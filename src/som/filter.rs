@@ -31,7 +31,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Element roles: `link` / `links` / `a` / `area` / `areas` / `anchor` /
 ///   `anchors` / `hyperlink` / `hyperlinks`, `button` / `buttons`, `text_input` /
 ///   `text_inputs` / `input` / `inputs` / `text_box` / `text_boxes` / `text_field` /
-///   `text_fields` / `textboxes` / `textfields` / `textbox` / `searchbox` /
+///   `text_fields` / `textboxes` / `textfields` / `textinput` / `textinputs` /
+///   `textbox` / `searchbox` /
 ///   `slider` / `sliders` / `spinbutton` / `spinbuttons` / `spin button` /
 ///   `spin buttons`, HTML
 ///   text-input types such as `text`,
@@ -81,9 +82,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `progress_bar` / `progress-bar` / `progress bar` / `progressbars` /
 ///   `meter` / `meters` /
 ///   `video` / `canvas`,
-///   `grid` / `grids` / `data_grid` / `data_grids` / `data-grid` / `data-grids` /
+///   `grid` / `grids` / `data_grid` / `data_grids` / `datagrid` / `datagrids` /
+///   `data-grid` / `data-grids` /
 ///   `treegrid` / `treegrids` / `tree-grid` / `tree-grids` / `table_grid` /
-///   `table-grid` / `table grids` / `table-grids`,
+///   `tablegrid` / `tablegrids` / `table-grid` / `table grids` / `table-grids`,
 ///   `separator` / `separators` / `hr`, `details` / `detail` / `summary` /
 ///   `summaries`,
 ///   `iframe` / `iframes`, `audio` / `audios`, `video` / `videos`,
@@ -807,6 +809,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "text_boxes"
         | "text_field"
         | "text_fields"
+        | "textinput"
+        | "textinputs"
         | "textfields"
         | "searchbox"
         | "searchboxes"
@@ -936,12 +940,16 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "grids"
         | "data_grid"
         | "data_grids"
+        | "datagrid"
+        | "datagrids"
         | "data-grid"
         | "data-grids"
         | "data grid"
         | "data grids"
         | "table_grid"
         | "table_grids"
+        | "tablegrid"
+        | "tablegrids"
         | "table-grid"
         | "table-grids"
         | "table grid"
@@ -1987,8 +1995,12 @@ mod tests {
             ("data-tables", ElementRole::Table),
             ("data tables", ElementRole::Table),
             ("data-grid", ElementRole::Table),
+            ("datagrid", ElementRole::Table),
+            ("datagrids", ElementRole::Table),
             ("data grids", ElementRole::Table),
             ("table-grid", ElementRole::Table),
+            ("tablegrid", ElementRole::Table),
+            ("tablegrids", ElementRole::Table),
             ("table grids", ElementRole::Table),
             ("tree-grid", ElementRole::Table),
             ("tree grids", ElementRole::Table),
@@ -2799,6 +2811,8 @@ mod tests {
         for selector in [
             "textboxes",
             "textfields",
+            "textinput",
+            "textinputs",
             "searchboxes",
             "queryboxes",
             "search_inputs",

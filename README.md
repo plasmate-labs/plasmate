@@ -254,7 +254,7 @@ aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,
 space-separated forms) target dialog regions; `content_region`/`content_regions` (and their hyphenated or
 space-separated forms) select content regions.
 Table selectors include `table`/`tables`, `data_table`/`data_tables`, and
-`grid`/`grids`/`data_grid`/`data_grids`/`treegrid`/`treegrids` (with
+`grid`/`grids`/`data_grid`/`data_grids`/`datagrid`/`datagrids`/`tablegrid`/`tablegrids`/`treegrid`/`treegrids` (with
 hyphenated and space-separated forms accepted too).
 Use `selector="media"` to keep images and media-capable grouped elements
 such as audio, video, and canvas while removing unrelated page content.
@@ -265,7 +265,7 @@ only the corresponding native media elements. Use
 `canvas` when you want every canvas element, or `canvas_item` when filtering a
 mixed media page down to canvas elements only.
 HTML text-input type names are also accepted as selectors, including
-`text`, `input`/`inputs`, `text_input`/`text_inputs`, `textbox`/`textboxes`/`text_box`/`text-box`/`text box` (and plural
+`text`, `input`/`inputs`, `text_input`/`text_inputs`, `textinput`/`textinputs`, `textbox`/`textboxes`/`text_box`/`text-box`/`text box` (and plural
 spaced or hyphenated forms), `search_input`/`search-input`, `search_control`/`search-control`,
 `search_field`/`search-field`, `search_box`/`search-box`, `query`,
 `query_input`/`query-input`, `query_field`/`query-field`,
