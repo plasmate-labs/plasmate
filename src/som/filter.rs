@@ -78,7 +78,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list` / `definition_lists`,
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
-///   `radiogroup` / `radiogroups` / `progress` / `progressbar` /
+///   `radiogroup` / `radiogroups` / `radio_group` / `radio_groups` /
+///   `radio-group` / `radio-groups` / `radio group` / `radio groups` /
+///   `progress` / `progressbar` /
 ///   `progress_bar` / `progress-bar` / `progress bar` / `progressbars` /
 ///   `meter` / `meters` /
 ///   `video` / `canvas`,
@@ -990,6 +992,12 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "figures"
         | "radiogroup"
         | "radiogroups"
+        | "radio_group"
+        | "radio_groups"
+        | "radio-group"
+        | "radio-groups"
+        | "radio group"
+        | "radio groups"
         | "progress"
         | "progressbar"
         | "progress_bar"
@@ -2543,6 +2551,10 @@ mod tests {
         for selector in [
             "figure",
             "radiogroup",
+            "radio_group",
+            "radio-group",
+            "radio group",
+            "radio groups",
             "progress",
             "progressbar",
             "progress_bar",

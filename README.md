@@ -242,7 +242,8 @@ Element selectors also accept common HTML tag aliases: `a`/`area`/`areas`/`ancho
 `p`/`s`/`ins`/`del`/`mark`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list`/`lists` (plus the explicit
 `unordered_list`, `ordered_list`, and `definition_list` forms).
 Structural aliases include `div`/`fieldset`/`fieldsets`/`group`/`groups`, `section`/`sections`, and ARIA group roles
-`figure`/`figures`/`radiogroup`/`radiogroups`/`progressbar`/`progressbars`/
+`figure`/`figures`/`radiogroup`/`radiogroups`/`radio_group`/`radio-group`/`radio group`/
+`progressbar`/`progressbars`/
 `meter`/`meters`/`output`/`outputs`, `hr`/`separator`,
 `details`/`summary`/`summaries`, and `iframe`; `img`/`image` and ARIA widget names such
 as `menuitem`/`menu items`, `option`/`options`, `tab`/`tabs`,
