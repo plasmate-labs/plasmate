@@ -555,9 +555,11 @@ fn canonical_selector_alias(value: &str) -> String {
         | "content region" | "content_regions" | "content-regions" | "content regions" => {
             "content".to_string()
         }
-        // Keep cache entries shared across the most common plural element
-        // aliases accepted by `apply_selector`.
-        "buttons" => "button".to_string(),
+        // Keep cache entries shared across the most common plural and ARIA
+        // widget aliases accepted by `apply_selector`.
+        "buttons" | "menuitem" | "menuitems" | "menu_item" | "menu_items" | "menu-item"
+        | "menu-items" | "option" | "options" | "tab" | "tabs" | "treeitem" | "treeitems"
+        | "tree_item" | "tree_items" | "tree-item" | "tree-items" => "button".to_string(),
         "links" | "a" | "area" | "areas" | "anchor" | "anchors" | "hyperlink" | "hyperlinks" => {
             "link".to_string()
         }
@@ -838,6 +840,37 @@ mod tests {
                     CacheLookup::Hit(_)
                 ),
                 "equivalent selector should hit cache: {stored} vs {lookup}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_reuse_aria_widget_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for stored in [
+            "menuitem",
+            "menu-items",
+            "option",
+            "options",
+            "tab",
+            "tabs",
+            "treeitem",
+            "tree-items",
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some("button")),
+                    CacheLookup::Hit(_)
+                ),
+                "ARIA widget alias should share the button cache key: {stored}"
             );
         }
     }
