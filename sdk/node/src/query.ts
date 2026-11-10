@@ -40,6 +40,7 @@ function normalizeRegionRole(role: string): RegionRole | undefined {
     sidebar: 'aside',
     sidebars: 'aside',
     complementary: 'aside',
+    complementaries: 'aside',
     header: 'header',
     headers: 'header',
     banner: 'header',

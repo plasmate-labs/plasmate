@@ -460,6 +460,7 @@ func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
 		{alias: "sidebar", role: "aside", id: "r_aside"},
 		{alias: "sidebars", role: "aside", id: "r_aside"},
 		{alias: "complementary", role: "aside", id: "r_aside"},
+		{alias: "complementaries", role: "aside", id: "r_aside"},
 		{alias: "banner", role: "header", id: "r_header"},
 		{alias: "contentinfo", role: "footer", id: "r_footer"},
 		{alias: "contentinfos", role: "footer", id: "r_footer"},

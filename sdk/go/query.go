@@ -34,6 +34,7 @@ func normalizeRegionRoleAlias(role string) string {
 		"asides":             "aside",
 		"banner":             "header",
 		"complementary":      "aside",
+		"complementaries":    "aside",
 		"contentinfo":        "footer",
 		"contentinfos":       "footer",
 		"content_info":       "footer",
