@@ -538,8 +538,10 @@ fn canonical_selector_alias(value: &str) -> String {
         "searches" | "search_nav" | "search-nav" | "search_navigation" | "search-navigation"
         | "search navigation" | "search_navigations" | "search-navigations"
         | "search navigations" => "search".to_string(),
-        "asides" | "sidebar" | "sidebars" | "complementary" => "aside".to_string(),
-        "headers" | "banner" => "header".to_string(),
+        "asides" | "sidebar" | "sidebars" | "complementary" | "complementaries" => {
+            "aside".to_string()
+        }
+        "headers" | "banner" | "banners" => "header".to_string(),
         "footers" | "contentinfo" | "contentinfos" | "content_info" | "content_infos"
         | "content-info" | "content-infos" | "content info" | "content infos" => {
             "footer".to_string()
@@ -556,7 +558,9 @@ fn canonical_selector_alias(value: &str) -> String {
         // Keep cache entries shared across the most common plural element
         // aliases accepted by `apply_selector`.
         "buttons" => "button".to_string(),
-        "links" | "anchors" | "hyperlink" | "hyperlinks" => "link".to_string(),
+        "links" | "a" | "area" | "areas" | "anchor" | "anchors" | "hyperlink" | "hyperlinks" => {
+            "link".to_string()
+        }
         // Text-control aliases all resolve to the SOM text-input role. Keep
         // compact and source-oriented spellings on one cache entry too.
         "text" | "text_inputs" | "textbox" | "textboxes" | "text_box" | "text_boxes"
@@ -580,6 +584,19 @@ fn canonical_selector_alias(value: &str) -> String {
         | "table-grids" | "table grid" | "table grids" | "tree_grid"
         | "tree_grids" | "tree-grid" | "tree-grids" | "tree grid" | "tree grids" | "treegrid"
         | "treegrids" => "table".to_string(),
+        // Form-control aliases all resolve to one SOM role. Keep cache hits
+        // stable when callers use the HTML or ARIA vocabulary accepted by
+        // `apply_selector`.
+        "selects" | "combobox" | "comboboxes" | "combo_box" | "combo_boxes" | "listbox"
+        | "listboxes" | "list_box" | "list_boxes" => "select".to_string(),
+        "checkboxes" | "check_box" | "check_boxes" | "switch" | "switches"
+        | "menuitemcheckbox" | "menuitemcheckboxes" | "menuitem_checkbox"
+        | "menuitem_checkboxes" | "menu-item-checkbox" | "menu-item-checkboxes"
+        | "menu_item_checkbox" | "menu_item_checkboxes" => "checkbox".to_string(),
+        "radios" | "radiobutton" | "radiobuttons" | "radio-button" | "radio-buttons"
+        | "radio_button" | "radio_buttons" | "menuitemradio" | "menuitemradios"
+        | "menuitem_radio" | "menuitem_radios" | "menu-item-radio" | "menu-item-radios"
+        | "menu_item_radio" | "menu_item_radios" => "radio".to_string(),
         value => value.to_string(),
     }
 }
@@ -788,6 +805,10 @@ mod tests {
             ("role=BUTTON", "button"),
             ("role=BUTTONS", "button"),
             ("links", "link"),
+            ("a", "link"),
+            ("area", "link"),
+            ("areas", "link"),
+            ("anchor", "link"),
             ("text", "text_input"),
             ("textinput", "text_input"),
             ("textfields", "text_input"),
@@ -855,12 +876,43 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_cache_keys_reuse_form_control_aliases() {
+        let cache = SomCache::new(CacheConfig::default());
+        for (stored, canonical) in [
+            ("comboboxes", "select"),
+            ("list boxes", "select"),
+            ("switches", "checkbox"),
+            ("menu-item-checkboxes", "checkbox"),
+            ("radiobuttons", "radio"),
+            ("menu item radios", "radio"),
+        ] {
+            cache.store_with_selector(
+                "https://example.com/app",
+                111,
+                Some(stored),
+                stored.as_bytes().to_vec(),
+                100,
+            );
+
+            assert!(
+                matches!(
+                    cache.lookup_with_selector("https://example.com/app", 111, Some(canonical)),
+                    CacheLookup::Hit(_)
+                ),
+                "form-control alias should share the canonical cache key: {stored}"
+            );
+        }
+    }
+
+    #[test]
     fn test_selector_cache_keys_reuse_region_aliases() {
         for (stored, canonical) in [
             ("main-region", "main"),
             ("navigation regions", "nav"),
             ("search_navigation", "search"),
             ("sidebar", "aside"),
+            ("complementaries", "aside"),
+            ("banners", "header"),
             ("content-info", "footer"),
             ("contentinfos", "footer"),
             ("content_infos", "footer"),

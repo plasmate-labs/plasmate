@@ -248,7 +248,7 @@ Structural aliases include `div`/`fieldset`/`fieldsets`/`group`/`groups`, `secti
 as `menuitem`/`menu items`, `option`, `tab`, `treeitem`/`tree items`, `switch`,
 `menuitemcheckbox`, and `menuitemradio` are also accepted. Region selectors accept ARIA landmark
 aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,
-`navigation region`/`navigation-region`/`navigation regions`, `search`/`search navigation`/`search navigations`, `banner`, `complementary`, and
+`navigation region`/`navigation-region`/`navigation regions`, `search`/`search navigation`/`search navigations`, `banner`/`banners`, `complementary`/`complementaries`, and
 `contentinfo`/`content_info`/`content-info`; `forms` and `dialogs` are plural aliases for `form` and
 `dialog`; `alertdialog`/`alertdialogs` (including `alert-dialog`/`alert-dialogs` and
 space-separated forms) target dialog regions; `content_region`/`content_regions` (and their hyphenated or
