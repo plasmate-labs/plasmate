@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import * as assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { Som } from './types';
+import type { RegionRole, Som } from './types';
 import {
   findActionTarget,
   findActionTargetByCacheKey,
@@ -403,6 +403,18 @@ describe('findByRole', () => {
     };
 
     assert.deepEqual(findByRole(uppercaseRoles, 'MAIN').map((region) => region.id), ['r_main']);
+  });
+
+  it('ignores incidental whitespace in compiled region roles', () => {
+    const paddedRoles: Som = {
+      ...fixture,
+      regions: fixture.regions.map((region) => ({
+        ...region,
+        role: ` ${region.role} ` as RegionRole,
+      })),
+    };
+
+    assert.deepEqual(findByRole(paddedRoles, 'header').map((region) => region.id), ['r_header']);
   });
 
   it('returns empty array for missing role', () => {

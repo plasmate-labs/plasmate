@@ -8,7 +8,7 @@ import type { Som, SomRegion, SomElement, RegionRole, ElementRole, ElementAction
 export function findByRole(som: Som, role: RegionRole | string): SomRegion[] {
   const normalizedRole = normalizeRegionRole(role);
   return normalizedRole
-    ? som.regions.filter((r) => r.role.toLowerCase() === normalizedRole)
+    ? som.regions.filter((r) => r.role.trim().toLowerCase() === normalizedRole)
     : [];
 }
 
