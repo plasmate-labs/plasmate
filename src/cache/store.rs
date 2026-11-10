@@ -563,6 +563,11 @@ fn canonical_selector_alias(value: &str) -> String {
         | "text_field" | "text_fields" | "textinput" | "textinputs" | "textfields"
         | "searchbox" | "searchboxes" | "slider" | "sliders" | "spinbutton"
         | "spinbuttons" | "spin_button" | "spin_buttons" | "input" | "inputs" | "email"
+        | "search_input" | "search_inputs" | "search_control" | "search_controls"
+        | "search_field" | "search_fields" | "search_box" | "search_boxes" | "query"
+        | "queries" | "query_input" | "query_inputs" | "query_field" | "query_fields"
+        | "query_control" | "query_controls" | "querybox" | "query_box" | "queryboxes"
+        | "query_boxes"
         | "number" | "password" | "tel" | "url" | "date" | "datetime"
         | "datetime_local" | "date_time" | "date_time_local" | "month" | "time" | "week"
         | "color" | "range" | "hidden" | "file" => "text_input".to_string(),
@@ -787,6 +792,7 @@ mod tests {
             ("textinput", "text_input"),
             ("textfields", "text_input"),
             ("searchbox", "text_input"),
+            ("queryboxes", "text_input"),
             ("action=TYPE_TEXT", "type"),
             ("action:select-option", "select"),
         ] {
