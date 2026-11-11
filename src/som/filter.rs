@@ -430,11 +430,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // without selecting every paragraph on the page.
     if matches!(
         selector.to_ascii_lowercase().as_str(),
-        "term" | "terms" | "definition" | "definitions"
+        "term" | "terms" | "dt" | "definition" | "definitions" | "dd"
     ) {
         let source_role = if matches!(
             selector.to_ascii_lowercase().as_str(),
-            "term" | "terms"
+            "term" | "terms" | "dt"
         ) {
             "term"
         } else {
@@ -2644,8 +2644,10 @@ mod tests {
         for (selector, source_role) in [
             ("term", "term"),
             ("terms", "term"),
+            ("dt", "term"),
             ("definition", "definition"),
             ("definitions", "definition"),
+            ("dd", "definition"),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
