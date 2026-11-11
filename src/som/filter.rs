@@ -950,9 +950,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "unordered_list"
         | "ordered_list"
         | "definition_list"
-        | "definition_lists"
-        | "feed"
-        | "feeds" => Some(ElementRole::List),
+        | "definition_lists" => Some(ElementRole::List),
         "table"
         | "tables"
         | "data_table"
