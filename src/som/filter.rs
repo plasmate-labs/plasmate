@@ -70,9 +70,11 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `figcaption` / `kbd` / `math` / `pre` / `q` / `ruby` / `samp` /
 ///   `small` / `var` / `s` / `ins` / `del` / `mark` / `subscript` /
 ///   `superscript` / `deletion` / `insertion` / `suggestion` / `definition` /
-///   `term` / `definition-term` / `definition-terms` / `description` /
-///   `descriptions` / `definition-description` / `definition-descriptions` /
-///   `emphasis` / `strong` /
+///   `term` / `definition-term` / `definition-terms` / `definition_term` /
+///   `definition_terms` / `description` / `descriptions` /
+///   `definition-description` / `definition-descriptions` /
+///   `definition_description` / `definition_descriptions` /
+///   `emphasis` / `strong` / `log` / `marquee` / `timer` /
 ///   `blockquote` / `quote` / `output` /
 ///   `outputs` / `alert` /
 ///   `alerts` / `status` / `statuses` / `tooltip` /
@@ -80,7 +82,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   plus the ARIA collection alias `feed` / `feeds`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
-///   `definition_list` / `definition_lists`, plus ARIA `feed` / `feeds`,
+///   `definition_list` / `definition_lists` / `definition-list` /
+///   `definition-lists` / `definition list` / `definition lists`, plus ARIA
+///   `feed` / `feeds`,
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
 ///   `radiogroup` / `radiogroups` / `radio_group` / `radio_groups` /
 ///   `radio-group` / `radio-groups` / `radio group` / `radio groups` /
@@ -367,6 +371,16 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    // ARIA live-region roles compile to Paragraph, but retain their source
+    // role so a live-region selector does not also return ordinary text.
+    if let Some(source_role) = live_region_source_role(selector) {
+        if som_contains_source_role(som, source_role) {
+            return filter_som_elements(som, selector, |element| {
+                is_source_role_element(element, source_role)
+            });
+        }
+    }
+
     // Explicit time-input selectors are useful when a page contains both a
     // native <time> element and a time form control. Keep the bare `time`
     // selector's backwards-compatible mixed behavior above.
@@ -438,6 +452,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "dt"
             | "definition-term"
             | "definition-terms"
+            | "definition term"
+            | "definition terms"
+            | "definition_term"
+            | "definition_terms"
             | "definition"
             | "definitions"
             | "dd"
@@ -445,10 +463,22 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "descriptions"
             | "definition-description"
             | "definition-descriptions"
+            | "definition description"
+            | "definition descriptions"
+            | "definition_description"
+            | "definition_descriptions"
     ) {
         let source_role = if matches!(
             selector.to_ascii_lowercase().as_str(),
-            "term" | "terms" | "dt" | "definition-term" | "definition-terms"
+            "term"
+                | "terms"
+                | "dt"
+                | "definition-term"
+                | "definition-terms"
+                | "definition term"
+                | "definition terms"
+                | "definition_term"
+                | "definition_terms"
         ) {
             "term"
         } else {
@@ -649,6 +679,15 @@ fn media_source_role(selector: &str) -> Option<&'static str> {
         | "canvas-items"
         | "canvas items"
         | "canvasitems" => Some("canvas"),
+        _ => None,
+    }
+}
+
+fn live_region_source_role(selector: &str) -> Option<&'static str> {
+    match selector.to_ascii_lowercase().as_str() {
+        "log" | "logs" => Some("log"),
+        "marquee" | "marquees" => Some("marquee"),
+        "timer" | "timers" => Some("timer"),
         _ => None,
     }
 }
@@ -985,7 +1024,11 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "unordered_list"
         | "ordered_list"
         | "definition_list"
-        | "definition_lists" => Some(ElementRole::List),
+        | "definition_lists"
+        | "definition-list"
+        | "definition-lists"
+        | "definition list"
+        | "definition lists" => Some(ElementRole::List),
         "table"
         | "tables"
         | "data_table"
@@ -1027,7 +1070,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "emphasis" | "emphases" | "strong" | "strongs" | "blockquote" | "blockquotes" | "quote" | "quotes"
         | "output" | "outputs"
         | "alert" | "alerts" | "status" | "statuses" | "tooltip"
-        | "tooltips" => {
+        | "tooltips" | "log" | "logs" | "marquee" | "marquees" | "timer"
+        | "timers" => {
             Some(ElementRole::Paragraph)
         }
         "article" | "articles" | "content" | "contents" | "region" | "regions"
@@ -2440,6 +2484,24 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_live_region_role_aliases_match_compiled_paragraphs() {
+        for selector in ["log", "logs", "marquee", "marquees", "timer", "timers"] {
+            let mut som = make_test_som();
+            som.regions[0].elements[0].role = ElementRole::Paragraph;
+            som.regions[0].elements[0].attrs = Some(serde_json::json!({
+                "source_role": live_region_source_role(selector).unwrap()
+            }));
+            som.regions[1].elements[0].role = ElementRole::Paragraph;
+            som.regions[1].elements[0].attrs = Some(serde_json::json!({"source_role": "plain"}));
+
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
+        }
+    }
+
+    #[test]
     fn test_selector_plural_aria_toggle_aliases_filter_compiled_roles() {
         let mut som = make_test_som();
         som.regions[0].elements[0].role = ElementRole::Checkbox;
@@ -2600,6 +2662,10 @@ mod tests {
             ("ordered_list", ElementRole::List),
             ("definition_list", ElementRole::List),
             ("definition_lists", ElementRole::List),
+            ("definition-list", ElementRole::List),
+            ("definition-lists", ElementRole::List),
+            ("definition list", ElementRole::List),
+            ("definition lists", ElementRole::List),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
@@ -2661,6 +2727,10 @@ mod tests {
             ("dt", "term"),
             ("definition-term", "term"),
             ("definition-terms", "term"),
+            ("definition term", "term"),
+            ("definition terms", "term"),
+            ("definition_term", "term"),
+            ("definition_terms", "term"),
             ("definition", "definition"),
             ("definitions", "definition"),
             ("dd", "definition"),
@@ -2668,6 +2738,10 @@ mod tests {
             ("descriptions", "definition"),
             ("definition-description", "definition"),
             ("definition-descriptions", "definition"),
+            ("definition description", "definition"),
+            ("definition descriptions", "definition"),
+            ("definition_description", "definition"),
+            ("definition_descriptions", "definition"),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
