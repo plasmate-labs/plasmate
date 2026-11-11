@@ -70,8 +70,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `figcaption` / `kbd` / `math` / `pre` / `q` / `ruby` / `samp` /
 ///   `small` / `var` / `s` / `ins` / `del` / `mark` / `subscript` /
 ///   `superscript` / `deletion` / `insertion` / `suggestion` / `definition` /
-///   `term` / `definition-term` / `definition-terms` / `description` /
-///   `descriptions` / `definition-description` / `definition-descriptions` /
+///   `term` / `definition-term` / `definition-terms` / `definition_term` /
+///   `definition_terms` / `description` / `descriptions` /
+///   `definition-description` / `definition-descriptions` /
+///   `definition_description` / `definition_descriptions` /
 ///   `emphasis` / `strong` /
 ///   `blockquote` / `quote` / `output` /
 ///   `outputs` / `alert` /
@@ -440,6 +442,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "definition-terms"
             | "definition term"
             | "definition terms"
+            | "definition_term"
+            | "definition_terms"
             | "definition"
             | "definitions"
             | "dd"
@@ -449,6 +453,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "definition-descriptions"
             | "definition description"
             | "definition descriptions"
+            | "definition_description"
+            | "definition_descriptions"
     ) {
         let source_role = if matches!(
             selector.to_ascii_lowercase().as_str(),
@@ -459,6 +465,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 | "definition-terms"
                 | "definition term"
                 | "definition terms"
+                | "definition_term"
+                | "definition_terms"
         ) {
             "term"
         } else {
@@ -2673,6 +2681,8 @@ mod tests {
             ("definition-terms", "term"),
             ("definition term", "term"),
             ("definition terms", "term"),
+            ("definition_term", "term"),
+            ("definition_terms", "term"),
             ("definition", "definition"),
             ("definitions", "definition"),
             ("dd", "definition"),
@@ -2682,6 +2692,8 @@ mod tests {
             ("definition-descriptions", "definition"),
             ("definition description", "definition"),
             ("definition descriptions", "definition"),
+            ("definition_description", "definition"),
+            ("definition_descriptions", "definition"),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
