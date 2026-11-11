@@ -369,6 +369,16 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    // ARIA live-region roles compile to Paragraph, but retain their source
+    // role so a live-region selector does not also return ordinary text.
+    if let Some(source_role) = live_region_source_role(selector) {
+        if som_contains_source_role(som, source_role) {
+            return filter_som_elements(som, selector, |element| {
+                is_source_role_element(element, source_role)
+            });
+        }
+    }
+
     // Explicit time-input selectors are useful when a page contains both a
     // native <time> element and a time form control. Keep the bare `time`
     // selector's backwards-compatible mixed behavior above.
@@ -667,6 +677,15 @@ fn media_source_role(selector: &str) -> Option<&'static str> {
         | "canvas-items"
         | "canvas items"
         | "canvasitems" => Some("canvas"),
+        _ => None,
+    }
+}
+
+fn live_region_source_role(selector: &str) -> Option<&'static str> {
+    match selector.to_ascii_lowercase().as_str() {
+        "log" | "logs" => Some("log"),
+        "marquee" | "marquees" => Some("marquee"),
+        "timer" | "timers" => Some("timer"),
         _ => None,
     }
 }
@@ -2460,11 +2479,15 @@ mod tests {
 
     #[test]
     fn test_selector_live_region_role_aliases_match_compiled_paragraphs() {
-        let mut som = make_test_som();
-        som.regions[0].elements[0].role = ElementRole::Paragraph;
-        som.regions[0].elements[0].attrs = Some(serde_json::json!({"source_role": "log"}));
-
         for selector in ["log", "logs", "marquee", "marquees", "timer", "timers"] {
+            let mut som = make_test_som();
+            som.regions[0].elements[0].role = ElementRole::Paragraph;
+            som.regions[0].elements[0].attrs = Some(serde_json::json!({
+                "source_role": live_region_source_role(selector).unwrap()
+            }));
+            som.regions[1].elements[0].role = ElementRole::Paragraph;
+            som.regions[1].elements[0].attrs = Some(serde_json::json!({"source_role": "plain"}));
+
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
