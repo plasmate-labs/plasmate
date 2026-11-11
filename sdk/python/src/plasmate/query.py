@@ -1526,7 +1526,7 @@ def _collect_by_text(
         (
             _normalize_label_text(part) == normalized_text
             if exact
-            else normalized_text.lower() in _normalize_label_text(part).lower()
+            else normalized_text.casefold() in _normalize_label_text(part).casefold()
         )
         for part in parts
     ):

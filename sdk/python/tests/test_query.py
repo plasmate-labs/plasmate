@@ -1587,6 +1587,15 @@ class TestGetActionPlan:
 
 
 class TestFindByText:
+    def test_finds_text_with_unicode_casefold(self, sample_som: Som) -> None:
+        sample_som.regions[0].elements.append(
+            SomElement(id="e_street", role=ElementRole.paragraph, text="Straße")
+        )
+
+        assert [element.id for element in find_by_text(sample_som, "STRASSE")] == [
+            "e_street"
+        ]
+
     def test_finds_by_exact_text(self, sample_som: Som) -> None:
         results = find_by_text(sample_som, "Click Me")
         assert len(results) == 1
