@@ -70,7 +70,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `figcaption` / `kbd` / `math` / `pre` / `q` / `ruby` / `samp` /
 ///   `small` / `var` / `s` / `ins` / `del` / `mark` / `subscript` /
 ///   `superscript` / `deletion` / `insertion` / `suggestion` / `definition` /
-///   `term` / `emphasis` / `strong` / `blockquote` / `quote` / `output` /
+///   `term` / `description` / `descriptions` / `emphasis` / `strong` /
+///   `blockquote` / `quote` / `output` /
 ///   `outputs` / `alert` /
 ///   `alerts` / `status` / `statuses` / `tooltip` /
 ///   `tooltips`, `section` / `sections`,
@@ -430,7 +431,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // without selecting every paragraph on the page.
     if matches!(
         selector.to_ascii_lowercase().as_str(),
-        "term" | "terms" | "dt" | "definition" | "definitions" | "dd"
+        "term"
+            | "terms"
+            | "dt"
+            | "definition"
+            | "definitions"
+            | "dd"
+            | "description"
+            | "descriptions"
     ) {
         let source_role = if matches!(
             selector.to_ascii_lowercase().as_str(),
@@ -2648,6 +2656,8 @@ mod tests {
             ("definition", "definition"),
             ("definitions", "definition"),
             ("dd", "definition"),
+            ("description", "definition"),
+            ("descriptions", "definition"),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
