@@ -9,7 +9,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `landmark`/`landmarks` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
+/// - Region roles: `landmark`/`landmarks`/`landmark_region`/`landmark_regions` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
 ///   `nav-region`/`nav region`/`nav_regions`/`nav-regions`/`nav regions`/
 ///   `navigation_region`/`navigation-region`/`navigation region`/
 ///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
@@ -153,7 +153,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // Return the page's compiled regions as a compact landmark inventory.
     // Unlike a specific region-role selector, this is useful when an agent
     // needs to discover the page structure before choosing a narrower target.
-    if selector.eq_ignore_ascii_case("landmark") || selector.eq_ignore_ascii_case("landmarks") {
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "landmark" | "landmarks" | "landmark_region" | "landmark_regions"
+    ) {
         if som.regions.is_empty() {
             eprintln!(
                 "Warning: selector '{}' matched no landmarks - returning full SOM",
@@ -3703,12 +3706,22 @@ mod tests {
     #[test]
     fn test_selector_landmarks_returns_region_inventory_without_elements() {
         let som = make_test_som();
-        let filtered = apply_selector(&som, " LANDMARKS ");
+        for selector in [
+            " LANDMARKS ",
+            "landmark_region",
+            "role=landmark_region",
+            "role:landmark_regions",
+        ] {
+            let filtered = apply_selector(&som, selector);
 
-        assert_eq!(filtered.regions.len(), som.regions.len());
-        assert!(filtered.regions.iter().all(|region| region.elements.is_empty()));
-        assert_eq!(filtered.meta.element_count, 0);
-        assert_eq!(filtered.meta.interactive_count, 0);
+            assert_eq!(filtered.regions.len(), som.regions.len(), "selector: {selector}");
+            assert!(
+                filtered.regions.iter().all(|region| region.elements.is_empty()),
+                "selector: {selector}"
+            );
+            assert_eq!(filtered.meta.element_count, 0, "selector: {selector}");
+            assert_eq!(filtered.meta.interactive_count, 0, "selector: {selector}");
+        }
         assert!(som.regions.iter().any(|region| !region.elements.is_empty()));
     }
 
