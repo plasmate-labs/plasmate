@@ -75,6 +75,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `alerts` / `status` / `statuses` / `tooltip` /
 ///   `tooltips`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
+///   plus the ARIA collection alias `feed` / `feeds`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list` / `definition_lists`,
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
@@ -931,6 +932,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "ol"
         | "dl"
         | "menu"
+        | "feed"
+        | "feeds"
         | "unordered_list"
         | "ordered_list"
         | "definition_list"
@@ -2213,6 +2216,19 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
+    }
+
+    #[test]
+    fn test_selector_feed_aliases_match_list_elements() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::List;
+
+        for selector in ["feed", "feeds"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::List);
+        }
     }
 
     #[test]
