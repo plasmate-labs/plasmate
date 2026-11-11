@@ -415,6 +415,15 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    // ARIA feed is preserved as source metadata because it does not map to
+    // the generic SOM list role. Match that source role directly so `feed`
+    // does not accidentally select ordinary lists.
+    if matches!(selector.to_ascii_lowercase().as_str(), "feed" | "feeds") {
+        return filter_som_elements(som, selector, |element| {
+            has_source_role(element, "feed")
+        });
+    }
+
     if let Some(role) = parse_element_role(selector) {
         return filter_som_elements(som, selector, |element| element.role == role);
     }
@@ -646,12 +655,16 @@ fn elements_contain_source_role(elements: &[Element], source_role: &str) -> bool
 
 fn is_source_role_element(element: &Element, source_role: &str) -> bool {
     element.role == ElementRole::Group
-        && element
-            .attrs
-            .as_ref()
-            .and_then(|attrs| attrs.get("source_role"))
-            .and_then(serde_json::Value::as_str)
-            .is_some_and(|value| value.eq_ignore_ascii_case(source_role))
+        && has_source_role(element, source_role)
+}
+
+fn has_source_role(element: &Element, source_role: &str) -> bool {
+    element
+        .attrs
+        .as_ref()
+        .and_then(|attrs| attrs.get("source_role"))
+        .and_then(serde_json::Value::as_str)
+        .is_some_and(|value| value.eq_ignore_ascii_case(source_role))
 }
 
 fn parse_heading_level_selector(selector: &str) -> Option<u8> {
@@ -2554,8 +2567,6 @@ mod tests {
             ("ordered_list", ElementRole::List),
             ("definition_list", ElementRole::List),
             ("definition_lists", ElementRole::List),
-            ("feed", ElementRole::List),
-            ("feeds", ElementRole::List),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
@@ -2569,14 +2580,29 @@ mod tests {
     #[test]
     fn test_selector_aria_feed_aliases_accept_role_forms() {
         let mut som = make_test_som();
-        som.regions[0].elements[0].role = ElementRole::List;
+        som.regions[0].elements[0].attrs = Some(serde_json::json!({"source_role": "feed"}));
 
         for selector in ["feed", "feeds", "role=feed", "role:feeds"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::List);
+            assert_eq!(
+                filtered.regions[0].elements[0]
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("source_role"))
+                    .and_then(serde_json::Value::as_str),
+                Some("feed")
+            );
         }
+    }
+
+    #[test]
+    fn test_selector_feed_does_not_match_plain_lists() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "feed");
+        assert_eq!(filtered.regions.len(), som.regions.len());
+        assert_eq!(filtered.regions[0].elements.len(), som.regions[0].elements.len());
     }
 
     #[test]
