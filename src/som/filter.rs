@@ -438,6 +438,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "dt"
             | "definition-term"
             | "definition-terms"
+            | "definition term"
+            | "definition terms"
             | "definition"
             | "definitions"
             | "dd"
@@ -445,10 +447,18 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "descriptions"
             | "definition-description"
             | "definition-descriptions"
+            | "definition description"
+            | "definition descriptions"
     ) {
         let source_role = if matches!(
             selector.to_ascii_lowercase().as_str(),
-            "term" | "terms" | "dt" | "definition-term" | "definition-terms"
+            "term"
+                | "terms"
+                | "dt"
+                | "definition-term"
+                | "definition-terms"
+                | "definition term"
+                | "definition terms"
         ) {
             "term"
         } else {
@@ -2661,6 +2671,8 @@ mod tests {
             ("dt", "term"),
             ("definition-term", "term"),
             ("definition-terms", "term"),
+            ("definition term", "term"),
+            ("definition terms", "term"),
             ("definition", "definition"),
             ("definitions", "definition"),
             ("dd", "definition"),
@@ -2668,6 +2680,8 @@ mod tests {
             ("descriptions", "definition"),
             ("definition-description", "definition"),
             ("definition-descriptions", "definition"),
+            ("definition description", "definition"),
+            ("definition descriptions", "definition"),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
