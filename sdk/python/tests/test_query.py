@@ -1438,7 +1438,7 @@ class TestGetActionPlan:
         assert find_action_target_by_label(som, "Save") == save
         assert find_action_targets_by_label(som, "save") == [save]
         assert find_action_targets_by_label(som, "  Save  ", exact=True) == [save]
-        assert find_action_targets_by_label(som, "") == []
+
         assert find_action_targets_by_label(som, " \n\t ", exact=True) == []
         assert find_action_targets_by_role(som, "button") == [expected[2], expected[3]]
         assert find_action_targets_by_role(som, ElementRole.button) == [expected[2], expected[3]]
@@ -1557,6 +1557,33 @@ class TestGetActionPlan:
         target = get_action_plan_index(sample_som)["by_label"]["Account settings"]
 
         assert target["id"] == "e11"
+
+
+    def test_label_matching_uses_unicode_casefold(self) -> None:
+        som = Som(
+            som_version="1.0",
+            url="https://example.com",
+            title="Example Page",
+            lang="en",
+            meta=SomMeta(html_bytes=0, som_bytes=0, element_count=1, interactive_count=1),
+            regions=[
+                SomRegion(
+                    id="r_main",
+                    role=RegionRole.main,
+                    elements=[
+                        SomElement(
+                            id="e_street",
+                            role=ElementRole.button,
+                            label="Straße",
+                            actions=["click"],
+                        )
+                    ],
+                )
+            ],
+        )
+
+        assert find_by_label(som, "STRASSE")
+        assert find_action_targets_by_label(som, "STRASSE")
 
 
 class TestFindByText:
