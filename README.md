@@ -256,7 +256,8 @@ as `menuitem`/`menu items`, `option`/`options`, `tab`/`tabs`,
 aliases such as `navigation`, `nav region`/`nav-region`/`nav regions`,
 `navigation region`/`navigation-region`/`navigation regions`, `search`/`search navigation`/`search navigations`, `banner`/`banners`, `complementary`/`complementaries`, and
 `contentinfo`/`content_info`/`content-info`; `forms` and `dialogs` are plural aliases for `form` and
-`dialog`; `alertdialog`/`alertdialogs` (including `alert-dialog`/`alert-dialogs` and
+`dialog`; modal regions also accept `modal`/`modals` and `popup`/`popups`/
+`pop-up`/`pop-ups`; `alertdialog`/`alertdialogs` (including `alert-dialog`/`alert-dialogs` and
 space-separated forms) target dialog regions; `content_region`/`content_regions` (and their hyphenated or
 space-separated forms) select content regions.
 Table selectors include `table`/`tables`, `data_table`/`data_tables`, and
