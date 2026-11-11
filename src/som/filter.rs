@@ -9,7 +9,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `landmark`/`landmarks`/`landmark_region`/`landmark_regions` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
+/// - Region roles: `landmark`/`landmarks`/`landmark_region`/`landmark_regions`/`landmark_inventory`/`landmark-inventory`/`landmark inventory` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
 ///   `nav-region`/`nav region`/`nav_regions`/`nav-regions`/`nav regions`/
 ///   `navigation_region`/`navigation-region`/`navigation region`/
 ///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
@@ -155,7 +155,13 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // needs to discover the page structure before choosing a narrower target.
     if matches!(
         selector.to_ascii_lowercase().as_str(),
-        "landmark" | "landmarks" | "landmark_region" | "landmark_regions"
+        "landmark"
+            | "landmarks"
+            | "landmark_region"
+            | "landmark_regions"
+            | "landmark_inventory"
+            | "landmark-inventory"
+            | "landmark inventory"
     ) {
         if som.regions.is_empty() {
             eprintln!(
@@ -3711,6 +3717,8 @@ mod tests {
             "landmark_region",
             "role=landmark_region",
             "role:landmark_regions",
+            "landmark-inventory",
+            "role:landmark inventory",
         ] {
             let filtered = apply_selector(&som, selector);
 
