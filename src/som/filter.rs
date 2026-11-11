@@ -77,7 +77,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   plus the ARIA collection alias `feed` / `feeds`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
-///   `definition_list` / `definition_lists`,
+///   `definition_list` / `definition_lists`, plus ARIA `feed` / `feeds`,
 ///   `group` / `groups` / `fieldset` / `fieldsets` / `figure` / `figures` /
 ///   `radiogroup` / `radiogroups` / `radio_group` / `radio_groups` /
 ///   `radio-group` / `radio-groups` / `radio group` / `radio groups` /
@@ -937,7 +937,9 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "unordered_list"
         | "ordered_list"
         | "definition_list"
-        | "definition_lists" => Some(ElementRole::List),
+        | "definition_lists"
+        | "feed"
+        | "feeds" => Some(ElementRole::List),
         "table"
         | "tables"
         | "data_table"
@@ -2552,6 +2554,8 @@ mod tests {
             ("ordered_list", ElementRole::List),
             ("definition_list", ElementRole::List),
             ("definition_lists", ElementRole::List),
+            ("feed", ElementRole::List),
+            ("feeds", ElementRole::List),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
@@ -2559,6 +2563,19 @@ mod tests {
                 .elements
                 .iter()
                 .all(|element| element.role == expected_role));
+        }
+    }
+
+    #[test]
+    fn test_selector_aria_feed_aliases_accept_role_forms() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::List;
+
+        for selector in ["feed", "feeds", "role=feed", "role:feeds"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::List);
         }
     }
 
