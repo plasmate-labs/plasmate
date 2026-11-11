@@ -241,8 +241,10 @@ whitespace is normalized so labels split across lines still match.
 Element selectors also accept common HTML tag aliases: `a`/`area`/`areas`/`anchor`/`anchors`/`hyperlink`/`hyperlinks`/`link`/`links`,
 `p`/`s`/`ins`/`del`/`mark`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list`/`lists` (plus the explicit
 `unordered_list`, `ordered_list`, and `definition_list` forms). Definition-list
-terms and descriptions can also be narrowed with `term`/`terms`/`dt` and
-`definition`/`definitions`/`dd`.
+terms and descriptions can also be narrowed with `term`/`terms`/`dt` (or
+`definition-term`/`definition-terms`) and `definition`/`definitions`/`dd`
+(or `description`/`descriptions` and `definition-description`/
+`definition-descriptions`).
 Structural aliases include `div`/`fieldset`/`fieldsets`/`group`/`groups`, `section`/`sections`, and ARIA group roles
 `figure`/`figures`/`radiogroup`/`radiogroups`/`radio_group`/`radio-group`/`radio group`/
 `progressbar`/`progressbars`/

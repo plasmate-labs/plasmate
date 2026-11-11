@@ -70,7 +70,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `figcaption` / `kbd` / `math` / `pre` / `q` / `ruby` / `samp` /
 ///   `small` / `var` / `s` / `ins` / `del` / `mark` / `subscript` /
 ///   `superscript` / `deletion` / `insertion` / `suggestion` / `definition` /
-///   `term` / `description` / `descriptions` / `emphasis` / `strong` /
+///   `term` / `definition-term` / `definition-terms` / `description` /
+///   `descriptions` / `definition-description` / `definition-descriptions` /
+///   `emphasis` / `strong` /
 ///   `blockquote` / `quote` / `output` /
 ///   `outputs` / `alert` /
 ///   `alerts` / `status` / `statuses` / `tooltip` /
@@ -434,15 +436,19 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         "term"
             | "terms"
             | "dt"
+            | "definition-term"
+            | "definition-terms"
             | "definition"
             | "definitions"
             | "dd"
             | "description"
             | "descriptions"
+            | "definition-description"
+            | "definition-descriptions"
     ) {
         let source_role = if matches!(
             selector.to_ascii_lowercase().as_str(),
-            "term" | "terms" | "dt"
+            "term" | "terms" | "dt" | "definition-term" | "definition-terms"
         ) {
             "term"
         } else {
@@ -2653,11 +2659,15 @@ mod tests {
             ("term", "term"),
             ("terms", "term"),
             ("dt", "term"),
+            ("definition-term", "term"),
+            ("definition-terms", "term"),
             ("definition", "definition"),
             ("definitions", "definition"),
             ("dd", "definition"),
             ("description", "definition"),
             ("descriptions", "definition"),
+            ("definition-description", "definition"),
+            ("definition-descriptions", "definition"),
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
