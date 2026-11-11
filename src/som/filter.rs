@@ -18,6 +18,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `aside`/`asides`/`sidebar`/`sidebars`/`complementary`/`complementaries`,
 ///   `header`/`headers`/`banner`/`banners`,
 ///   `footer`/`footers`/`contentinfo`/`content_info`/`content-info`, `form`/`forms`, `dialog`/`dialogs`/
+///   `modal`/`modals`,
 ///   `alertdialog`/`alertdialogs`/`alert-dialog`/`alert-dialogs`/`alert dialog`/
 ///   `alert dialogs`,
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
@@ -238,6 +239,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         "form" | "forms" => Some(RegionRole::Form),
         "dialog"
         | "dialogs"
+        | "modal"
+        | "modals"
         | "alertdialog"
         | "alertdialogs"
         | "alert_dialog"
@@ -2950,6 +2953,8 @@ mod tests {
             ("search", RegionRole::Navigation),
             ("forms", RegionRole::Form),
             ("dialogs", RegionRole::Dialog),
+            ("modal", RegionRole::Dialog),
+            ("modals", RegionRole::Dialog),
             ("alertdialog", RegionRole::Dialog),
             ("alertdialogs", RegionRole::Dialog),
             ("alert_dialog", RegionRole::Dialog),
