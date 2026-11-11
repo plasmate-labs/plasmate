@@ -81,6 +81,9 @@ Time form controls also accept `time_input`/`time-input`/`time input` and
 Alert-dialog regions also accept `alertdialog`/`alertdialogs`, plus hyphenated
 and space-separated forms (`alert-dialog`, `alert dialogs`, and so on).
 
+Dialog regions also accept the modal and popup aliases `modal`/`modals`,
+`popup`/`popups`, and `pop-up`/`pop-ups`.
+
 The `section`/`sections` selectors target compiled Section elements, while the
 `div` selector targets SOM group elements compiled from ordinary HTML
 `<div>` containers. The plural `lists` selector is also accepted for list elements.
