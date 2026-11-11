@@ -70,7 +70,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `figcaption` / `kbd` / `math` / `pre` / `q` / `ruby` / `samp` /
 ///   `small` / `var` / `s` / `ins` / `del` / `mark` / `subscript` /
 ///   `superscript` / `deletion` / `insertion` / `suggestion` / `definition` /
-///   `term` / `emphasis` / `strong` / `blockquote` / `quote` / `output` /
+///   `term` / `definition-term` / `definition-terms` / `description` /
+///   `descriptions` / `definition-description` / `definition-descriptions` /
+///   `emphasis` / `strong` /
+///   `blockquote` / `quote` / `output` /
 ///   `outputs` / `alert` /
 ///   `alerts` / `status` / `statuses` / `tooltip` /
 ///   `tooltips`, `section` / `sections`,
@@ -421,6 +424,38 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     if matches!(selector.to_ascii_lowercase().as_str(), "feed" | "feeds") {
         return filter_som_elements(som, selector, |element| {
             has_source_role(element, "feed")
+        });
+    }
+
+    // Definition-list terms and descriptions compile to readable paragraph
+    // elements while retaining their authored ARIA/source role. Match that
+    // metadata directly so callers can target one side of a definition list
+    // without selecting every paragraph on the page.
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "term"
+            | "terms"
+            | "dt"
+            | "definition-term"
+            | "definition-terms"
+            | "definition"
+            | "definitions"
+            | "dd"
+            | "description"
+            | "descriptions"
+            | "definition-description"
+            | "definition-descriptions"
+    ) {
+        let source_role = if matches!(
+            selector.to_ascii_lowercase().as_str(),
+            "term" | "terms" | "dt" | "definition-term" | "definition-terms"
+        ) {
+            "term"
+        } else {
+            "definition"
+        };
+        return filter_som_elements(som, selector, |element| {
+            has_source_role(element, source_role)
         });
     }
 
@@ -2601,6 +2636,52 @@ mod tests {
         let filtered = apply_selector(&som, "feed");
         assert_eq!(filtered.regions.len(), som.regions.len());
         assert_eq!(filtered.regions[0].elements.len(), som.regions[0].elements.len());
+    }
+
+    #[test]
+    fn test_selector_definition_list_source_role_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].attrs = Some(serde_json::json!({"source_role": "term"}));
+        som.regions[0].elements.push(Element {
+            id: "e-definition".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Meaning".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"source_role": "definition"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for (selector, source_role) in [
+            ("term", "term"),
+            ("terms", "term"),
+            ("dt", "term"),
+            ("definition-term", "term"),
+            ("definition-terms", "term"),
+            ("definition", "definition"),
+            ("definitions", "definition"),
+            ("dd", "definition"),
+            ("description", "definition"),
+            ("descriptions", "definition"),
+            ("definition-description", "definition"),
+            ("definition-descriptions", "definition"),
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0]
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("source_role"))
+                    .and_then(serde_json::Value::as_str),
+                Some(source_role),
+                "selector: {selector}"
+            );
+        }
     }
 
     #[test]
