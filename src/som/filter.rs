@@ -74,7 +74,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `definition_terms` / `description` / `descriptions` /
 ///   `definition-description` / `definition-descriptions` /
 ///   `definition_description` / `definition_descriptions` /
-///   `emphasis` / `strong` /
+///   `emphasis` / `strong` / `log` / `marquee` / `timer` /
 ///   `blockquote` / `quote` / `output` /
 ///   `outputs` / `alert` /
 ///   `alerts` / `status` / `statuses` / `tooltip` /
@@ -1045,7 +1045,8 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "emphasis" | "emphases" | "strong" | "strongs" | "blockquote" | "blockquotes" | "quote" | "quotes"
         | "output" | "outputs"
         | "alert" | "alerts" | "status" | "statuses" | "tooltip"
-        | "tooltips" => {
+        | "tooltips" | "log" | "logs" | "marquee" | "marquees" | "timer"
+        | "timers" => {
             Some(ElementRole::Paragraph)
         }
         "article" | "articles" | "content" | "contents" | "region" | "regions"
@@ -2454,6 +2455,20 @@ mod tests {
             "menu-item-radios",
         ] {
             assert_eq!(parse_element_role(selector), Some(ElementRole::Radio));
+        }
+    }
+
+    #[test]
+    fn test_selector_live_region_role_aliases_match_compiled_paragraphs() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::Paragraph;
+        som.regions[0].elements[0].attrs = Some(serde_json::json!({"source_role": "log"}));
+
+        for selector in ["log", "logs", "marquee", "marquees", "timer", "timers"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
     }
 
