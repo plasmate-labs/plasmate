@@ -57,6 +57,11 @@ class TestExtractLastJson:
         result = _extract_last_json(text)
         assert result == {"code": "if (x) { y }", "valid": True}
 
+    def test_embedded_nested_object_returns_enclosing_payload(self):
+        """A wrapped response must not be reduced to its last nested object."""
+        text = 'INFO: result = {"meta": {"count": 42}, "ok": true} [finished]'
+        assert _extract_last_json(text) == {"meta": {"count": 42}, "ok": True}
+
     def test_empty_string(self):
         assert _extract_last_json("") is None
 
