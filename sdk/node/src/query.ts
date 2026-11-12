@@ -616,7 +616,8 @@ function normalizeSelectorText(value: string): string {
   if (normalized.length >= 2) {
     const first = normalized[0];
     const last = normalized[normalized.length - 1];
-    if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+    if ((first === '"' && last === '"') || (first === "'" && last === "'") ||
+      (first === '`' && last === '`')) {
       return normalizeLabelText(normalized.slice(1, -1));
     }
   }
