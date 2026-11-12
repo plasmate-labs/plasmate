@@ -1142,6 +1142,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 },
                 "javascript": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
                 },
                 "selector": {
@@ -7311,7 +7312,11 @@ mod tests {
 
     #[test]
     fn selector_tool_summaries_document_heading_aliases() {
-        for definition in [fetch_page_definition(), extract_text_definition()] {
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+        ] {
             assert!(definition
                 .description
                 .contains("hyphenated, underscored, or spaced forms"));
