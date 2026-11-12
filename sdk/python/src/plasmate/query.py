@@ -150,13 +150,13 @@ def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomEleme
     normalized_label = _normalize_label_text(label)
     if not normalized_label:
         return results
-    folded_label = normalized_label.lower()
+    folded_label = normalized_label.casefold()
     for element in flat_elements(som):
         labels = _label_candidates(element)
         if (exact and any(normalized_label == _normalize_label_text(value) for value in labels)) or (
             not exact
             and any(
-                folded_label in _normalize_label_text(value).lower() for value in labels
+                folded_label in _normalize_label_text(value).casefold() for value in labels
             )
         ):
             results.append(element)
@@ -847,14 +847,14 @@ def find_action_target(
         found = index["by_label"].get(normalized_value)
         if found is not None:
             return found
-        folded_value = normalized_value.lower()
+        folded_value = normalized_value.casefold()
         plan = get_enabled_action_plan(som) if enabled_only else get_action_plan(som)
         return next(
             (
                 item
                 for item in plan
                 if isinstance(item.get("label"), str)
-                and _normalize_label_text(item["label"]).lower() == folded_value
+                and _normalize_label_text(item["label"]).casefold() == folded_value
             ),
             None,
         )
@@ -890,7 +890,7 @@ def find_action_targets_by_label(
     normalized_label = _normalize_label_text(label)
     if not normalized_label:
         return results
-    folded_label = normalized_label.lower()
+    folded_label = normalized_label.casefold()
     for item in plan:
         item_label = item.get("label")
         if not isinstance(item_label, str):
@@ -898,7 +898,7 @@ def find_action_targets_by_label(
         if exact:
             if normalized_label == _normalize_label_text(item_label):
                 results.append(item)
-        elif folded_label in _normalize_label_text(item_label).lower():
+        elif folded_label in _normalize_label_text(item_label).casefold():
             results.append(item)
     return results
 
@@ -1214,7 +1214,7 @@ def find_action_targets_by_action(
     aliases are normalized only for this lookup.
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
-    normalized_action = " ".join(action.strip().lower().split())
+    normalized_action = " ".join(action.strip().casefold().split())
     if (
         len(normalized_action) >= 2
         and normalized_action[0] == normalized_action[-1]
@@ -1243,8 +1243,8 @@ def find_action_targets_by_action(
         for item in plan:
             button_type = item.get("button_type")
             matches_submitter = isinstance(button_type, str) and (
-                button_type.lower() == normalized_action
-                or (normalized_action == "submit" and button_type.lower() == "image")
+                button_type.casefold() == normalized_action
+                or (normalized_action == "submit" and button_type.casefold() == "image")
             )
             if matches_submitter and item.get("id") not in seen_ids:
                 results.append(item)
@@ -1367,7 +1367,7 @@ def get_compression_ratio(som: Union[Som, dict]) -> float:
 
 def _normalize_role_alias(value: str) -> str:
     """Normalize role aliases so hyphenated and spaced forms behave alike."""
-    normalized = " ".join(value.strip().lower().split())
+    normalized = " ".join(value.strip().casefold().split())
     if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'":
         normalized = normalized[1:-1].strip()
     if normalized.startswith("role"):
@@ -1526,7 +1526,7 @@ def _collect_by_text(
         (
             _normalize_label_text(part) == normalized_text
             if exact
-            else normalized_text.lower() in _normalize_label_text(part).lower()
+            else normalized_text.casefold() in _normalize_label_text(part).casefold()
         )
         for part in parts
     ):

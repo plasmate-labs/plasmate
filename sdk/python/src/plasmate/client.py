@@ -26,9 +26,9 @@ def _extract_last_json(text: str) -> Any:
     2. **Line scan** — try each non-empty line from the end.  Handles output
        where a progress/info line precedes the JSON on a separate line, including
        valid scalar JSON results such as ``true`` or ``"ok"``.
-    3. **Brace walk** — scan for every ``{`` position right-to-left and call
-       ``raw_decode`` at each.  Handles JSON embedded within a longer string
-       (e.g. a log message that includes the serialised response).
+    3. **Brace walk** — scan every object or array start and keep the complete
+       candidate that ends furthest right. Handles nested JSON embedded within
+       a longer string (e.g. a log message containing the serialized response).
 
     Returns the parsed value (usually a ``dict``), or ``None`` if no valid JSON
     object is found.  Malformed or absent JSON silently returns ``None`` rather
@@ -57,17 +57,25 @@ def _extract_last_json(text: str) -> Any:
             pass
 
     # Phase 3: JSON embedded inside a longer string — try raw_decode from each
-    # object or array position, rightmost first, so we return the *last*
-    # complete payload.
+    # object or array position and keep the candidate that ends furthest to the
+    # right. Scanning right-to-left would return a nested object before its
+    # enclosing response when logs wrap a serialized payload.
     decoder = json.JSONDecoder()
-    for pos in reversed(
-        [i for i, ch in enumerate(stripped) if ch in ("{", "[")]
-    ):
+    last_value = None
+    last_end = -1
+    for pos, ch in enumerate(stripped):
+        if ch not in ("{", "["):
+            continue
         try:
-            value, _ = decoder.raw_decode(stripped, pos)
-            return value
+            value, end = decoder.raw_decode(stripped, pos)
         except (json.JSONDecodeError, ValueError):
             continue
+        if end >= last_end:
+            last_value = value
+            last_end = end
+
+    if last_end >= 0:
+        return last_value
 
     return None
 
