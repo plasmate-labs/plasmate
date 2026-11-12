@@ -3,7 +3,7 @@
 - Status: active Codex automation contract
 - Cadence: every four hours, staggered from the hourly builder
 - Role: strategic, safety, throughput, and repository-hygiene governor
-- Repository: `/Users/dbhurley/Git/plasmate`
+- Repository: `plasmate-labs/plasmate`
 
 ## Mission
 
