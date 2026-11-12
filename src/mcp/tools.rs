@@ -1277,7 +1277,7 @@ pub async fn handle_crawl_policy(arguments: &Value) -> Value {
 pub fn inspect_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "inspect_page".to_string(),
-        description: "Inspect a page through a bounded compact SOM first, then optionally attach a hardened offline-rendered screenshot. JavaScript is off by default; javascript=true executes it in a supervised worker with bounded source-HTML fallback on containment failure. visual_mode='auto' captures only for named structural insufficiency signals; 'never' only recommends; 'always' explicitly requests pixels. Plasmate does not perform vision-model interpretation, and visual failure never discards the SOM.".to_string(),
+        description: "Inspect a page through a bounded compact SOM first, then optionally attach a hardened offline-rendered screenshot. For large pages, start with selector='landmark' to inventory regions, then use selector='main' or another targeted selector before requesting pixels. JavaScript is off by default; javascript=true executes it in a supervised worker with bounded source-HTML fallback on containment failure. visual_mode='auto' captures only for named structural insufficiency signals; 'never' only recommends; 'always' explicitly requests pixels. Plasmate does not perform vision-model interpretation, and visual failure never discards the SOM.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -7094,6 +7094,14 @@ mod tests {
                 definition.name
             );
         }
+    }
+
+    #[test]
+    fn inspect_page_description_teaches_landmark_then_targeted_inspection() {
+        let description = inspect_page_definition().description;
+        assert!(description.contains("selector='landmark'"));
+        assert!(description.contains("selector='main'"));
+        assert!(description.contains("before requesting pixels"));
     }
 
     #[test]
