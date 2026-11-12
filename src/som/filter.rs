@@ -179,103 +179,34 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Try to match a region role
     let role_opt: Option<RegionRole> = match selector.to_lowercase().as_str() {
-        "main"
-        | "main_content"
-        | "main_contents"
-        | "main-content"
-        | "main-contents"
-        | "main content"
-        | "main contents"
-        | "main_region"
-        | "main-region"
-        | "main region"
-        | "main_regions"
-        | "main-regions"
-        | "main regions"
-        | "maincontent"
-        | "maincontents" => Some(RegionRole::Main),
-        "nav"
-        | "navs"
-        | "navigation"
-        | "navigations"
-        | "nav_region"
-        | "nav-region"
-        | "nav region"
-        | "nav_regions"
-        | "nav-regions"
-        | "nav regions"
-        | "navigation_region"
-        | "navigation-region"
-        | "navigation region"
-        | "navigation_regions"
-        | "navigation-regions"
-        | "navigation regions"
-        | "search"
-        | "searches"
-        | "search_nav"
-        | "search-nav"
-        | "search_navigation"
-        | "search-navigation"
-        | "search navigation"
-        | "search_navigations"
-        | "search-navigations"
-        | "search navigations" =>
-        {
+        "main" | "main_content" | "main_contents" | "main-content" | "main-contents"
+        | "main content" | "main contents" | "main_region" | "main-region" | "main region"
+        | "main_regions" | "main-regions" | "main regions" | "maincontent" | "maincontents" => {
+            Some(RegionRole::Main)
+        }
+        "nav" | "navs" | "navigation" | "navigations" | "nav_region" | "nav-region"
+        | "nav region" | "nav_regions" | "nav-regions" | "nav regions" | "navigation_region"
+        | "navigation-region" | "navigation region" | "navigation_regions"
+        | "navigation-regions" | "navigation regions" | "search" | "searches" | "search_nav"
+        | "search-nav" | "search_navigation" | "search-navigation" | "search navigation"
+        | "search_navigations" | "search-navigations" | "search navigations" => {
             Some(RegionRole::Navigation)
         }
-        "aside"
-        | "asides"
-        | "sidebar"
-        | "sidebars"
-        | "complementary"
-        | "complementaries" => {
+        "aside" | "asides" | "sidebar" | "sidebars" | "complementary" | "complementaries" => {
             Some(RegionRole::Aside)
         }
         "header" | "headers" | "banner" | "banners" => Some(RegionRole::Header),
-        "footer"
-        | "footers"
-        | "contentinfo"
-        | "contentinfos"
-        | "content_info"
-        | "content_infos"
-        | "content-info"
-        | "content-infos"
-        | "content info"
-        | "content infos" =>
-        {
+        "footer" | "footers" | "contentinfo" | "contentinfos" | "content_info"
+        | "content_infos" | "content-info" | "content-infos" | "content info" | "content infos" => {
             Some(RegionRole::Footer)
         }
         "form" | "forms" => Some(RegionRole::Form),
-        "dialog"
-        | "dialogs"
-        | "modal"
-        | "modals"
-        | "popup"
-        | "popups"
-        | "pop-up"
-        | "pop-ups"
-        | "alertdialog"
-        | "alertdialogs"
-        | "alert_dialog"
-        | "alert_dialogs"
-        | "alert-dialog"
-        | "alert-dialogs"
-        | "alert dialog"
-        | "alert dialogs" => Some(RegionRole::Dialog),
-        "content"
-        | "contents"
-        | "article"
-        | "articles"
-        | "region"
-        | "regions"
-        | "content_region"
-        | "content-region"
-        | "content region"
-        | "content_regions"
-        | "content-regions"
-        | "content regions" => {
-            Some(RegionRole::Content)
-        }
+        "dialog" | "dialogs" | "modal" | "modals" | "popup" | "popups" | "pop-up" | "pop-ups"
+        | "alertdialog" | "alertdialogs" | "alert_dialog" | "alert_dialogs" | "alert-dialog"
+        | "alert-dialogs" | "alert dialog" | "alert dialogs" => Some(RegionRole::Dialog),
+        "content" | "contents" | "article" | "articles" | "region" | "regions"
+        | "content_region" | "content-region" | "content region" | "content_regions"
+        | "content-regions" | "content regions" => Some(RegionRole::Content),
         _ => None,
     };
 
@@ -364,26 +295,24 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // source-facing selector useful for both compiled forms without treating
     // every text input or paragraph as a time value.
     if selector.eq_ignore_ascii_case("time") || selector.eq_ignore_ascii_case("times") {
-        return filter_som_elements(som, selector, |element| {
-            match element.role {
-                ElementRole::Paragraph => element.attrs.as_ref().is_some_and(|attrs| {
-                    attrs
-                        .get("source_tag")
+        return filter_som_elements(som, selector, |element| match element.role {
+            ElementRole::Paragraph => element.attrs.as_ref().is_some_and(|attrs| {
+                attrs
+                    .get("source_tag")
+                    .and_then(serde_json::Value::as_str)
+                    .is_some_and(|tag| tag.eq_ignore_ascii_case("time"))
+                    || attrs
+                        .get("source_role")
                         .and_then(serde_json::Value::as_str)
-                        .is_some_and(|tag| tag.eq_ignore_ascii_case("time"))
-                        || attrs
-                            .get("source_role")
-                            .and_then(serde_json::Value::as_str)
-                            .is_some_and(|role| role.eq_ignore_ascii_case("time"))
-                }),
-                ElementRole::TextInput => element.attrs.as_ref().is_some_and(|attrs| {
-                    attrs
-                        .get("input_type")
-                        .and_then(serde_json::Value::as_str)
-                        .is_some_and(|input_type| input_type.eq_ignore_ascii_case("time"))
-                }),
-                _ => false,
-            }
+                        .is_some_and(|role| role.eq_ignore_ascii_case("time"))
+            }),
+            ElementRole::TextInput => element.attrs.as_ref().is_some_and(|attrs| {
+                attrs
+                    .get("input_type")
+                    .and_then(serde_json::Value::as_str)
+                    .is_some_and(|input_type| input_type.eq_ignore_ascii_case("time"))
+            }),
+            _ => false,
         });
     }
 
@@ -452,9 +381,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // the generic SOM list role. Match that source role directly so `feed`
     // does not accidentally select ordinary lists.
     if matches!(selector.to_ascii_lowercase().as_str(), "feed" | "feeds") {
-        return filter_som_elements(som, selector, |element| {
-            has_source_role(element, "feed")
-        });
+        return filter_som_elements(som, selector, |element| has_source_role(element, "feed"));
     }
 
     // Definition-list terms and descriptions compile to readable paragraph
@@ -661,40 +588,12 @@ fn is_media_element(element: &Element) -> bool {
 
 fn media_source_role(selector: &str) -> Option<&'static str> {
     match selector.to_ascii_lowercase().as_str() {
-        "audio"
-        | "audios"
-        | "audio_item"
-        | "audio-item"
-        | "audio item"
-        | "audioitem"
-        | "audio_items"
-        | "audio-items"
-        | "audio items"
-        | "audioitems" => {
-            Some("audio")
-        }
-        "video"
-        | "videos"
-        | "video_item"
-        | "video-item"
-        | "video item"
-        | "videoitem"
-        | "video_items"
-        | "video-items"
-        | "video items"
-        | "videoitems" => {
-            Some("video")
-        }
-        "canvas"
-        | "canvases"
-        | "canvas_item"
-        | "canvas-item"
-        | "canvas item"
-        | "canvasitem"
-        | "canvas_items"
-        | "canvas-items"
-        | "canvas items"
-        | "canvasitems" => Some("canvas"),
+        "audio" | "audios" | "audio_item" | "audio-item" | "audio item" | "audioitem"
+        | "audio_items" | "audio-items" | "audio items" | "audioitems" => Some("audio"),
+        "video" | "videos" | "video_item" | "video-item" | "video item" | "videoitem"
+        | "video_items" | "video-items" | "video items" | "videoitems" => Some("video"),
+        "canvas" | "canvases" | "canvas_item" | "canvas-item" | "canvas item" | "canvasitem"
+        | "canvas_items" | "canvas-items" | "canvas items" | "canvasitems" => Some("canvas"),
         _ => None,
     }
 }
@@ -710,15 +609,10 @@ fn live_region_source_role(selector: &str) -> Option<&'static str> {
 
 fn source_specific_group_role(selector: &str) -> Option<&'static str> {
     match selector.to_ascii_lowercase().as_str() {
-        "progress"
-        | "progressbar"
-        | "progress_bar"
-        | "progress-bar"
-        | "progress bar"
-        | "progressbars"
-        | "progress_bars"
-        | "progress-bars"
-        | "progress bars" => Some("progressbar"),
+        "progress" | "progressbar" | "progress_bar" | "progress-bar" | "progress bar"
+        | "progressbars" | "progress_bars" | "progress-bars" | "progress bars" => {
+            Some("progressbar")
+        }
         "meter" | "meters" => Some("meter"),
         _ => None,
     }
@@ -737,15 +631,15 @@ fn elements_contain_source_role(elements: &[Element], source_role: &str) -> bool
                 .children
                 .as_deref()
                 .is_some_and(|children| elements_contain_source_role(children, source_role))
-            || element.shadow.as_ref().is_some_and(|shadow| {
-                elements_contain_source_role(&shadow.elements, source_role)
-            })
+            || element
+                .shadow
+                .as_ref()
+                .is_some_and(|shadow| elements_contain_source_role(&shadow.elements, source_role))
     })
 }
 
 fn is_source_role_element(element: &Element, source_role: &str) -> bool {
-    element.role == ElementRole::Group
-        && has_source_role(element, source_role)
+    element.role == ElementRole::Group && has_source_role(element, source_role)
 }
 
 fn has_source_role(element: &Element, source_role: &str) -> bool {
@@ -766,9 +660,7 @@ fn parse_heading_level_selector(selector: &str) -> Option<u8> {
     if level_suffix.len() > 1 && level_suffix.starts_with('0') {
         return None;
     }
-    let level = level_suffix
-        .parse::<u8>()
-        .ok()?;
+    let level = level_suffix.parse::<u8>().ok()?;
     (1..=6).contains(&level).then_some(level)
 }
 
@@ -786,11 +678,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
 fn element_matches_label(element: &Element, label: &str) -> bool {
     let matches = |value: &str| normalize_label_text(value).contains(label);
 
-    if element
-        .label
-        .as_deref()
-        .is_some_and(matches)
-        || element.text.as_deref().is_some_and(matches)
+    if element.label.as_deref().is_some_and(matches) || element.text.as_deref().is_some_and(matches)
     {
         return true;
     }
@@ -804,23 +692,24 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
             "description",
             "aria-description",
         ]
-            .into_iter()
-            .any(|key| {
-                attrs
-                    .get(key)
-                    .and_then(serde_json::Value::as_str)
-                    .is_some_and(matches)
-            })
-            || attrs
-                .get("aria")
-                .and_then(serde_json::Value::as_object)
-                .is_some_and(|aria| {
-                    ["label", "description"].into_iter().any(|key| {
+        .into_iter()
+        .any(|key| {
+            attrs
+                .get(key)
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(matches)
+        }) || attrs
+            .get("aria")
+            .and_then(serde_json::Value::as_object)
+            .is_some_and(|aria| {
+                ["label", "description", "aria-label", "aria-description"]
+                    .into_iter()
+                    .any(|key| {
                         aria.get(key)
                             .and_then(serde_json::Value::as_str)
                             .is_some_and(matches)
                     })
-                })
+            })
     })
 }
 
@@ -864,7 +753,11 @@ fn filter_som_by_label(som: &Som, selector: &str, label: &str) -> Som {
 }
 
 fn normalize_label_text(value: &str) -> String {
-    value.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase()
+    value
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
 }
 
 fn heading_compiled_level(element: &Element) -> Option<u8> {
@@ -890,99 +783,32 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         .replace(['-', ' '], "_")
         .as_str()
     {
-        "link"
-        | "links"
-        | "a"
-        | "area"
-        | "areas"
-        | "anchor"
-        | "anchors"
-        | "hyperlink"
-        | "hyperlinks" => {
-            Some(ElementRole::Link)
-        }
+        "link" | "links" | "a" | "area" | "areas" | "anchor" | "anchors" | "hyperlink"
+        | "hyperlinks" => Some(ElementRole::Link),
         // These ARIA widget roles compile to the SOM's button role, so expose
         // the same selector aliases instead of making callers know the
         // normalized representation.
-        "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "menu_items"
-        | "option" | "options" | "tab" | "tabs" | "treeitem" | "treeitems"
-        | "tree_item" | "tree_items" => {
+        "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "menu_items" | "option"
+        | "options" | "tab" | "tabs" | "treeitem" | "treeitems" | "tree_item" | "tree_items" => {
             Some(ElementRole::Button)
         }
         // HTML input types compile to the same SOM role. Accept their names
         // here so callers can target the controls using the source markup's
         // vocabulary without knowing the normalized role.
-        "text_input"
-        | "text_inputs"
-        | "textbox"
-        | "textboxes"
-        | "text_box"
-        | "text_boxes"
-        | "text_field"
-        | "text_fields"
-        | "textinput"
-        | "textinputs"
-        | "textfields"
-        | "searchbox"
-        | "searchboxes"
-        | "slider"
-        | "sliders"
-        | "spinbutton"
-        | "spinbuttons"
-        | "spin_button"
-        | "spin_buttons"
-        | "input"
-        | "text"
-        | "search"
-        | "search_input"
-        | "search_inputs"
-        | "search_control"
-        | "search_controls"
-        | "search_field"
-        | "search_fields"
-        | "search_box"
-        | "search_boxes"
-        | "query_input"
-        | "query_inputs"
-        | "queries"
-        | "query"
-        | "query_field"
-        | "query_fields"
-        | "query_control"
-        | "query_controls"
-        | "querybox"
-        | "query_box"
-        | "queryboxes"
-        | "query_boxes"
-        | "inputs"
-        | "email"
-        | "number"
-        | "password"
-        | "tel"
-        | "url"
-        | "date"
-        | "datetime"
-        | "datetime_local"
-        | "date_time"
-        | "date_time_local"
-        | "month"
-        | "time"
-        | "week"
-        | "color"
-        | "range"
-        | "hidden"
-        | "file" => Some(ElementRole::TextInput),
+        "text_input" | "text_inputs" | "textbox" | "textboxes" | "text_box" | "text_boxes"
+        | "text_field" | "text_fields" | "textinput" | "textinputs" | "textfields"
+        | "searchbox" | "searchboxes" | "slider" | "sliders" | "spinbutton" | "spinbuttons"
+        | "spin_button" | "spin_buttons" | "input" | "text" | "search" | "search_input"
+        | "search_inputs" | "search_control" | "search_controls" | "search_field"
+        | "search_fields" | "search_box" | "search_boxes" | "query_input" | "query_inputs"
+        | "queries" | "query" | "query_field" | "query_fields" | "query_control"
+        | "query_controls" | "querybox" | "query_box" | "queryboxes" | "query_boxes" | "inputs"
+        | "email" | "number" | "password" | "tel" | "url" | "date" | "datetime"
+        | "datetime_local" | "date_time" | "date_time_local" | "month" | "time" | "week"
+        | "color" | "range" | "hidden" | "file" => Some(ElementRole::TextInput),
         "textarea" | "textareas" | "text_area" | "text_areas" => Some(ElementRole::Textarea),
-        "select"
-        | "selects"
-        | "combobox"
-        | "comboboxes"
-        | "combo_box"
-        | "combo_boxes"
-        | "listbox"
-        | "listboxes"
-        | "list_box"
-        | "list_boxes" => Some(ElementRole::Select),
+        "select" | "selects" | "combobox" | "comboboxes" | "combo_box" | "combo_boxes"
+        | "listbox" | "listboxes" | "list_box" | "list_boxes" => Some(ElementRole::Select),
         "checkbox"
         | "checkboxes"
         | "check_box"
@@ -996,144 +822,46 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "menu-item-checkbox"
         | "menu-item-checkboxes"
         | "menu_item_checkbox"
-        | "menu_item_checkboxes" => {
-            Some(ElementRole::Checkbox)
-        }
-        "radio"
-        | "radios"
-        | "radiobutton"
-        | "radiobuttons"
-        | "radio-button"
-        | "radio-buttons"
-        | "radio_button"
-        | "radio_buttons"
-        | "menuitemradio"
-        | "menuitemradios"
-        | "menuitem_radio"
-        | "menuitem_radios"
-        | "menu-item-radio"
-        | "menu-item-radios"
-        | "menu_item_radio"
-        | "menu_item_radios" => Some(ElementRole::Radio),
+        | "menu_item_checkboxes" => Some(ElementRole::Checkbox),
+        "radio" | "radios" | "radiobutton" | "radiobuttons" | "radio-button" | "radio-buttons"
+        | "radio_button" | "radio_buttons" | "menuitemradio" | "menuitemradios"
+        | "menuitem_radio" | "menuitem_radios" | "menu-item-radio" | "menu-item-radios"
+        | "menu_item_radio" | "menu_item_radios" => Some(ElementRole::Radio),
         "heading" | "headings" => Some(ElementRole::Heading),
-        "image"
-        | "images"
-        | "img"
-        | "picture"
-        | "pictures"
-        | "image_item"
-        | "image-item"
-        | "image item"
-        | "imageitem"
-        | "image_items"
-        | "image-items"
-        | "image items"
+        "image" | "images" | "img" | "picture" | "pictures" | "image_item" | "image-item"
+        | "image item" | "imageitem" | "image_items" | "image-items" | "image items"
         | "imageitems" => Some(ElementRole::Image),
-        "list"
-        | "lists"
-        | "ul"
-        | "ol"
-        | "dl"
-        | "menu"
-        | "feed"
-        | "feeds"
-        | "unordered_list"
-        | "ordered_list"
-        | "definition_list"
-        | "definition_lists"
-        | "definition-list"
-        | "definition-lists"
-        | "definition list"
-        | "definition lists" => Some(ElementRole::List),
-        "table"
-        | "tables"
-        | "data_table"
-        | "data_tables"
-        | "data-table"
-        | "data-tables"
-        | "data table"
-        | "data tables"
-        | "grid"
-        | "grids"
-        | "data_grid"
-        | "data_grids"
-        | "datagrid"
-        | "datagrids"
-        | "data-grid"
-        | "data-grids"
-        | "data grid"
-        | "data grids"
-        | "table_grid"
-        | "table_grids"
-        | "tablegrid"
-        | "tablegrids"
-        | "table-grid"
-        | "table-grids"
-        | "table grid"
-        | "table grids"
-        | "tree_grid"
-        | "tree_grids"
-        | "tree-grid"
-        | "tree-grids"
-        | "tree grid"
-        | "tree grids"
-        | "treegrid"
-        | "treegrids" => Some(ElementRole::Table),
+        "list" | "lists" | "ul" | "ol" | "dl" | "menu" | "feed" | "feeds" | "unordered_list"
+        | "ordered_list" | "definition_list" | "definition_lists" | "definition-list"
+        | "definition-lists" | "definition list" | "definition lists" => Some(ElementRole::List),
+        "table" | "tables" | "data_table" | "data_tables" | "data-table" | "data-tables"
+        | "data table" | "data tables" | "grid" | "grids" | "data_grid" | "data_grids"
+        | "datagrid" | "datagrids" | "data-grid" | "data-grids" | "data grid" | "data grids"
+        | "table_grid" | "table_grids" | "tablegrid" | "tablegrids" | "table-grid"
+        | "table-grids" | "table grid" | "table grids" | "tree_grid" | "tree_grids"
+        | "tree-grid" | "tree-grids" | "tree grid" | "tree grids" | "treegrid" | "treegrids" => {
+            Some(ElementRole::Table)
+        }
         "paragraph" | "paragraphs" | "p" | "abbr" | "address" | "cite" | "code" | "dfn"
-        | "figcaption" | "kbd" | "math" | "pre" | "q" | "ruby" | "samp" | "small" | "var"
-        | "s" | "ins" | "del" | "mark" | "subscript" | "superscript" | "deletion"
-        | "insertion" | "suggestion" | "definition" | "definitions" | "term" | "terms"
-        | "emphasis" | "emphases" | "strong" | "strongs" | "blockquote" | "blockquotes" | "quote" | "quotes"
-        | "output" | "outputs"
-        | "alert" | "alerts" | "status" | "statuses" | "tooltip"
-        | "tooltips" | "log" | "logs" | "marquee" | "marquees" | "timer"
-        | "timers" => {
+        | "figcaption" | "kbd" | "math" | "pre" | "q" | "ruby" | "samp" | "small" | "var" | "s"
+        | "ins" | "del" | "mark" | "subscript" | "superscript" | "deletion" | "insertion"
+        | "suggestion" | "definition" | "definitions" | "term" | "terms" | "emphasis"
+        | "emphases" | "strong" | "strongs" | "blockquote" | "blockquotes" | "quote" | "quotes"
+        | "output" | "outputs" | "alert" | "alerts" | "status" | "statuses" | "tooltip"
+        | "tooltips" | "log" | "logs" | "marquee" | "marquees" | "timer" | "timers" => {
             Some(ElementRole::Paragraph)
         }
         "article" | "articles" | "content" | "contents" | "region" | "regions"
         | "content_region" | "content_regions" | "section" | "sections" => {
             Some(ElementRole::Section)
         }
-        "group"
-        | "groups"
-        | "div"
-        | "fieldset"
-        | "fieldsets"
-        | "figure"
-        | "figures"
-        | "radiogroup"
-        | "radiogroups"
-        | "radio_group"
-        | "radio_groups"
-        | "radio-group"
-        | "radio-groups"
-        | "radio group"
-        | "radio groups"
-        | "progress"
-        | "progressbar"
-        | "progress_bar"
-        | "progress-bar"
-        | "progress bar"
-        | "progressbars"
-        | "progress_bars"
-        | "progress-bars"
-        | "progress bars"
-        | "meter"
-        | "meters"
-        | "audio"
-        | "audios"
-        | "audio_item"
-        | "audio-item"
-        | "audio_items"
-        | "audio-items"
-        | "video"
-        | "videos"
-        | "video_item"
-        | "video-item"
-        | "video_items"
-        | "video-items"
-        | "canvas"
-        | "canvases" => {
+        "group" | "groups" | "div" | "fieldset" | "fieldsets" | "figure" | "figures"
+        | "radiogroup" | "radiogroups" | "radio_group" | "radio_groups" | "radio-group"
+        | "radio-groups" | "radio group" | "radio groups" | "progress" | "progressbar"
+        | "progress_bar" | "progress-bar" | "progress bar" | "progressbars" | "progress_bars"
+        | "progress-bars" | "progress bars" | "meter" | "meters" | "audio" | "audios"
+        | "audio_item" | "audio-item" | "audio_items" | "audio-items" | "video" | "videos"
+        | "video_item" | "video-item" | "video_items" | "video-items" | "canvas" | "canvases" => {
             Some(ElementRole::Group)
         }
         "separator" | "separators" | "hr" => Some(ElementRole::Separator),
@@ -1445,7 +1173,11 @@ mod tests {
         for selector in ["alerts", "statuses", "tooltips"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
     }
@@ -1459,13 +1191,23 @@ mod tests {
         for selector in ["label:billing", "label=\"BILLING ADDRESS\""] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("intro"));
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
+            assert_eq!(
+                filtered.regions[0].elements[0].html_id.as_deref(),
+                Some("intro")
+            );
         }
 
         let filtered = apply_selector(&som, "label:save");
         assert_eq!(filtered.regions.len(), 1);
-        assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("save"));
+        assert_eq!(
+            filtered.regions[0].elements[0].html_id.as_deref(),
+            Some("save")
+        );
     }
 
     #[test]
@@ -1620,7 +1362,10 @@ mod tests {
         let filtered = apply_selector(&som, "label=ACCOUNT FILTERS");
 
         assert_eq!(filtered.regions.len(), 1);
-        assert_eq!(filtered.regions[0].label.as_deref(), Some("Account\n  filters"));
+        assert_eq!(
+            filtered.regions[0].label.as_deref(),
+            Some("Account\n  filters")
+        );
         assert_eq!(filtered.regions[0].elements.len(), 2);
     }
 
@@ -1777,7 +1522,11 @@ mod tests {
         for selector in ["area", "areas", "role=area", "role:areas"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Link);
         }
     }
@@ -1789,7 +1538,11 @@ mod tests {
         for selector in ["s", "role=s", "ins", "role=ins", "del", "role:del", "mark"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
     }
@@ -1900,12 +1653,30 @@ mod tests {
         let som = make_test_som();
 
         for selector in [
-            "abbr", "address", "cite", "code", "dfn", "figcaption", "kbd", "math", "pre",
-            "q", "ruby", "samp", "small", "var", "role=code", "role:var",
+            "abbr",
+            "address",
+            "cite",
+            "code",
+            "dfn",
+            "figcaption",
+            "kbd",
+            "math",
+            "pre",
+            "q",
+            "ruby",
+            "samp",
+            "small",
+            "var",
+            "role=code",
+            "role:var",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
     }
@@ -1925,7 +1696,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
     }
@@ -1946,7 +1721,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
     }
@@ -1978,7 +1757,10 @@ mod tests {
                 "selector: {selector}"
             );
             assert!(filtered.regions.iter().all(|region| {
-                region.elements.iter().all(|element| element.role.is_interactive())
+                region
+                    .elements
+                    .iter()
+                    .all(|element| element.role.is_interactive())
             }));
         }
     }
@@ -2049,7 +1831,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
         }
     }
@@ -2062,7 +1848,11 @@ mod tests {
         for selector in ["queryboxes", "query_boxes", "query-boxes", "query boxes"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
         }
     }
@@ -2085,7 +1875,11 @@ mod tests {
             som.regions[0].elements[0].role = ElementRole::Select;
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Select);
         }
     }
@@ -2093,7 +1887,11 @@ mod tests {
     #[test]
     fn test_selector_accepts_spaced_compound_element_roles() {
         let mut som = make_test_som();
-        for element in som.regions.iter_mut().flat_map(|region| region.elements.iter_mut()) {
+        for element in som
+            .regions
+            .iter_mut()
+            .flat_map(|region| region.elements.iter_mut())
+        {
             element.role = ElementRole::Paragraph;
         }
         som.regions[0].elements[0].role = ElementRole::TextInput;
@@ -2107,8 +1905,15 @@ mod tests {
             som.regions[0].elements[0].role = role.clone();
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements[0].role, role, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
+            assert_eq!(
+                filtered.regions[0].elements[0].role, role,
+                "selector: {selector}"
+            );
         }
     }
 
@@ -2144,7 +1949,11 @@ mod tests {
             som.regions[0].elements[0].role = role.clone();
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, role);
         }
     }
@@ -2191,7 +2000,11 @@ mod tests {
             som.regions[1].elements[0].role = ElementRole::Group;
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Group);
         }
     }
@@ -2334,7 +2147,11 @@ mod tests {
         for selector in ["feed", "feeds"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::List);
         }
     }
@@ -2347,7 +2164,11 @@ mod tests {
         for selector in ["picture", "pictures"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
         }
     }
@@ -2369,7 +2190,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
         }
     }
@@ -2382,7 +2207,11 @@ mod tests {
         for selector in ["media", "media_items", "media-items", "mediaitems"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
         }
     }
@@ -2395,7 +2224,11 @@ mod tests {
         for selector in ["media_item", "media-item", "media item", "mediaitem"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Image);
         }
     }
@@ -2444,7 +2277,10 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.iter().flat_map(|r| &r.elements).count(), 1);
-            assert_eq!(filtered.regions[0].elements[0].role, role, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0].role, role,
+                "selector: {selector}"
+            );
         }
     }
 
@@ -2512,7 +2348,11 @@ mod tests {
 
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
     }
@@ -2532,7 +2372,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Checkbox);
         }
 
@@ -2548,7 +2392,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Radio);
         }
     }
@@ -2561,7 +2409,11 @@ mod tests {
         for selector in ["alert", "status", "tooltip"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Paragraph);
         }
     }
@@ -2605,7 +2457,10 @@ mod tests {
         let filtered = apply_selector(&som, "#IntroPanel");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
-        assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("IntroPanel"));
+        assert_eq!(
+            filtered.regions[0].elements[0].html_id.as_deref(),
+            Some("IntroPanel")
+        );
         assert_eq!(apply_selector(&som, "#intropanel").regions.len(), 2);
     }
 
@@ -2700,7 +2555,11 @@ mod tests {
         for selector in ["feed", "feeds", "role=feed", "role:feeds"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(
                 filtered.regions[0].elements[0]
                     .attrs
@@ -2717,7 +2576,10 @@ mod tests {
         let som = make_test_som();
         let filtered = apply_selector(&som, "feed");
         assert_eq!(filtered.regions.len(), som.regions.len());
-        assert_eq!(filtered.regions[0].elements.len(), som.regions[0].elements.len());
+        assert_eq!(
+            filtered.regions[0].elements.len(),
+            som.regions[0].elements.len()
+        );
     }
 
     #[test]
@@ -2761,7 +2623,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(
                 filtered.regions[0].elements[0]
                     .attrs
@@ -2825,8 +2691,15 @@ mod tests {
         for selector in ["output", "outputs", "role=output"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements[0].id, "e2", "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
+            assert_eq!(
+                filtered.regions[0].elements[0].id, "e2",
+                "selector: {selector}"
+            );
         }
     }
 
@@ -2842,7 +2715,11 @@ mod tests {
         for selector in ["progress_bars", "progress-bars", "progress bars"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(
                 filtered.regions[0].elements[0]
                     .attrs
@@ -2912,7 +2789,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Table);
         }
     }
@@ -3078,7 +2959,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].id, "e-search");
         }
     }
@@ -3178,7 +3063,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 2, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                2,
+                "selector: {selector}"
+            );
             assert!(filtered.regions[0]
                 .elements
                 .iter()
@@ -3228,7 +3117,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].id, expected_id);
         }
     }
@@ -3305,7 +3198,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].id, "e-datetime");
         }
     }
@@ -3408,6 +3305,19 @@ mod tests {
             apply_selector(&som, "select").regions[0].elements[0].id,
             "e-combo"
         );
+    }
+
+    #[test]
+    fn test_selector_label_matches_hyphenated_nested_aria_description() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "aria": { "aria-description": "Choose a country" }
+        }));
+
+        let filtered = apply_selector(&som, "label:country");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e1");
     }
 
     #[test]
@@ -3530,7 +3440,10 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements[0].id, "e2", "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0].id, "e2",
+                "selector: {selector}"
+            );
         }
     }
 
@@ -3554,12 +3467,22 @@ mod tests {
         for selector in ["type text", "action:type text", "action : type text"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements[0].id, "e2", "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0].id, "e2",
+                "selector: {selector}"
+            );
         }
-        for selector in ["select option", "action:select option", "action : select option"] {
+        for selector in [
+            "select option",
+            "action:select option",
+            "action : select option",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements[0].id, "e-select", "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0].id, "e-select",
+                "selector: {selector}"
+            );
         }
     }
 
@@ -3722,9 +3645,16 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
 
-            assert_eq!(filtered.regions.len(), som.regions.len(), "selector: {selector}");
+            assert_eq!(
+                filtered.regions.len(),
+                som.regions.len(),
+                "selector: {selector}"
+            );
             assert!(
-                filtered.regions.iter().all(|region| region.elements.is_empty()),
+                filtered
+                    .regions
+                    .iter()
+                    .all(|region| region.elements.is_empty()),
                 "selector: {selector}"
             );
             assert_eq!(filtered.meta.element_count, 0, "selector: {selector}");
@@ -3741,7 +3671,11 @@ mod tests {
         for selector in ["query_control", "query-control"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
         }
     }
@@ -3877,7 +3811,11 @@ mod tests {
         for selector in ["article", "role=article"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(
                 filtered.regions[0].elements[0].role,
                 ElementRole::Section,
@@ -3905,7 +3843,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(
                 filtered.regions[0].elements[0].role,
                 ElementRole::Section,
@@ -3948,7 +3890,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].id, "e-grid");
         }
     }
@@ -3986,7 +3932,11 @@ mod tests {
         for selector in ["video", "videos", "video-item", "role=video"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].id, "e-video");
         }
     }
@@ -4043,7 +3993,11 @@ mod tests {
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements.len(),
+                1,
+                "selector: {selector}"
+            );
             assert_eq!(filtered.regions[0].elements[0].id, expected_id);
         }
     }
