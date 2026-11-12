@@ -253,6 +253,9 @@ class TestFindByRole:
         assert [region.id for region in find_by_role(sample_som, "role = 'navigation'")] == [
             "r_navigation"
         ]
+        assert [region.id for region in find_by_role(sample_som, "role = `navigation`")] == [
+            "r_navigation"
+        ]
         for alias in ("content-info", "content-infos", "content_infos"):
             assert [region.id for region in find_by_role(sample_som, alias)] == [
                 "r_footer"

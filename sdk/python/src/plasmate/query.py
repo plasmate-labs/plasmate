@@ -1368,13 +1368,13 @@ def get_compression_ratio(som: Union[Som, dict]) -> float:
 def _normalize_role_alias(value: str) -> str:
     """Normalize role aliases so hyphenated and spaced forms behave alike."""
     normalized = " ".join(value.strip().casefold().split())
-    if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'":
+    if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'`":
         normalized = normalized[1:-1].strip()
     if normalized.startswith("role"):
         remainder = normalized[4:].lstrip()
         if remainder.startswith((":", "=")):
             normalized = remainder[1:].strip()
-    if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'":
+    if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'`":
         normalized = normalized[1:-1].strip()
     return "_".join(normalized.replace("-", " ").split())
 

@@ -512,7 +512,8 @@ func normalizeElementRoleAlias(role string) string {
 func normalizeRoleQuery(value string) string {
 	value = strings.TrimSpace(strings.ToLower(value))
 	if len(value) >= 2 && ((value[0] == '"' && value[len(value)-1] == '"') ||
-		(value[0] == '\'' && value[len(value)-1] == '\'')) {
+		(value[0] == '\'' && value[len(value)-1] == '\'') ||
+		(value[0] == '`' && value[len(value)-1] == '`')) {
 		value = strings.TrimSpace(value[1 : len(value)-1])
 	}
 	if strings.HasPrefix(value, "role") {
@@ -520,7 +521,8 @@ func normalizeRoleQuery(value string) string {
 		if strings.HasPrefix(rest, ":") || strings.HasPrefix(rest, "=") {
 			value = strings.TrimSpace(rest[1:])
 			if len(value) >= 2 && ((value[0] == '"' && value[len(value)-1] == '"') ||
-				(value[0] == '\'' && value[len(value)-1] == '\'')) {
+				(value[0] == '\'' && value[len(value)-1] == '\'') ||
+				(value[0] == '`' && value[len(value)-1] == '`')) {
 				value = strings.TrimSpace(value[1 : len(value)-1])
 			}
 		}

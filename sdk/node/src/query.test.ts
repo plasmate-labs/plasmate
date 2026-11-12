@@ -454,6 +454,7 @@ describe('findByRole', () => {
     assert.deepEqual(findByRole(som, 'role : main').map((region) => region.id), ['r_main']);
     assert.deepEqual(findByRole(som, 'role=navigation').map((region) => region.id), ['r_nav']);
     assert.deepEqual(findByRole(som, "role = 'navigation'").map((region) => region.id), ['r_nav']);
+    assert.deepEqual(findByRole(som, 'role = `navigation`').map((region) => region.id), ['r_nav']);
     assert.deepEqual(findByRole(som, 'navigation').map((region) => region.id), ['r_nav']);
     assert.deepEqual(findByRole(som, 'article').map((region) => region.id), ['r_content']);
     for (const alias of ['content-info', 'content_info', 'content-infos', 'content_infos']) {
