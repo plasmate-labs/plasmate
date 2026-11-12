@@ -3,7 +3,7 @@
 - Status: active Codex automation contract
 - Cadence: hourly, overlap prohibited
 - Role: bounded product-improvement loop
-- Repository: `/Users/dbhurley/Git/plasmate`
+- Repository: `plasmate-labs/plasmate`
 - Source of truth: `plasmate-labs/plasmate` `master`
 
 ## Mission

@@ -144,7 +144,16 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let selector_lower = selector.to_ascii_lowercase();
     let selector = selector_lower
         .strip_prefix("role")
-        .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        .and_then(|rest| {
+            let trimmed = rest.trim_start();
+            trimmed
+                .strip_prefix(['=', ':'])
+                .or_else(|| {
+                    (!trimmed.is_empty()
+                        && rest.chars().next().is_some_and(char::is_whitespace))
+                        .then_some(trimmed)
+                })
+        })
         .map(str::trim)
         .map(strip_selector_quotes)
         .filter(|value| !value.is_empty())
@@ -523,7 +532,16 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let selector_lower = selector.to_ascii_lowercase();
     let action = selector_lower
         .strip_prefix("action")
-        .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        .and_then(|rest| {
+            let trimmed = rest.trim_start();
+            trimmed
+                .strip_prefix(['=', ':'])
+                .or_else(|| {
+                    (!trimmed.is_empty()
+                        && rest.chars().next().is_some_and(char::is_whitespace))
+                        .then_some(trimmed)
+                })
+        })
         .map(str::trim)
         .map(strip_selector_quotes)
         .filter(|action| !action.is_empty())
@@ -1739,6 +1757,8 @@ mod tests {
             "ROLE:BUTTON",
             "role = button",
             "role : button",
+            "role button",
+            " ROLE\tBUTTON ",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
@@ -3625,7 +3645,12 @@ mod tests {
     fn test_selector_action_accepts_whitespace_around_separator() {
         let som = make_test_som();
 
-        for selector in ["action : click", "action = click", " ACTION : CLICK "] {
+        for selector in [
+            "action : click",
+            "action = click",
+            "action click",
+            " ACTION\tCLICK ",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
             assert!(filtered

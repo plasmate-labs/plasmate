@@ -233,6 +233,9 @@ Use `selector="landmark"` (or `selector="landmarks"`) first when you need a
 compact inventory of the page's compiled regions before choosing a narrower
 region selector; the inventory keeps region metadata and removes their
 elements.
+Selector values may also be wrapped in matching single quotes, double quotes,
+or backticks (including `role=...`, `action:...`, and `#id` forms); surrounding
+whitespace is ignored.
 Use `selector="label:<text>"` or `selector="label=<text>"` for
 case-insensitive accessible-label/text matching on regions and elements;
 element matching also falls back to `aria-label`, `title`, `placeholder`, and
