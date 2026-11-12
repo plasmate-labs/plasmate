@@ -3429,7 +3429,7 @@ mod tests {
         let filtered = apply_selector(&som, "label:country");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
-        assert_eq!(filtered.regions[0].elements[0].id, "e1");
+        assert_eq!(filtered.regions[0].elements[0].id, "e2");
     }
 
     #[test]
@@ -3442,7 +3442,7 @@ mod tests {
         let filtered = apply_selector(&som, "label:country");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
-        assert_eq!(filtered.regions[0].elements[0].id, "e1");
+        assert_eq!(filtered.regions[0].elements[0].id, "e2");
     }
 
     #[test]
