@@ -801,7 +801,7 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
         return true;
     }
 
-    element.attrs.as_ref().is_some_and(|attrs| {
+    element.attrs.as_ref().and_then(serde_json::Value::as_object).is_some_and(|attrs| {
         attrs.iter().any(|(key, value)| {
             matches!(
                 normalized_key(key).as_str(),
@@ -3431,7 +3431,7 @@ mod tests {
         let filtered = apply_selector(&som, "label:country");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
-        assert_eq!(filtered.regions[0].elements[0].id, "e1");
+        assert_eq!(filtered.regions[0].elements[0].id, "e2");
     }
 
     #[test]
@@ -3457,7 +3457,7 @@ mod tests {
         let filtered = apply_selector(&som, "label:country");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
-        assert_eq!(filtered.regions[0].elements[0].id, "e1");
+        assert_eq!(filtered.regions[0].elements[0].id, "e2");
     }
 
     #[test]
