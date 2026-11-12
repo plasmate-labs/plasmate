@@ -1214,7 +1214,7 @@ def find_action_targets_by_action(
     aliases are normalized only for this lookup.
     """
     index = get_action_plan_index(som, enabled_only=enabled_only)
-    normalized_action = " ".join(action.strip().lower().split())
+    normalized_action = " ".join(action.strip().casefold().split())
     if (
         len(normalized_action) >= 2
         and normalized_action[0] == normalized_action[-1]
@@ -1243,8 +1243,8 @@ def find_action_targets_by_action(
         for item in plan:
             button_type = item.get("button_type")
             matches_submitter = isinstance(button_type, str) and (
-                button_type.lower() == normalized_action
-                or (normalized_action == "submit" and button_type.lower() == "image")
+                button_type.casefold() == normalized_action
+                or (normalized_action == "submit" and button_type.casefold() == "image")
             )
             if matches_submitter and item.get("id") not in seen_ids:
                 results.append(item)
@@ -1367,7 +1367,7 @@ def get_compression_ratio(som: Union[Som, dict]) -> float:
 
 def _normalize_role_alias(value: str) -> str:
     """Normalize role aliases so hyphenated and spaced forms behave alike."""
-    normalized = " ".join(value.strip().lower().split())
+    normalized = " ".join(value.strip().casefold().split())
     if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'":
         normalized = normalized[1:-1].strip()
     if normalized.startswith("role"):

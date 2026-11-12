@@ -26,9 +26,9 @@ def _extract_last_json(text: str) -> Any:
     2. **Line scan** — try each non-empty line from the end.  Handles output
        where a progress/info line precedes the JSON on a separate line, including
        valid scalar JSON results such as ``true`` or ``"ok"``.
-    3. **Brace walk** — scan for every ``{`` position right-to-left and call
-       ``raw_decode`` at each.  Handles JSON embedded within a longer string
-       (e.g. a log message that includes the serialised response).
+    3. **Brace walk** — scan every object or array start and keep the complete
+       candidate that ends furthest right. Handles nested JSON embedded within
+       a longer string (e.g. a log message containing the serialized response).
 
     Returns the parsed value (usually a ``dict``), or ``None`` if no valid JSON
     object is found.  Malformed or absent JSON silently returns ``None`` rather
