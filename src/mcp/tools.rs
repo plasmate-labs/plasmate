@@ -521,7 +521,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "javascript": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
+                    "description": "Enable JavaScript execution for dynamic/SPA pages. Leave enabled for dynamic content; set false for static HTML to avoid script execution. Default: true."
                 },
                 "selector": {
                     "type": "string",
@@ -553,7 +553,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 "javascript": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
+                    "description": "Enable JavaScript execution for dynamic/SPA pages. Leave enabled for dynamic content; set false for static HTML to avoid script execution. Default: true."
                 },
                 "max_chars": {
                     "type": "integer",
@@ -1143,7 +1143,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 "javascript": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
+                    "description": "Enable JavaScript execution for dynamic/SPA pages. Leave enabled for dynamic content; set false for static HTML to avoid script execution. Default: true."
                 },
                 "selector": {
                     "type": "string",
@@ -7376,13 +7376,20 @@ mod tests {
 
     #[test]
     fn page_read_schemas_advertise_javascript_default() {
-        for definition in [fetch_page_definition(), extract_text_definition()] {
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+        ] {
             assert_eq!(
                 definition.input_schema["properties"]["javascript"]["default"],
                 true,
                 "{} should expose the JavaScript default in JSON Schema",
                 definition.name
             );
+            assert!(definition.input_schema["properties"]["javascript"]["description"]
+                .as_str()
+                .is_some_and(|description| description.contains("static HTML")));
         }
     }
 
