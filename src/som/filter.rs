@@ -632,17 +632,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
 fn strip_selector_quotes(value: &str) -> &str {
     let value = value.trim();
-    value
-        .strip_prefix('"')
-        .and_then(|value| value.strip_suffix('"'))
-        .map(str::trim)
-        .or_else(|| {
-            value
-                .strip_prefix('\'')
-                .and_then(|value| value.strip_suffix('\''))
-                .map(str::trim)
-        })
-        .unwrap_or(value)
+    match value.as_bytes().first().copied() {
+        Some(quote @ (b'"' | b'\'' | b'`'))
+            if value.as_bytes().last().copied() == Some(quote) =>
+        {
+            value[1..value.len() - 1].trim()
+        }
+        _ => value,
+    }
 }
 
 fn collapse_selector_whitespace(value: &str) -> String {
@@ -1429,7 +1426,14 @@ mod tests {
     fn test_selector_accepts_quoted_bare_values() {
         let som = make_test_som();
 
-        for selector in ["\"main\"", "'main'", "\" button \"", "' button '"] {
+        for selector in [
+            "\"main\"",
+            "'main'",
+            "`main`",
+            "\" button \"",
+            "' button '",
+            "` button `",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].role, RegionRole::Main);
@@ -2213,8 +2217,10 @@ mod tests {
         for selector in [
             "role=\"button\"",
             "role='button'",
+            "role=`button`",
             "role=\" button \"",
             "role=' button '",
+            "role=` button `",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
@@ -2225,8 +2231,10 @@ mod tests {
         for selector in [
             "action=\"click\"",
             "action='click'",
+            "action=`click`",
             "action=\" click \"",
             "action=' click '",
+            "action=` click `",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
