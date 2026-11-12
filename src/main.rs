@@ -124,6 +124,8 @@ enum Commands {
         /// element roles (button, link/links/a/anchor/anchors/hyperlink/hyperlinks, paragraph/paragraphs/p/time/definition/definitions/term/terms/emphasis/emphases/strong/strongs, blockquote/blockquotes/quote/quotes, subscript/superscript/deletion/insertion/suggestion, list/ul/ol, grid/grids/data-grid/data-grids/data grid/data grids/treegrid/treegrids/tree-grid/tree-grids/tree grid/tree grids/table/table-grid/table-grids/table grid/table grids, media/media_item/media-item/mediaitem/media_items/media-items, audio_item/audio-item/audio_items/audio-items, video_item/video-item/video_items/video-items, canvas/canvases/canvas_item/canvas-item/canvas_items/canvas-items, input/inputs/text_input/text_inputs, search_input/search-input/search_control/search-control/search_field/search-field/search_box/search-box/query/queries/query_input/query-input/query_field/query-field/query_control/query-control/querybox/query-box, datetime/date_time/date-time/date time/date_time_local/date-time-local/date time local, select, etc.), action selectors (interactive,
         /// click/type/type_text/clear/select/select_option/toggle/submit/reset, or action:<verb> (action : <verb> and action = <verb> also work), or an HTML id selector
         /// (#my-id), or label:<text>/label=<text> for case-insensitive accessible-label/text matching.
+        /// Selector values may be wrapped in matching single quotes, double quotes, or backticks;
+        /// this also applies to role/action and #id forms.
         /// When a role is given, only regions of that role are included.
         /// When an element/action selector or id is given, only matching
         /// elements are kept, with parent containers preserved.
