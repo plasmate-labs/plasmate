@@ -785,6 +785,12 @@ fn parse_label_selector(selector: &str) -> Option<String> {
 
 fn element_matches_label(element: &Element, label: &str) -> bool {
     let matches = |value: &str| normalize_label_text(value).contains(label);
+    let normalized_key = |key: &str| {
+        key.chars()
+            .filter(|character| character.is_ascii_alphanumeric())
+            .flat_map(char::to_lowercase)
+            .collect::<String>()
+    };
 
     if element
         .label
@@ -795,41 +801,24 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
         return true;
     }
 
-    element.attrs.as_ref().is_some_and(|attrs| {
-        [
-            "aria-label",
-            "title",
-            "placeholder",
-            "alt",
-            "description",
-            "aria-description",
-        ]
-            .into_iter()
-            .any(|key| {
-                attrs
-                    .get(key)
-                    .and_then(serde_json::Value::as_str)
-                    .is_some_and(matches)
-            })
-            || attrs
-                .get("aria")
-                .and_then(serde_json::Value::as_object)
-                .is_some_and(|aria| {
-                    [
-                        "label",
-                        "description",
-                        "aria-label",
-                        "aria-description",
-                        "ariaLabel",
-                        "ariaDescription",
-                    ]
-                        .into_iter()
-                        .any(|key| {
-                        aria.get(key)
-                            .and_then(serde_json::Value::as_str)
-                            .is_some_and(matches)
-                        })
+    element.attrs.as_ref().and_then(serde_json::Value::as_object).is_some_and(|attrs| {
+        attrs.iter().any(|(key, value)| {
+            matches!(
+                normalized_key(key).as_str(),
+                "arialabel" | "title" | "placeholder" | "alt" | "description" | "ariadescription"
+            ) && value.as_str().is_some_and(matches)
+        }) || attrs
+            .get("aria")
+            .and_then(serde_json::Value::as_object)
+            .is_some_and(|aria| {
+                aria.iter().any(|(key, value)| {
+                    matches!(
+                        normalized_key(key).as_str(),
+                        "label" | "description" | "arialabel" | "ariadescription"
+                    )
+                        && value.as_str().is_some_and(matches)
                 })
+            })
     })
 }
 
@@ -3433,10 +3422,36 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_label_matches_camel_case_aria_label_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "ariaLabel": "Choose a country"
+        }));
+
+        let filtered = apply_selector(&som, "label:country");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e2");
+    }
+
+    #[test]
     fn test_selector_label_matches_camel_case_nested_aria_description() {
         let mut som = make_test_som();
         som.regions[1].elements[0].attrs = Some(serde_json::json!({
             "aria": { "ariaDescription": "Choose a country" }
+        }));
+
+        let filtered = apply_selector(&som, "label:country");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e2");
+    }
+
+    #[test]
+    fn test_selector_label_matches_underscore_nested_aria_description() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "aria": { "aria_description": "Choose a country" }
         }));
 
         let filtered = apply_selector(&som, "label:country");
