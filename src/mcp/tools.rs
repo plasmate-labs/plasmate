@@ -45,6 +45,7 @@ pub struct ToolDefinition {
 }
 
 const SOM_SELECTOR_DESCRIPTION: &str = "Filter to a page region (main/main_region/main-region/main region/main_regions/main-regions/main regions, nav/navigation/nav_region/nav-region/nav region/nav_regions/nav-regions/nav regions/navigation_region/navigation-region/navigation region/navigation_regions/navigation-regions/navigation regions/search/searches/search_nav/search-navigation/search navigation/search_navigations/search-navigations/search navigations, header, footer, aside/sidebar/sidebars, content/article/content_region/content-region/content region/content_regions/content-regions/content regions, form, dialog; role=<region> and role:<region> also work), heading level (h1-h6, heading1-heading6, including hyphenated, underscored, and spaced forms such as h-1, h_1, and h 1), all headings (heading/headings), or an element role (button/buttons/menuitem/option/tab/treeitem, link/links/a/anchor/anchors/hyperlink/hyperlinks, area/areas, paragraph/paragraphs/p/s/blockquote/blockquotes/alert/alerts/status/statuses/tooltip/tooltips, list/ul/ol/dl/menu/feed/feeds, unordered_list/ordered_list/definition_list, image/img, media, output/audio/video/canvas, audio/audio_item/audio-item/audioitem/audios/audio_items/audio-items/audioitems, video/video_item/video-item/videoitem/videos/video_items/video-items/videoitems, canvas/canvas_item/canvas-item/canvasitem/canvases/canvas_items/canvas-items/canvasitems, (images also accepted) input/inputs/text_input/text_inputs/textinput/textinputs/textbox/textboxes/text_field/text_fields/textfields/searchbox/search_input/search-input (including compact textfields), slider/sliders/spinbutton/spinbuttons/spin button/spin buttons, search_control/search-control/search_field/search-field/search_box/search-box/query/queries/queryboxes/query_boxes/query-boxes/query boxes, query_input/query-input/query_field/query-field/query_control/query-control/querybox/query-box/input, HTML input types such as text/search/email/number/password/tel/url/date/datetime/datetime-local/date_time/date-time/date time/date_time_local/date-time-local/date time local/month/time/times/time_input/time_inputs/time-input/time-inputs/time input/time inputs/timeinput/timeinputs/timecontrol/timecontrols/time_picker/time_pickers/timepicker/timepickers/time-picker/time-pickers/time picker/time pickers/week/color/range/hidden/file, textarea (textareas also accepted), select/selects/combobox/comboboxes/combo box/combo boxes/combo-boxes/listbox/listboxes/list_box/list_boxes/list box/list boxes, checkbox/checkboxes/switch/switches/menuitemcheckbox/menuitemcheckboxes (including hyphenated forms), radio/radios/menuitemradio/menuitemradios (including hyphenated forms), table/tables/data_table/data_tables/grid/grids/treegrid/treegrids/tree_grid/tree_grids/tree-grid/tree-grids/tree grid/tree grids (also data-table/data-tables and spaced data table/data tables), section/sections, separator/separators/hr, detail/details/summary/summaries, iframe/iframes, group/groups/fieldset/fieldsets/figure/figures/radiogroup/radiogroups/progress/progressbar/progressbars/meter/meters/output/outputs, etc.; role=<element> and role:<element> also work). Use search_input, search-input, search_control, search-control, search_field, search-field, search_box, search-box, query, queries, query_input, query-input, query_field, query-field, query_control, query-control, querybox, query-box for a search control; search by itself selects the search navigation region; search_nav, search-navigation, search navigation, search_navigations, search-navigations, and search navigations are explicit aliases for the same region. Action surface (interactive/interactives/interactive_elements/interactive-elements, click/type/type_text/type-text/type text/clear/select/select_option/select-option/select option/toggle/submit/reset, or action:click/action:type/action:type_text/action:type-text/action:clear/action:select/action:select_option/action:select-option/action:toggle/action:submit/action:reset; role=<action> and role:<action> are also accepted, and the action=<verb> form works with whitespace around either separator such as action : click or action = click), or #element-id (region id first, then SOM element/html id). The type_text/type-text/type text and select_option/select-option/select option aliases, including action=type_text/action=type-text and action=select_option/action=select-option, match the corresponding MCP interaction tool names. Selector names are case-insensitive. Compact text_input/textbox/searchbox/search_input/search-input aliases are also accepted. Strips irrelevant regions/elements to reduce tokens. If a selector is unknown or matches nothing, the full SOM is returned unchanged.";
+const SOM_SELECTOR_QUOTING_DESCRIPTION: &str = " Selector values may be wrapped in matching single quotes, double quotes, or backticks, including role/action and #id forms; surrounding whitespace is ignored.";
 const SOM_LANDMARK_SELECTOR_DESCRIPTION: &str = " landmark/landmarks/landmark_region/landmark_regions/landmark_inventory returns a compact inventory of all compiled regions without their elements, useful before choosing a narrower selector. Landmark aliases also accept role=landmark, role:landmark, role=landmark_region, role:landmark_regions, plural headers, banners, and complementaries.";
 
 const SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION: &str = " ARIA button-backed widget selectors also accept option/options, tab/tabs, treeitem/treeitems, and menuitem/menu-item/menu_item plus their plural forms.";
@@ -502,7 +503,7 @@ async fn load_session_page_for_mcp(
 pub fn fetch_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "fetch_page".to_string(),
-        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. For large pages, set budget to cap the returned tokens and combine it with selector='main' when navigation and footer content are not needed. Add selector='main' to strip nav/footer, selector='h1' through selector='h6' (including hyphenated, underscored, or spaced forms such as 'h-1', 'h_1', or 'h 1') to isolate a heading level, selector='query' (or selector='query_input', selector='query_field', or selector='query_control', including hyphenated forms) to isolate a search field, or selector='interactive' / selector='click' (or action:click) / selector='type', 'type_text', or 'type-text' (or action:type, action:type_text, or action:type-text) / selector='clear' (or action:clear) / selector='select', 'select_option', or 'select-option' (or action:select, action:select_option, or action:select-option) / selector='toggle' (or action:toggle) / selector='submit' (or action:submit) / selector='reset' (or action:reset) to return only reusable action targets. The action:<verb> form also accepts whitespace around its separator, such as action : reset or action = reset; role=<action> and role:<action> are equivalent forms.".to_string(),
+        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. For large pages, set budget to cap the returned tokens and combine it with selector='main' when navigation and footer content are not needed. Use selector='landmark' first when you need to discover the page's regions without their elements. Add selector='main' to strip nav/footer, selector='h1' through selector='h6' (including hyphenated, underscored, or spaced forms such as 'h-1', 'h_1', or 'h 1') to isolate a heading level, selector='query' (or selector='query_input', selector='query_field', or selector='query_control', including hyphenated forms) to isolate a search field, or selector='interactive' / selector='click' (or action:click) / selector='type', 'type_text', or 'type-text' (or action:type, action:type_text, or action:type-text) / selector='clear' (or action:clear) / selector='select', 'select_option', or 'select-option' (or action:select, action:select_option, or action:select-option) / selector='toggle' (or action:toggle) / selector='submit' (or action:submit) / selector='reset' (or action:reset) to return only reusable action targets. The action:<verb> form also accepts whitespace around its separator, such as action : reset or action = reset; role=<action> and role:<action> are equivalent forms.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -526,7 +527,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -563,7 +564,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -1148,7 +1149,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 },
                 "max_links": {
                     "type": "integer",
@@ -1295,7 +1296,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 },
                 "visual_mode": {
                     "type": "string",
@@ -4180,7 +4181,7 @@ pub fn open_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -7076,6 +7077,26 @@ mod tests {
     }
 
     #[test]
+    fn selector_schemas_document_quote_wrapping() {
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            extract_links_definition(),
+            inspect_page_definition(),
+            open_page_definition(),
+        ] {
+            let description = definition.input_schema["properties"]["selector"]["description"]
+                .as_str()
+                .unwrap_or_default();
+            assert!(
+                description.contains("single quotes, double quotes, or backticks"),
+                "{} should document selector quote wrapping",
+                definition.name
+            );
+        }
+    }
+
+    #[test]
     fn selector_schemas_advertise_aria_widget_aliases() {
         for definition in [
             fetch_page_definition(),
@@ -7304,6 +7325,9 @@ mod tests {
             let fetch_page_description = fetch_page_definition().description;
             assert!(fetch_page_description.contains("selector='query'"));
             assert!(fetch_page_description.contains("selector='query_control'"));
+            assert!(fetch_page_description.contains(
+                "Use selector='landmark' first when you need to discover the page's regions"
+            ));
         }
 
         assert!(extract_links_definition().description.contains(
