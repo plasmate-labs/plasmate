@@ -815,7 +815,14 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                 .get("aria")
                 .and_then(serde_json::Value::as_object)
                 .is_some_and(|aria| {
-                    ["label", "description", "aria-label", "aria-description"]
+                    [
+                        "label",
+                        "description",
+                        "aria-label",
+                        "aria-description",
+                        "ariaLabel",
+                        "ariaDescription",
+                    ]
                         .into_iter()
                         .any(|key| {
                         aria.get(key)
@@ -3417,6 +3424,19 @@ mod tests {
         let mut som = make_test_som();
         som.regions[1].elements[0].attrs = Some(serde_json::json!({
             "aria": { "aria-description": "Choose a country" }
+        }));
+
+        let filtered = apply_selector(&som, "label:country");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e1");
+    }
+
+    #[test]
+    fn test_selector_label_matches_camel_case_nested_aria_description() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "aria": { "ariaDescription": "Choose a country" }
         }));
 
         let filtered = apply_selector(&som, "label:country");
