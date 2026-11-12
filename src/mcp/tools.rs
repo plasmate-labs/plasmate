@@ -1300,7 +1300,8 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 "visual_mode": {
                     "type": "string",
                     "enum": ["never", "auto", "always"],
-                    "default": "auto"
+                    "default": "auto",
+                    "description": "Screenshot policy: 'auto' captures only for named structural insufficiency signals, 'never' returns SOM only, and 'always' explicitly requests pixels. Visual failure never discards the SOM."
                 },
                 "width": { "type": "integer", "minimum": 320, "maximum": 1920, "default": 1280 },
                 "height": { "type": "integer", "minimum": 200, "maximum": 1080, "default": 720 },
@@ -18886,6 +18887,9 @@ mod tests {
             inspect.input_schema["properties"]["visual_mode"]["enum"],
             json!(["never", "auto", "always"])
         );
+        assert!(inspect.input_schema["properties"]["visual_mode"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("structural insufficiency")));
         let defaults: InspectPageParams =
             serde_json::from_value(json!({"url": "https://example.com/"})).unwrap();
         assert!(!defaults.javascript);
