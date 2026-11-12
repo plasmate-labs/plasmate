@@ -520,6 +520,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 },
                 "javascript": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
                 },
                 "selector": {
@@ -551,6 +552,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 },
                 "javascript": {
                     "type": "boolean",
+                    "default": true,
                     "description": "Enable JavaScript execution for dynamic/SPA pages. Default: true."
                 },
                 "max_chars": {
@@ -7365,6 +7367,18 @@ mod tests {
         );
         assert!(budget_description.contains("selector='main'"));
         assert!(budget_description.contains("preserving structured regions"));
+    }
+
+    #[test]
+    fn page_read_schemas_advertise_javascript_default() {
+        for definition in [fetch_page_definition(), extract_text_definition()] {
+            assert_eq!(
+                definition.input_schema["properties"]["javascript"]["default"],
+                true,
+                "{} should expose the JavaScript default in JSON Schema",
+                definition.name
+            );
+        }
     }
 
     #[test]
