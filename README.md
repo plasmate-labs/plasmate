@@ -237,7 +237,8 @@ Selector values may also be wrapped in matching single quotes, double quotes,
 or backticks (including `role=...`, `action:...`, and `#id` forms); surrounding
 whitespace is ignored.
 Use `selector="label:<text>"` or `selector="label=<text>"` (or the
-shorter `text:<text>`, `text=<text>`, `name:<text>`, and `name=<text>` aliases) for
+shorter `text:<text>`, `text=<text>`, `name:<text>`, `name=<text>`, and
+`placeholder:<text>` / `placeholder=<text>` aliases) for
 case-insensitive accessible-label/text matching on regions and elements;
 element matching also falls back to `aria-label`, `title`, `placeholder`, and
 `alt` attributes when a compiled label is unavailable. The explicit

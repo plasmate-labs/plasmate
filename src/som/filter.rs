@@ -128,6 +128,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Label/text search: `label:<text>` / `label=<text>` (also `text:<text>` /
 ///   `text=<text>`, `name:<text>` /
 ///   `name=<text>` and
+///   `placeholder:<text>` / `placeholder=<text>` and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `accessible-name:<text>` / `accessible_name=<text>` and
 ///   `accessible-label:<text>` / `accessible_label=<text>`) matches a region or
@@ -824,6 +825,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "label",
         "text",
         "name",
+        "placeholder",
         "aria-label",
         "aria_label",
         "aria label",
@@ -3640,6 +3642,21 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e2");
+    }
+
+    #[test]
+    fn test_selector_placeholder_matches_placeholder_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "placeholder": "Choose a country"
+        }));
+
+        for selector in ["placeholder:country", "placeholder=country"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2", "selector: {selector}");
+        }
     }
 
     #[test]
