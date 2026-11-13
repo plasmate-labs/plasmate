@@ -850,11 +850,13 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
             matches!(
                 normalized_key(key).as_str(),
                 "arialabel"
+                    | "labelledby"
                     | "arialabelledby"
                     | "title"
                     | "placeholder"
                     | "alt"
                     | "description"
+                    | "describedby"
                     | "ariadescription"
                     | "ariadescribedby"
             ) && value.as_str().is_some_and(matches)
@@ -868,7 +870,9 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                         "label"
                             | "description"
                             | "arialabel"
+                            | "labelledby"
                             | "arialabelledby"
+                            | "describedby"
                             | "ariadescription"
                             | "ariadescribedby"
                     )
@@ -1670,6 +1674,26 @@ mod tests {
             "aria": {
                 "aria-labelledby": "Search products",
                 "aria-describedby": "Search suggestions"
+            }
+        }));
+
+        for selector in ["label:products", "description:suggestions"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e3");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compiled_nested_aria_reference_keys() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria": {
+                "labelledby": "Search products",
+                "describedby": "Search suggestions"
             }
         }));
 
