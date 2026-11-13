@@ -157,6 +157,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 .strip_prefix(['=', ':'])
                 .map(str::trim)
                 .map(strip_selector_quotes)
+                .or_else(|| {
+                    (!rest.is_empty()
+                        && rest.chars().next().is_some_and(char::is_whitespace))
+                        .then_some(trimmed)
+                })
         })
         .filter(|value| !value.is_empty())
         .unwrap_or(selector);
@@ -3949,7 +3954,12 @@ mod tests {
     #[test]
     fn test_selector_accepts_named_selector_wrappers() {
         let som = make_test_som();
-        for selector in ["selector=main", "selector: main", "SELECTOR = 'main'"] {
+        for selector in [
+            "selector=main",
+            "selector: main",
+            "selector main",
+            "SELECTOR = 'main'",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].role, RegionRole::Main);
