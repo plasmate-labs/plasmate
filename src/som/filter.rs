@@ -803,6 +803,10 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "accessible-name",
         "accessible_name",
         "accessible name",
+        "description",
+        "aria-description",
+        "aria_description",
+        "aria description",
     ]
         .into_iter()
         .find_map(|prefix| {
@@ -1616,6 +1620,28 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_accepts_description_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria-description": "Password requirements"
+        }));
+
+        for selector in [
+            "description:requirements",
+            "aria-description=requirements",
+            "aria_description:requirements",
+            "aria description=requirements",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e3");
+        }
     }
 
     #[test]
