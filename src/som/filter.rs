@@ -128,7 +128,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Label/text search: `label:<text>` / `label=<text>` (also `name:<text>` /
 ///   `name=<text>` and
 ///   `aria-label:<text>` / `aria-label=<text>` and
-///   `accessible-name:<text>` / `accessible_name=<text>`) matches a region or
+///   `accessible-name:<text>` / `accessible_name=<text>` and
+///   `accessible-label:<text>` / `accessible_label=<text>`) matches a region or
 ///   element's accessible label, authored text, or `aria-label`/title/placeholder/
 ///   `alt`/`description`/`aria-description` fallbacks (including nested ARIA descriptions),
 ///   case-insensitively, preserving parent context.
@@ -803,6 +804,9 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "accessible-name",
         "accessible_name",
         "accessible name",
+        "accessible-label",
+        "accessible_label",
+        "accessible label",
         "accessible-description",
         "accessible_description",
         "accessible description",
@@ -1508,6 +1512,8 @@ mod tests {
             "aria_label=\"BILLING ADDRESS\"",
             "accessible-name:billing address",
             "accessible_name=\"BILLING ADDRESS\"",
+            "accessible-label:billing address",
+            "accessible_label=\"BILLING ADDRESS\"",
             "name:billing address",
             "name=\"BILLING ADDRESS\"",
         ] {
