@@ -100,9 +100,10 @@ all canvas elements, or `canvas_item` to isolate canvas elements on a mixed
 media page.
 
 Use `label:<text>` or `label=<text>` for case-insensitive accessible-label or
-authored-text matching on regions and elements. When a compiled label is
-unavailable, element matching also checks `aria-label`, `title`, `placeholder`,
-and `alt`; whitespace is normalized before matching.
+authored-text matching on regions and elements. Use `testid:<text>` or
+`testid=<text>` (also `data-testid:<text>`) to match compiled stable test hooks.
+When a compiled label is unavailable, element matching also checks `aria-label`,
+`title`, `placeholder`, and `alt`; whitespace is normalized before matching.
 
 ## Using with Cursor
 

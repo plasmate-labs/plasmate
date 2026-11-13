@@ -128,7 +128,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// - Label/text search: `label:<text>` / `label=<text>` (also `text:<text>` /
 ///   `text=<text>`, `name:<text>` /
 ///   `name=<text>` and
-///   `placeholder:<text>` / `placeholder=<text>` and
+///   `placeholder:<text>` / `placeholder=<text>` and `title:<text>` /
+///   `title=<text>` and
+///   `testid:<text>` / `testid=<text>` and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `accessible-name:<text>` / `accessible_name=<text>` and
 ///   `accessible-label:<text>` / `accessible_label=<text>`) matches a region or
@@ -556,6 +558,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    if let Some(test_id) = parse_test_id_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("test_id"))
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|value| normalize_label_text(value).contains(&test_id))
+        });
+    }
+
     if let Some(label) = parse_label_selector(selector) {
         return filter_som_by_label(som, selector, &label);
     }
@@ -826,9 +839,17 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "text",
         "name",
         "placeholder",
+        "title",
+        "testid",
+        "test-id",
+        "test_id",
+        "data-testid",
+        "data-test",
+        "data-qa",
         "aria-label",
         "aria_label",
         "aria label",
+        "alt",
         "accessible-name",
         "accessible_name",
         "accessible name",
@@ -853,6 +874,21 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         .map(strip_selector_quotes)
         .filter(|value| !value.is_empty())?;
     Some(normalize_label_text(value))
+}
+
+fn parse_test_id_selector(selector: &str) -> Option<String> {
+    let selector_lower = selector.to_ascii_lowercase();
+    ["testid", "test-id", "test_id", "data-testid", "data-test", "data-qa"]
+        .into_iter()
+        .find_map(|prefix| {
+            selector_lower
+                .strip_prefix(prefix)
+                .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        })
+        .map(str::trim)
+        .map(strip_selector_quotes)
+        .filter(|value| !value.is_empty())
+        .map(normalize_label_text)
 }
 
 fn element_matches_label(element: &Element, label: &str) -> bool {
@@ -883,6 +919,10 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                     | "title"
                     | "placeholder"
                     | "alt"
+                    | "testid"
+                    | "datatestid"
+                    | "datatest"
+                    | "dataqa"
                     | "description"
                     | "describedby"
                     | "ariadescription"
@@ -1598,6 +1638,54 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_matches_title_alias() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-tooltip".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"title": "Open settings"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["title:settings", "title=OPEN SETTINGS"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-tooltip");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_stable_test_id_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-test-hook".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"test_id": "save-action"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["testid:action", "test-id=SAVE-ACTION", "data-testid:save"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-test-hook");
+        }
+    }
+
+    #[test]
     fn test_selector_matches_aria_label_fallback_attribute() {
         let mut som = make_test_som();
         som.regions[1].elements[1].label = None;
@@ -1799,6 +1887,30 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-image");
+    }
+
+    #[test]
+    fn test_selector_matches_image_alt_alias() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-image".to_string(),
+            role: ElementRole::Image,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"alt": "Product preview"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["alt:preview", "alt=PRODUCT"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-image");
+        }
     }
 
     #[test]
