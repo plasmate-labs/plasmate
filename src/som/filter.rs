@@ -125,9 +125,11 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
-/// - Label/text search: `label:<text>` / `label=<text>` (also
+/// - Label/text search: `label:<text>` / `label=<text>` (also `name:<text>` /
+///   `name=<text>` and
 ///   `aria-label:<text>` / `aria-label=<text>` and
-///   `accessible-name:<text>` / `accessible_name=<text>`) matches a region or
+///   `accessible-name:<text>` / `accessible_name=<text>` and
+///   `accessible-label:<text>` / `accessible_label=<text>`) matches a region or
 ///   element's accessible label, authored text, or `aria-label`/title/placeholder/
 ///   `alt`/`description`/`aria-description` fallbacks (including nested ARIA descriptions),
 ///   case-insensitively, preserving parent context.
@@ -795,12 +797,23 @@ fn parse_label_selector(selector: &str) -> Option<String> {
     let selector_lower = selector.to_ascii_lowercase();
     let value = [
         "label",
+        "name",
         "aria-label",
         "aria_label",
         "aria label",
         "accessible-name",
         "accessible_name",
         "accessible name",
+        "accessible-label",
+        "accessible_label",
+        "accessible label",
+        "accessible-description",
+        "accessible_description",
+        "accessible description",
+        "description",
+        "aria-description",
+        "aria_description",
+        "aria description",
     ]
         .into_iter()
         .find_map(|prefix| {
@@ -1499,6 +1512,10 @@ mod tests {
             "aria_label=\"BILLING ADDRESS\"",
             "accessible-name:billing address",
             "accessible_name=\"BILLING ADDRESS\"",
+            "accessible-label:billing address",
+            "accessible_label=\"BILLING ADDRESS\"",
+            "name:billing address",
+            "name=\"BILLING ADDRESS\"",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
@@ -1612,6 +1629,31 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_accepts_description_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria-description": "Password requirements"
+        }));
+
+        for selector in [
+            "description:requirements",
+            "aria-description=requirements",
+            "aria_description:requirements",
+            "aria description=requirements",
+            "accessible-description:requirements",
+            "accessible_description=requirements",
+            "accessible description:requirements",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e3");
+        }
     }
 
     #[test]
