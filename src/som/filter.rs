@@ -125,7 +125,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
-/// - Label/text search: `label:<text>` or `label=<text>` matches a region or
+/// - Label/text search: `label:<text>` / `label=<text>` (also
+///   `aria-label:<text>` / `aria-label=<text>` and
+///   `accessible-name:<text>` / `accessible_name=<text>`) matches a region or
 ///   element's accessible label, authored text, or `aria-label`/title/placeholder/
 ///   `alt`/`description`/`aria-description` fallbacks (including nested ARIA descriptions),
 ///   case-insensitively, preserving parent context.
@@ -166,6 +168,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         selector.to_ascii_lowercase().as_str(),
         "landmark"
             | "landmarks"
+            | "role=landmark"
+            | "role:landmark"
             | "landmark_region"
             | "landmark_regions"
             | "landmark_inventory"
@@ -789,9 +793,21 @@ fn parse_heading_level_selector(selector: &str) -> Option<u8> {
 
 fn parse_label_selector(selector: &str) -> Option<String> {
     let selector_lower = selector.to_ascii_lowercase();
-    let value = selector_lower
-        .strip_prefix("label")
-        .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+    let value = [
+        "label",
+        "aria-label",
+        "aria_label",
+        "aria label",
+        "accessible-name",
+        "accessible_name",
+        "accessible name",
+    ]
+        .into_iter()
+        .find_map(|prefix| {
+            selector_lower
+                .strip_prefix(prefix)
+                .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        })
         .map(str::trim)
         .map(strip_selector_quotes)
         .filter(|value| !value.is_empty())?;
@@ -1476,7 +1492,14 @@ mod tests {
         som.regions[1].elements[0].label = Some("Billing\n  address".to_string());
         som.regions[1].elements[1].text = Some("Save\tchanges".to_string());
 
-        for selector in ["label:billing", "label=\"BILLING ADDRESS\""] {
+        for selector in [
+            "label:billing",
+            "label=\"BILLING ADDRESS\"",
+            "aria-label:billing address",
+            "aria_label=\"BILLING ADDRESS\"",
+            "accessible-name:billing address",
+            "accessible_name=\"BILLING ADDRESS\"",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
