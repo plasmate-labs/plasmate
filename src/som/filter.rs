@@ -445,7 +445,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // selector's backwards-compatible mixed behavior above.
     if matches!(
         selector.to_ascii_lowercase().as_str(),
-        "time_input"
+        "times"
+            | "time_input"
             | "time_inputs"
             | "timeinput"
             | "timeinputs"
@@ -1093,6 +1094,17 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "date_time_local"
         | "month"
         | "time"
+        | "times"
+        | "time_input"
+        | "time_inputs"
+        | "timeinput"
+        | "timeinputs"
+        | "timecontrol"
+        | "timecontrols"
+        | "time_picker"
+        | "time_pickers"
+        | "timepicker"
+        | "timepickers"
         | "week"
         | "color"
         | "range"
@@ -3221,6 +3233,30 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Table);
+        }
+    }
+
+    #[test]
+    fn test_selector_time_input_aliases_match_time_inputs() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::TextInput;
+        som.regions[0].elements[0].attrs = Some(serde_json::json!({"input_type": "time"}));
+
+        for selector in [
+            "times",
+            "time_input",
+            "time-input",
+            "time input",
+            "timeinput",
+            "time_picker",
+            "time-picker",
+            "time picker",
+            "timecontrol",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::TextInput);
         }
     }
 
