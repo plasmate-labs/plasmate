@@ -126,7 +126,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
 /// - Label/text search: `label:<text>` / `label=<text>` (also
-///   `aria-label:<text>` / `aria-label=<text>`) matches a region or
+///   `aria-label:<text>` / `aria-label=<text>` and
+///   `accessible-name:<text>` / `accessible_name=<text>`) matches a region or
 ///   element's accessible label, authored text, or `aria-label`/title/placeholder/
 ///   `alt`/`description`/`aria-description` fallbacks (including nested ARIA descriptions),
 ///   case-insensitively, preserving parent context.
@@ -792,7 +793,15 @@ fn parse_heading_level_selector(selector: &str) -> Option<u8> {
 
 fn parse_label_selector(selector: &str) -> Option<String> {
     let selector_lower = selector.to_ascii_lowercase();
-    let value = ["label", "aria-label", "aria_label", "aria label"]
+    let value = [
+        "label",
+        "aria-label",
+        "aria_label",
+        "aria label",
+        "accessible-name",
+        "accessible_name",
+        "accessible name",
+    ]
         .into_iter()
         .find_map(|prefix| {
             selector_lower
@@ -1488,6 +1497,8 @@ mod tests {
             "label=\"BILLING ADDRESS\"",
             "aria-label:billing address",
             "aria_label=\"BILLING ADDRESS\"",
+            "accessible-name:billing address",
+            "accessible_name=\"BILLING ADDRESS\"",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
