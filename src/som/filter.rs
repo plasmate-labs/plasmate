@@ -130,6 +130,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `name=<text>` and
 ///   `placeholder:<text>` / `placeholder=<text>` and `title:<text>` /
 ///   `title=<text>` and
+///   `testid:<text>` / `testid=<text>` and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `accessible-name:<text>` / `accessible_name=<text>` and
 ///   `accessible-label:<text>` / `accessible_label=<text>`) matches a region or
@@ -828,6 +829,12 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "name",
         "placeholder",
         "title",
+        "testid",
+        "test-id",
+        "test_id",
+        "data-testid",
+        "data-test",
+        "data-qa",
         "aria-label",
         "aria_label",
         "aria label",
@@ -886,6 +893,10 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                     | "title"
                     | "placeholder"
                     | "alt"
+                    | "testid"
+                    | "datatestid"
+                    | "datatest"
+                    | "dataqa"
                     | "description"
                     | "describedby"
                     | "ariadescription"
@@ -1621,6 +1632,30 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-tooltip");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_stable_test_id_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-test-hook".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"test_id": "save-action"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["testid:action", "test-id=SAVE-ACTION", "data-testid:save"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-test-hook");
         }
     }
 
