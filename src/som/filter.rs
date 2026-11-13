@@ -829,6 +829,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "aria-label",
         "aria_label",
         "aria label",
+        "alt",
         "accessible-name",
         "accessible_name",
         "accessible name",
@@ -1799,6 +1800,30 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-image");
+    }
+
+    #[test]
+    fn test_selector_matches_image_alt_alias() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-image".to_string(),
+            role: ElementRole::Image,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"alt": "Product preview"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["alt:preview", "alt=PRODUCT"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-image");
+        }
     }
 
     #[test]

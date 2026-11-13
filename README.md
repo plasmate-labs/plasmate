@@ -241,7 +241,8 @@ shorter `text:<text>`, `text=<text>`, `name:<text>`, `name=<text>`, and
 `placeholder:<text>` / `placeholder=<text>` aliases) for
 case-insensitive accessible-label/text matching on regions and elements;
 element matching also falls back to `aria-label`, `title`, `placeholder`, and
-`alt` attributes when a compiled label is unavailable. The explicit
+`alt` attributes when a compiled label is unavailable; use `alt:<text>` or
+`alt=<text>` for an image-focused query. The explicit
 `description:<text>` / `description=<text>`, `aria-description`, and
 `accessible-description` aliases also match compiled description metadata;
 whitespace is normalized so labels split across lines still match.
