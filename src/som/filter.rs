@@ -803,6 +803,9 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "accessible-name",
         "accessible_name",
         "accessible name",
+        "accessible-description",
+        "accessible_description",
+        "accessible description",
         "description",
         "aria-description",
         "aria_description",
@@ -1636,6 +1639,9 @@ mod tests {
             "aria-description=requirements",
             "aria_description:requirements",
             "aria description=requirements",
+            "accessible-description:requirements",
+            "accessible_description=requirements",
+            "accessible description:requirements",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
