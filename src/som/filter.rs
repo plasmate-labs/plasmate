@@ -125,7 +125,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
-/// - Label/text search: `label:<text>` / `label=<text>` (also
+/// - Label/text search: `label:<text>` / `label=<text>` (also `name:<text>` /
+///   `name=<text>` and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `accessible-name:<text>` / `accessible_name=<text>`) matches a region or
 ///   element's accessible label, authored text, or `aria-label`/title/placeholder/
@@ -795,6 +796,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
     let selector_lower = selector.to_ascii_lowercase();
     let value = [
         "label",
+        "name",
         "aria-label",
         "aria_label",
         "aria label",
@@ -1499,6 +1501,8 @@ mod tests {
             "aria_label=\"BILLING ADDRESS\"",
             "accessible-name:billing address",
             "accessible_name=\"BILLING ADDRESS\"",
+            "name:billing address",
+            "name=\"BILLING ADDRESS\"",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
