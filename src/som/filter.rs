@@ -558,6 +558,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    if let Some(test_id) = parse_test_id_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("test_id"))
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|value| normalize_label_text(value).contains(&test_id))
+        });
+    }
+
     if let Some(label) = parse_label_selector(selector) {
         return filter_som_by_label(som, selector, &label);
     }
@@ -863,6 +874,21 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         .map(strip_selector_quotes)
         .filter(|value| !value.is_empty())?;
     Some(normalize_label_text(value))
+}
+
+fn parse_test_id_selector(selector: &str) -> Option<String> {
+    let selector_lower = selector.to_ascii_lowercase();
+    ["testid", "test-id", "test_id", "data-testid", "data-test", "data-qa"]
+        .into_iter()
+        .find_map(|prefix| {
+            selector_lower
+                .strip_prefix(prefix)
+                .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        })
+        .map(str::trim)
+        .map(strip_selector_quotes)
+        .filter(|value| !value.is_empty())
+        .map(normalize_label_text)
 }
 
 fn element_matches_label(element: &Element, label: &str) -> bool {
