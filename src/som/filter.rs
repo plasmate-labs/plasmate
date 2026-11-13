@@ -865,7 +865,12 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                 aria.iter().any(|(key, value)| {
                     matches!(
                         normalized_key(key).as_str(),
-                        "label" | "description" | "arialabel" | "ariadescription"
+                        "label"
+                            | "description"
+                            | "arialabel"
+                            | "arialabelledby"
+                            | "ariadescription"
+                            | "ariadescribedby"
                     )
                         && value.as_str().is_some_and(matches)
                 })
@@ -1646,6 +1651,26 @@ mod tests {
         som.regions[1].elements[1].attrs = Some(serde_json::json!({
             "aria-labelledby": "Search products",
             "aria-describedby": "Search suggestions"
+        }));
+
+        for selector in ["label:products", "description:suggestions"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e3");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_nested_aria_labelledby_and_describedby_fallbacks() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria": {
+                "aria-labelledby": "Search products",
+                "aria-describedby": "Search suggestions"
+            }
         }));
 
         for selector in ["label:products", "description:suggestions"] {
