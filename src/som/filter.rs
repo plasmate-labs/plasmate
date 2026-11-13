@@ -849,7 +849,16 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
         attrs.iter().any(|(key, value)| {
             matches!(
                 normalized_key(key).as_str(),
-                "arialabel" | "title" | "placeholder" | "alt" | "description" | "ariadescription"
+                "arialabel"
+                    | "labelledby"
+                    | "arialabelledby"
+                    | "title"
+                    | "placeholder"
+                    | "alt"
+                    | "description"
+                    | "describedby"
+                    | "ariadescription"
+                    | "ariadescribedby"
             ) && value.as_str().is_some_and(matches)
         }) || attrs
             .get("aria")
@@ -858,7 +867,14 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                 aria.iter().any(|(key, value)| {
                     matches!(
                         normalized_key(key).as_str(),
-                        "label" | "description" | "arialabel" | "ariadescription"
+                        "label"
+                            | "description"
+                            | "arialabel"
+                            | "labelledby"
+                            | "arialabelledby"
+                            | "describedby"
+                            | "ariadescription"
+                            | "ariadescribedby"
                     )
                         && value.as_str().is_some_and(matches)
                 })
@@ -1629,6 +1645,64 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_aria_labelledby_and_describedby_fallbacks() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria-labelledby": "Search products",
+            "aria-describedby": "Search suggestions"
+        }));
+
+        for selector in ["label:products", "description:suggestions"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e3");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_nested_aria_labelledby_and_describedby_fallbacks() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria": {
+                "aria-labelledby": "Search products",
+                "aria-describedby": "Search suggestions"
+            }
+        }));
+
+        for selector in ["label:products", "description:suggestions"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e3");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compiled_nested_aria_reference_keys() {
+        let mut som = make_test_som();
+        som.regions[1].elements[1].label = None;
+        som.regions[1].elements[1].text = None;
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({
+            "aria": {
+                "labelledby": "Search products",
+                "describedby": "Search suggestions"
+            }
+        }));
+
+        for selector in ["label:products", "description:suggestions"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e3");
+        }
     }
 
     #[test]
