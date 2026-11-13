@@ -540,7 +540,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, machine-readable time values alongside human-readable time labels, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' (including hyphenated, underscored, or spaced forms such as 'h-1', 'h_1', or 'h 1') for headings.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, machine-readable time values alongside human-readable time labels, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' (including hyphenated, underscored, or spaced forms such as 'h-1', 'h_1', or 'h 1') for headings. Use selector='label:<text>' / selector='name:<text>' / selector='accessible-name:<text>' to return text from a matching region or element by accessible name, authored text, or description.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1277,7 +1277,7 @@ pub async fn handle_crawl_policy(arguments: &Value) -> Value {
 pub fn inspect_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "inspect_page".to_string(),
-        description: "Inspect a page through a bounded compact SOM first, then optionally attach a hardened offline-rendered screenshot. For large pages, start with selector='landmark' to inventory regions, then use selector='main' or another targeted selector before requesting pixels. JavaScript is off by default; javascript=true executes it in a supervised worker with bounded source-HTML fallback on containment failure. visual_mode='auto' captures only for named structural insufficiency signals; 'never' only recommends; 'always' explicitly requests pixels. Plasmate does not perform vision-model interpretation, and visual failure never discards the SOM.".to_string(),
+        description: "Inspect a page through a bounded compact SOM first, then optionally attach a hardened offline-rendered screenshot. For large pages, start with selector='landmark' to inventory regions, then use selector='main' or another targeted selector before requesting pixels. Use selector='label:<text>' / selector='name:<text>' / selector='accessible-name:<text>' to inspect only a matching region or element by accessible name, authored text, or description. JavaScript is off by default; javascript=true executes it in a supervised worker with bounded source-HTML fallback on containment failure. visual_mode='auto' captures only for named structural insufficiency signals; 'never' only recommends; 'always' explicitly requests pixels. Plasmate does not perform vision-model interpretation, and visual failure never discards the SOM.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -7342,6 +7342,14 @@ mod tests {
             assert!(fetch_page_description.contains("selector='query_control'"));
             assert!(fetch_page_description.contains("selector='label:<text>'"));
             assert!(fetch_page_description.contains("selector='accessible-name:<text>'"));
+
+            let extract_text_description = extract_text_definition().description;
+            assert!(extract_text_description.contains("selector='label:<text>'"));
+            assert!(extract_text_description.contains("selector='accessible-name:<text>'"));
+
+            let inspect_page_description = inspect_page_definition().description;
+            assert!(inspect_page_description.contains("selector='label:<text>'"));
+            assert!(inspect_page_description.contains("selector='accessible-name:<text>'"));
             assert!(fetch_page_description.contains(
                 "Use selector='landmark' first when you need to discover the page's regions"
             ));
