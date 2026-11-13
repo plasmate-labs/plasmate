@@ -125,8 +125,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
-/// - Label/text search: `label:<text>` / `label=<text>` (also `name:<text>` /
+/// - Label/text search: `label:<text>` / `label=<text>` (also `text:<text>` /
+///   `text=<text>`, `name:<text>` /
 ///   `name=<text>` and
+///   `placeholder:<text>` / `placeholder=<text>` and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `accessible-name:<text>` / `accessible_name=<text>` and
 ///   `accessible-label:<text>` / `accessible_label=<text>`) matches a region or
@@ -821,7 +823,9 @@ fn parse_label_selector(selector: &str) -> Option<String> {
     let selector_lower = selector.to_ascii_lowercase();
     let value = [
         "label",
+        "text",
         "name",
+        "placeholder",
         "aria-label",
         "aria_label",
         "aria label",
@@ -1548,6 +1552,8 @@ mod tests {
         for selector in [
             "label:billing",
             "label=\"BILLING ADDRESS\"",
+            "text:billing address",
+            "text=\"BILLING ADDRESS\"",
             "aria-label:billing address",
             "aria_label=\"BILLING ADDRESS\"",
             "accessible-name:billing address",
@@ -3636,6 +3642,21 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e2");
+    }
+
+    #[test]
+    fn test_selector_placeholder_matches_placeholder_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "placeholder": "Choose a country"
+        }));
+
+        for selector in ["placeholder:country", "placeholder=country"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2", "selector: {selector}");
+        }
     }
 
     #[test]
