@@ -145,6 +145,26 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // configuration layer that quotes every value uniformly.
     let selector = collapse_selector_whitespace(strip_selector_quotes(selector));
     let selector = selector.as_str();
+    // Accept an explicitly named selector value when callers forward a
+    // key/value option instead of passing only the selector itself.
+    let selector = selector
+        .get(..8)
+        .filter(|prefix| prefix.eq_ignore_ascii_case("selector"))
+        .and_then(|_| selector.get(8..))
+        .and_then(|rest| {
+            let trimmed = rest.trim_start();
+            trimmed
+                .strip_prefix(['=', ':'])
+                .map(str::trim)
+                .map(strip_selector_quotes)
+                .or_else(|| {
+                    (!rest.is_empty()
+                        && rest.chars().next().is_some_and(char::is_whitespace))
+                        .then_some(trimmed)
+                })
+        })
+        .filter(|value| !value.is_empty())
+        .unwrap_or(selector);
     let selector_lower = selector.to_ascii_lowercase();
     let selector = selector_lower
         .strip_prefix("role")
@@ -172,6 +192,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "landmarks"
             | "role=landmark"
             | "role:landmark"
+            | "role=landmark_region"
+            | "role:landmark_region"
+            | "role=landmark_regions"
+            | "role:landmark_regions"
             | "landmark_region"
             | "landmark_regions"
             | "landmark_inventory"
@@ -3929,6 +3953,21 @@ mod tests {
         let filtered = apply_selector(&som, " main ");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_accepts_named_selector_wrappers() {
+        let som = make_test_som();
+        for selector in [
+            "selector=main",
+            "selector: main",
+            "selector main",
+            "SELECTOR = 'main'",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Main);
+        }
     }
 
     #[test]
