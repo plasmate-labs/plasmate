@@ -452,6 +452,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "timeinputs"
             | "timecontrol"
             | "timecontrols"
+            | "time-control"
+            | "time-controls"
+            | "time control"
+            | "time controls"
             | "time-input"
             | "time-inputs"
             | "time input"
@@ -1101,6 +1105,10 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "timeinputs"
         | "timecontrol"
         | "timecontrols"
+        | "time-control"
+        | "time-controls"
+        | "time control"
+        | "time controls"
         | "time_picker"
         | "time_pickers"
         | "timepicker"
@@ -3252,6 +3260,8 @@ mod tests {
             "time-picker",
             "time picker",
             "timecontrol",
+            "time-control",
+            "time control",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
