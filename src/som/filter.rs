@@ -1054,6 +1054,7 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                     | "datatestid"
                     | "datatest"
                     | "dataqa"
+                    | "datacy"
                     | "description"
                     | "describedby"
                     | "ariadescription"
@@ -1923,6 +1924,29 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_label_selector_matches_data_cy_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-cy-label".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-cy": "save-action"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "label:save-action");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-cy-label");
     }
 
     #[test]
