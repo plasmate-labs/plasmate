@@ -133,7 +133,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `title=<text>` and
 ///   `testid:<text>` / `testid=<text>` (also `test-id`, `test_id`,
 ///   `data-testid`, `datatestid`, `data-test-id`, `data_test_id`,
-///   `data-test`, and `data-qa`) and
+///   `data-test`, `data-qa`, and `data-cy`) and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `alt:<text>` / `alt=<text>` (also `alternative`, `alt-text`, `alt_text`,
 ///   `alt text`,
@@ -890,6 +890,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "data_test_id",
         "data-test",
         "data-qa",
+        "data-cy",
         "aria-label",
         "aria_label",
         "aria label",
@@ -932,6 +933,7 @@ fn parse_test_id_selector(selector: &str) -> Option<String> {
         "data_test_id",
         "data-test",
         "data-qa",
+        "data-cy",
     ]
         .into_iter()
         .find_map(|prefix| {
@@ -1777,6 +1779,7 @@ mod tests {
             "data-test-id=SAVE-ACTION",
             "data_test_id:save",
             "datatestid=SAVE-ACTION",
+            "data-cy=SAVE-ACTION",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
