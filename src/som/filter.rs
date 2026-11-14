@@ -133,7 +133,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `title=<text>` and
 ///   `testid:<text>` / `testid=<text>` (also `test-id`, `test_id`,
 ///   `data-testid`, `datatestid`, `data-test-id`, `data_test_id`,
-///   `data-test`, `data-qa`, `data-cy`, and `data-automation-id`) and
+///   `data-test`, `data-qa`, `data-cy`, and `data-automation-id`). CSS presence
+///   forms such as `[data-testid]` match elements exposing a stable test hook
+///   without requiring a particular value, and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `alt:<text>` / `alt=<text>` (also `alttext`, `alternative`, `alt-text`, `alt_text`,
 ///   `alt text`,
@@ -580,6 +582,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Accept the familiar CSS attribute form for the label/test-id selectors
     // as well as the documented `key:value` forms.
+    if let Some(attribute) = parse_attribute_presence_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_key(element, &attribute)
+        });
+    }
+
     if let Some(attribute_value) = parse_attribute_selector(selector) {
         return filter_som_by_label(som, selector, &attribute_value);
     }
@@ -947,6 +955,39 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
         .then(|| strip_selector_quotes(value.trim()))
         .filter(|value| !value.is_empty())
         .map(normalize_label_text)
+}
+
+fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
+    let key = selector.strip_prefix('[')?.strip_suffix(']')?.trim();
+    let key = key.to_ascii_lowercase();
+    matches!(
+        key.as_str(),
+        "testid" | "data-testid" | "data-test-id" | "data_test_id"
+    )
+    .then_some(key)
+}
+
+fn element_has_attribute_key(element: &Element, key: &str) -> bool {
+    let normalize = |value: &str| {
+        value
+            .chars()
+            .filter(|character| character.is_ascii_alphanumeric())
+            .flat_map(char::to_lowercase)
+            .collect::<String>()
+    };
+    let normalized_key = normalize(key);
+
+    element
+        .attrs
+        .as_ref()
+        .and_then(serde_json::Value::as_object)
+        .is_some_and(|attrs| {
+            attrs.keys().any(|attribute| {
+                let normalized_attribute = normalize(attribute);
+                normalized_attribute == normalized_key
+                    || (normalized_key != "testid" && normalized_attribute == "testid")
+            })
+        })
 }
 
 fn parse_test_id_selector(selector: &str) -> Option<String> {
@@ -1870,6 +1911,29 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-css-hook");
+    }
+
+    #[test]
+    fn test_selector_matches_css_attribute_presence_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-css-presence-hook".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"test_id": "save-action"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "[data-testid]");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-css-presence-hook");
     }
 
     #[test]
