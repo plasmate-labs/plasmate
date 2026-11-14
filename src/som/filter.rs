@@ -133,6 +133,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `title=<text>` and
 ///   `testid:<text>` / `testid=<text>` and
 ///   `aria-label:<text>` / `aria-label=<text>` and
+///   `alt:<text>` / `alt=<text>` (also `alt-text`, `alt_text`, and `alt text`) and
 ///   `accessible-name:<text>` / `accessible_name=<text>` and
 ///   `accessible-label:<text>` / `accessible_label=<text>`) matches a region or
 ///   element's accessible label, authored text, or `aria-label`/title/placeholder/
@@ -929,11 +930,13 @@ fn parse_test_id_selector(selector: &str) -> Option<String> {
 
 fn parse_alt_selector(selector: &str) -> Option<String> {
     let selector_lower = selector.to_ascii_lowercase();
-    ["alt"].into_iter().find_map(|prefix| {
-        selector_lower
-            .strip_prefix(prefix)
-            .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
-    })
+    ["alt", "alt-text", "alt_text", "alt text"]
+        .into_iter()
+        .find_map(|prefix| {
+            selector_lower
+                .strip_prefix(prefix)
+                .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        })
     .map(str::trim)
     .map(strip_selector_quotes)
     .filter(|value| !value.is_empty())
@@ -1969,7 +1972,13 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["alt:preview", "alt=PRODUCT"] {
+        for selector in [
+            "alt:preview",
+            "alt=PRODUCT",
+            "alt-text:preview",
+            "alt_text=PRODUCT",
+            "alt text:preview",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
