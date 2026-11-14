@@ -133,7 +133,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `title=<text>` and
 ///   `testid:<text>` / `testid=<text>` and
 ///   `aria-label:<text>` / `aria-label=<text>` and
-///   `alt:<text>` / `alt=<text>` (also `alternative`, `alt-text`, `alt_text`,
+///   `alt:<text>` / `alt=<text>` (also `alttext`, `alternative`, `alt-text`, `alt_text`,
 ///   `alt text`,
 ///   `alternative-text`, `alternative_text`, and `alternative text`) and
 ///   `accessible-name:<text>` / `accessible_name=<text>` and
@@ -934,6 +934,7 @@ fn parse_alt_selector(selector: &str) -> Option<String> {
     let selector_lower = selector.to_ascii_lowercase();
     [
         "alt",
+        "alttext",
         "alternative",
         "alt-text",
         "alt_text",
@@ -1988,6 +1989,7 @@ mod tests {
             "alt=PRODUCT",
             "alt-text:preview",
             "alt_text=PRODUCT",
+            "alttext:PRODUCT",
             "alt text:preview",
             "alternative=PRODUCT",
             "alternative-text:preview",
