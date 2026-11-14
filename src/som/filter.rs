@@ -655,13 +655,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         }
     }
 
-    // Try id selector: #my-id. Prefer documented region ids, then SOM
-    // element ids or HTML ids. If neither matches, return the full SOM.
-    if let Some(id) = selector
-        .strip_prefix('#')
-        .map(str::trim)
-        .map(strip_selector_quotes)
-    {
+    // Try id selectors: #my-id, id=my-id, and id:my-id. Prefer documented
+    // region ids, then SOM element ids or HTML ids. If neither matches,
+    // return the full SOM.
+    if let Some(id) = parse_id_selector(selector) {
         let region_matches: Vec<_> = som.regions.iter().filter(|r| r.id == id).cloned().collect();
         if !region_matches.is_empty() {
             let mut result = som.clone();
@@ -697,6 +694,19 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         selector
     );
     som.clone()
+}
+
+fn parse_id_selector(selector: &str) -> Option<&str> {
+    if let Some(id) = selector.strip_prefix('#') {
+        return Some(strip_selector_quotes(id.trim()));
+    }
+    let rest = selector.strip_prefix("id")?;
+    let id = rest
+        .trim_start()
+        .strip_prefix(['=', ':'])?
+        .trim()
+        .trim_matches(['\'', '"', '`']);
+    (!id.is_empty()).then_some(id)
 }
 
 fn strip_selector_quotes(value: &str) -> &str {
@@ -4101,6 +4111,17 @@ mod tests {
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e1");
         assert_eq!(filtered.regions[0].elements[0].role, ElementRole::Link);
+    }
+
+    #[test]
+    fn test_selector_explicit_id_forms_match_regions_and_elements() {
+        let som = make_test_som();
+        for selector in ["id=r2", "id:r2", "id='r2'"] {
+            assert_eq!(apply_selector(&som, selector).regions[0].id, "r2");
+        }
+        for selector in ["id=e3", "id:e3", "id=\"e3\""] {
+            assert_eq!(apply_selector(&som, selector).regions[0].elements[0].id, "e3");
+        }
     }
 
     #[test]
