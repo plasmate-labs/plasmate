@@ -942,6 +942,7 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
             | "data-testid"
             | "data-test-id"
             | "data_test_id"
+            | "data-test"
             | "data-qa"
             | "data-cy"
     );
@@ -1840,6 +1841,29 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-css-hook");
+    }
+
+    #[test]
+    fn test_selector_matches_css_data_test_alias() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-css-data-test".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-test": "save-action"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "[data-test='SAVE-ACTION']");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-css-data-test");
     }
 
     #[test]
