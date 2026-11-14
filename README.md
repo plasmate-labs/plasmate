@@ -243,7 +243,7 @@ case-insensitive accessible-label/text matching on regions and elements;
 element matching also falls back to `aria-label`, `title`, `placeholder`, and
 `alt` attributes when a compiled label is unavailable; use `alt:<text>` or
 `alt=<text>` for an image-focused query. Use `testid:<text>` or
-`testid=<text>` (also `data-testid:<text>`) to match compiled stable test
+`testid=<text>` (also `data-testid:<text>` and `data-test-id:<text>`) to match compiled stable test
 hooks. The explicit
 `description:<text>` / `description=<text>`, `aria-description`, and
 `accessible-description` aliases also match compiled description metadata;

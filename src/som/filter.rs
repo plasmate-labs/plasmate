@@ -131,7 +131,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `name=<text>` and
 ///   `placeholder:<text>` / `placeholder=<text>` and `title:<text>` /
 ///   `title=<text>` and
-///   `testid:<text>` / `testid=<text>` and
+///   `testid:<text>` / `testid=<text>` (also `test-id`, `test_id`,
+///   `data-testid`, `data-test-id`, `data-test`, and `data-qa`) and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `alt:<text>` / `alt=<text>` (also `alternative`, `alt-text`, `alt_text`,
 ///   `alt text`,
@@ -883,6 +884,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "test-id",
         "test_id",
         "data-testid",
+        "data-test-id",
         "data-test",
         "data-qa",
         "aria-label",
@@ -917,7 +919,15 @@ fn parse_label_selector(selector: &str) -> Option<String> {
 
 fn parse_test_id_selector(selector: &str) -> Option<String> {
     let selector_lower = selector.to_ascii_lowercase();
-    ["testid", "test-id", "test_id", "data-testid", "data-test", "data-qa"]
+    [
+        "testid",
+        "test-id",
+        "test_id",
+        "data-testid",
+        "data-test-id",
+        "data-test",
+        "data-qa",
+    ]
         .into_iter()
         .find_map(|prefix| {
             selector_lower
@@ -1755,7 +1765,12 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["testid:action", "test-id=SAVE-ACTION", "data-testid:save"] {
+        for selector in [
+            "testid:action",
+            "test-id=SAVE-ACTION",
+            "data-testid:save",
+            "data-test-id=SAVE-ACTION",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
