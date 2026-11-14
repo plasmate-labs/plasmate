@@ -132,7 +132,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `placeholder:<text>` / `placeholder=<text>` and `title:<text>` /
 ///   `title=<text>` and
 ///   `testid:<text>` / `testid=<text>` (also `test-id`, `test_id`,
-///   `data-testid`, `data-test-id`, `data-test`, and `data-qa`) and
+///   `data-testid`, `datatestid`, `data-test-id`, `data_test_id`,
+///   `data-test`, and `data-qa`) and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `alt:<text>` / `alt=<text>` (also `alternative`, `alt-text`, `alt_text`,
 ///   `alt text`,
@@ -884,7 +885,9 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "test-id",
         "test_id",
         "data-testid",
+        "datatestid",
         "data-test-id",
+        "data_test_id",
         "data-test",
         "data-qa",
         "aria-label",
@@ -924,7 +927,9 @@ fn parse_test_id_selector(selector: &str) -> Option<String> {
         "test-id",
         "test_id",
         "data-testid",
+        "datatestid",
         "data-test-id",
+        "data_test_id",
         "data-test",
         "data-qa",
     ]
@@ -1770,6 +1775,8 @@ mod tests {
             "test-id=SAVE-ACTION",
             "data-testid:save",
             "data-test-id=SAVE-ACTION",
+            "data_test_id:save",
+            "datatestid=SAVE-ACTION",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
