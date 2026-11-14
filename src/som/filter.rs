@@ -133,7 +133,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `title=<text>` and
 ///   `testid:<text>` / `testid=<text>` (also `test-id`, `test_id`,
 ///   `data-testid`, `datatestid`, `data-test-id`, `data_test_id`,
-///   `data-test`, `data-qa`, and `data-cy`) and
+///   `data-test`, `data-qa`, `data-cy`, and `data-automation-id`) and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `alt:<text>` / `alt=<text>` (also `alttext`, `alternative`, `alt-text`, `alt_text`,
 ///   `alt text`,
@@ -892,6 +892,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "data-test",
         "data-qa",
         "data-cy",
+        "data-automation-id",
         "aria-label",
         "aria_label",
         "aria label",
@@ -940,6 +941,7 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
             | "data-test"
             | "data-qa"
             | "data-cy"
+            | "data-automation-id"
     );
     supported
         .then(|| strip_selector_quotes(value.trim()))
@@ -960,6 +962,7 @@ fn parse_test_id_selector(selector: &str) -> Option<String> {
         "data-test",
         "data-qa",
         "data-cy",
+        "data-automation-id",
     ]
         .into_iter()
         .find_map(|prefix| {
@@ -989,7 +992,12 @@ fn element_has_test_id(element: &Element, test_id: &str) -> bool {
             attrs.iter().any(|(key, value)| {
                 matches!(
                     normalized_key(key).as_str(),
-                    "testid" | "datatestid" | "datatest" | "dataqa" | "datacy"
+                    "testid"
+                        | "datatestid"
+                        | "datatest"
+                        | "dataqa"
+                        | "datacy"
+                        | "dataautomationid"
                 ) && value
                     .as_str()
                     .is_some_and(|value| normalize_label_text(value).contains(test_id))
@@ -1055,6 +1063,7 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                     | "datatest"
                     | "dataqa"
                     | "datacy"
+                    | "dataautomationid"
                     | "description"
                     | "describedby"
                     | "ariadescription"
@@ -1907,6 +1916,33 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-raw-test-hook");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_data_automation_id_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-automation-hook".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-automation-id": "save-action"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "data-automation-id:save-action",
+            "[data-automation-id='SAVE-ACTION']",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-automation-hook");
         }
     }
 
