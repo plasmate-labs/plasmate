@@ -131,9 +131,11 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `name=<text>` and
 ///   `placeholder:<text>` / `placeholder=<text>` and `title:<text>` /
 ///   `title=<text>` and
-///   `testid:<text>` / `testid=<text>` and
+///   `testid:<text>` / `testid=<text>` (also `test-id`, `test_id`,
+///   `data-testid`, `datatestid`, `data-test-id`, `data_test_id`,
+///   `data-test`, `data-qa`, and `data-cy`) and
 ///   `aria-label:<text>` / `aria-label=<text>` and
-///   `alt:<text>` / `alt=<text>` (also `alternative`, `alt-text`, `alt_text`,
+///   `alt:<text>` / `alt=<text>` (also `alttext`, `alternative`, `alt-text`, `alt_text`,
 ///   `alt text`,
 ///   `alternative-text`, `alternative_text`, and `alternative text`) and
 ///   `accessible-name:<text>` / `accessible_name=<text>` and
@@ -883,8 +885,12 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "test-id",
         "test_id",
         "data-testid",
+        "datatestid",
+        "data-test-id",
+        "data_test_id",
         "data-test",
         "data-qa",
+        "data-cy",
         "aria-label",
         "aria_label",
         "aria label",
@@ -917,7 +923,18 @@ fn parse_label_selector(selector: &str) -> Option<String> {
 
 fn parse_test_id_selector(selector: &str) -> Option<String> {
     let selector_lower = selector.to_ascii_lowercase();
-    ["testid", "test-id", "test_id", "data-testid", "data-test", "data-qa"]
+    [
+        "testid",
+        "test-id",
+        "test_id",
+        "data-testid",
+        "datatestid",
+        "data-test-id",
+        "data_test_id",
+        "data-test",
+        "data-qa",
+        "data-cy",
+    ]
         .into_iter()
         .find_map(|prefix| {
             selector_lower
@@ -934,6 +951,7 @@ fn parse_alt_selector(selector: &str) -> Option<String> {
     let selector_lower = selector.to_ascii_lowercase();
     [
         "alt",
+        "alttext",
         "alternative",
         "alt-text",
         "alt_text",
@@ -1755,7 +1773,15 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["testid:action", "test-id=SAVE-ACTION", "data-testid:save"] {
+        for selector in [
+            "testid:action",
+            "test-id=SAVE-ACTION",
+            "data-testid:save",
+            "data-test-id=SAVE-ACTION",
+            "data_test_id:save",
+            "datatestid=SAVE-ACTION",
+            "data-cy=SAVE-ACTION",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
@@ -1988,6 +2014,7 @@ mod tests {
             "alt=PRODUCT",
             "alt-text:preview",
             "alt_text=PRODUCT",
+            "alttext:PRODUCT",
             "alt text:preview",
             "alternative=PRODUCT",
             "alternative-text:preview",
