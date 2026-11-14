@@ -586,12 +586,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     if let Some(test_id) = parse_test_id_selector(selector) {
         return filter_som_elements(som, selector, |element| {
-            element
-                .attrs
-                .as_ref()
-                .and_then(|attrs| attrs.get("test_id"))
-                .and_then(serde_json::Value::as_str)
-                .is_some_and(|value| normalize_label_text(value).contains(&test_id))
+            element_has_test_id(element, &test_id)
         });
     }
 
@@ -976,6 +971,30 @@ fn parse_test_id_selector(selector: &str) -> Option<String> {
         .map(strip_selector_quotes)
         .filter(|value| !value.is_empty())
         .map(normalize_label_text)
+}
+
+fn element_has_test_id(element: &Element, test_id: &str) -> bool {
+    let normalized_key = |key: &str| {
+        key.chars()
+            .filter(|character| character.is_ascii_alphanumeric())
+            .flat_map(char::to_lowercase)
+            .collect::<String>()
+    };
+
+    element
+        .attrs
+        .as_ref()
+        .and_then(serde_json::Value::as_object)
+        .is_some_and(|attrs| {
+            attrs.iter().any(|(key, value)| {
+                matches!(
+                    normalized_key(key).as_str(),
+                    "testid" | "datatestid" | "datatest" | "dataqa" | "datacy"
+                ) && value
+                    .as_str()
+                    .is_some_and(|value| normalize_label_text(value).contains(test_id))
+            })
+        })
 }
 
 fn parse_alt_selector(selector: &str) -> Option<String> {
@@ -1864,6 +1883,30 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-css-data-test");
+    }
+
+    #[test]
+    fn test_selector_matches_raw_test_id_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-raw-test-hook".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-testid": "save-action"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["data-testid:save", "data-cy=SAVE-ACTION"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-raw-test-hook");
+        }
     }
 
     #[test]
