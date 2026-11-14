@@ -584,6 +584,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    if let Some(alt_text) = parse_alt_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("alt"))
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|value| normalize_label_text(value).contains(&alt_text))
+        });
+    }
+
     if let Some(label) = parse_label_selector(selector) {
         return filter_som_by_label(som, selector, &label);
     }
@@ -914,6 +925,19 @@ fn parse_test_id_selector(selector: &str) -> Option<String> {
         .map(strip_selector_quotes)
         .filter(|value| !value.is_empty())
         .map(normalize_label_text)
+}
+
+fn parse_alt_selector(selector: &str) -> Option<String> {
+    let selector_lower = selector.to_ascii_lowercase();
+    ["alt"].into_iter().find_map(|prefix| {
+        selector_lower
+            .strip_prefix(prefix)
+            .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+    })
+    .map(str::trim)
+    .map(strip_selector_quotes)
+    .filter(|value| !value.is_empty())
+    .map(normalize_label_text)
 }
 
 fn element_matches_label(element: &Element, label: &str) -> bool {
@@ -1951,6 +1975,41 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-image");
         }
+    }
+
+    #[test]
+    fn test_selector_alt_alias_ignores_unrelated_accessible_text() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-image".to_string(),
+            role: ElementRole::Image,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"alt": "Product preview"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+        som.regions[1].elements.push(Element {
+            id: "e-title".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"title": "Product preview"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "alt:preview");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-image");
     }
 
     #[test]
