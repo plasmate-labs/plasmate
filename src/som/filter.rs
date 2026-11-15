@@ -941,6 +941,10 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
         key.as_str(),
         "aria-label"
             | "aria_label"
+            | "aria-labelledby"
+            | "aria_labelledby"
+            | "aria-describedby"
+            | "aria_describedby"
             | "aria-description"
             | "aria_description"
             | "title"
@@ -968,6 +972,10 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
         key.as_str(),
         "aria-label"
             | "aria_label"
+            | "aria-labelledby"
+            | "aria_labelledby"
+            | "aria-describedby"
+            | "aria_describedby"
             | "aria-description"
             | "aria_description"
             | "title"
@@ -1993,6 +2001,8 @@ mod tests {
             actions: None,
             attrs: Some(serde_json::json!({
                 "aria-label": "Save",
+                "aria-labelledby": "save-label",
+                "aria-describedby": "save-description",
                 "aria-description": "Save this document",
                 "title": "Save",
                 "placeholder": "Save",
@@ -2006,6 +2016,10 @@ mod tests {
         for selector in [
             "[aria-label]",
             "[aria_label]",
+            "[aria-labelledby]",
+            "[aria_labelledby]",
+            "[aria-describedby]",
+            "[aria_describedby]",
             "[aria-description]",
             "[aria_description]",
             "[title]",
