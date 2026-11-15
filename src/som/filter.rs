@@ -1264,6 +1264,10 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
             | "ariakeyshortcuts"
             | "ariaowns"
             | "ariaroledescription"
+            | "ariavaluemax"
+            | "ariavaluemin"
+            | "ariavaluenow"
+            | "ariavaluetext"
             ) && value.as_str().is_some_and(matches)
         }) || attrs
             .get("aria")
@@ -1298,6 +1302,10 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                         | "keyshortcuts"
                         | "owns"
                         | "roledescription"
+                        | "valuemax"
+                        | "valuemin"
+                        | "valuenow"
+                        | "valuetext"
                     )
                         && value.as_str().is_some_and(matches)
                 })
