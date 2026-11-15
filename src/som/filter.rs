@@ -962,7 +962,17 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
     let key = key.to_ascii_lowercase();
     matches!(
         key.as_str(),
-        "testid" | "data-testid" | "data-test-id" | "data_test_id"
+        "testid"
+            | "test-id"
+            | "test_id"
+            | "data-testid"
+            | "datatestid"
+            | "data-test-id"
+            | "data_test_id"
+            | "data-test"
+            | "data-qa"
+            | "data-cy"
+            | "data-automation-id"
     )
     .then_some(key)
 }
@@ -976,6 +986,17 @@ fn element_has_attribute_key(element: &Element, key: &str) -> bool {
             .collect::<String>()
     };
     let normalized_key = normalize(key);
+    let is_test_hook = |key: &str| {
+        matches!(
+            key,
+            "testid"
+                | "datatestid"
+                | "datatest"
+                | "dataqa"
+                | "datacy"
+                | "dataautomationid"
+        )
+    };
 
     element
         .attrs
@@ -985,7 +1006,7 @@ fn element_has_attribute_key(element: &Element, key: &str) -> bool {
             attrs.keys().any(|attribute| {
                 let normalized_attribute = normalize(attribute);
                 normalized_attribute == normalized_key
-                    || (normalized_key != "testid" && normalized_attribute == "testid")
+                    || (is_test_hook(&normalized_attribute) && is_test_hook(&normalized_key))
             })
         })
 }
@@ -1923,17 +1944,30 @@ mod tests {
             text: None,
             label: None,
             actions: None,
-            attrs: Some(serde_json::json!({"test_id": "save-action"})),
+            attrs: Some(serde_json::json!({"data-cy": "save-action"})),
             children: None,
             hints: None,
             shadow: None,
         });
 
-        let filtered = apply_selector(&som, "[data-testid]");
-
-        assert_eq!(filtered.regions.len(), 1);
-        assert_eq!(filtered.regions[0].elements.len(), 1);
-        assert_eq!(filtered.regions[0].elements[0].id, "e-css-presence-hook");
+        for selector in [
+            "[testid]",
+            "[test-id]",
+            "[test_id]",
+            "[data-testid]",
+            "[datatestid]",
+            "[data-test-id]",
+            "[data_test_id]",
+            "[data-test]",
+            "[data-qa]",
+            "[data-cy]",
+            "[data-automation-id]",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-css-presence-hook");
+        }
     }
 
     #[test]
