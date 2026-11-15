@@ -135,7 +135,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `data-testid`, `datatestid`, `data-test-id`, `data_test_id`,
 ///   `data-test`, `data-qa`, `data-cy`, and `data-automation-id`). CSS presence
 ///   forms such as `[data-testid]`, `[aria-label]`, `[aria-description]`,
-///   `[aria-expanded]`, `[aria-selected]`, and `[title]` match
+///   `[aria-expanded]`, `[aria-selected]`, `[aria-busy]`, `[aria-disabled]`,
+///   `[aria-hidden]`, and `[title]` match
 ///   elements exposing the corresponding attribute without requiring a
 ///   particular value, and
 ///   `aria-label:<text>` / `aria-label=<text>` and
@@ -949,6 +950,12 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
             | "aria_current"
             | "aria-expanded"
             | "aria_expanded"
+            | "aria-busy"
+            | "aria_busy"
+            | "aria-disabled"
+            | "aria_disabled"
+            | "aria-hidden"
+            | "aria_hidden"
             | "aria-haspopup"
             | "aria_haspopup"
             | "aria-pressed"
@@ -988,6 +995,12 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_current"
             | "aria-expanded"
             | "aria_expanded"
+            | "aria-busy"
+            | "aria_busy"
+            | "aria-disabled"
+            | "aria_disabled"
+            | "aria-hidden"
+            | "aria_hidden"
             | "aria-haspopup"
             | "aria_haspopup"
             | "aria-pressed"
@@ -2079,6 +2092,37 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-aria-state-presence-hook");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_css_common_aria_state_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-common-aria-state-presence-hook".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({
+                "aria-busy": "true",
+                "aria-disabled": "false",
+                "aria-hidden": "false"
+            })),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[aria-busy]", "[aria_disabled]", "[aria-hidden]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0].id,
+                "e-common-aria-state-presence-hook"
+            );
         }
     }
 
