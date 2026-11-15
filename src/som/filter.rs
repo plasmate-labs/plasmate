@@ -2135,7 +2135,7 @@ mod tests {
         let mut som = make_test_som();
         som.regions[1].elements.push(Element {
             id: "e-live-region".to_string(),
-            role: ElementRole::Status,
+            role: ElementRole::Button,
             html_id: None,
             text: Some("Saved".to_string()),
             label: None,
@@ -2306,7 +2306,7 @@ mod tests {
         let mut som = make_test_som();
         som.regions[1].elements.push(Element {
             id: "e-aria-range-hook".to_string(),
-            role: ElementRole::Slider,
+            role: ElementRole::Button,
             html_id: None,
             text: None,
             label: None,
