@@ -4940,10 +4940,20 @@ mod tests {
         som.regions[1].id = "CheckoutRegion".to_string();
         som.regions[1].elements[1].html_id = Some("SaveButton".to_string());
 
-        for selector in ["#CheckoutRegion", "id=CheckoutRegion"] {
+        for selector in [
+            "#CheckoutRegion",
+            "id=CheckoutRegion",
+            "selector=#CheckoutRegion",
+            "selector: '#CheckoutRegion'",
+        ] {
             assert_eq!(apply_selector(&som, selector).regions[0].id, "CheckoutRegion");
         }
-        for selector in ["#SaveButton", "id:SaveButton"] {
+        for selector in [
+            "#SaveButton",
+            "id:SaveButton",
+            "selector = id=SaveButton",
+            "selector: 'id:SaveButton'",
+        ] {
             assert_eq!(
                 apply_selector(&som, selector).regions[0].elements[0].html_id.as_deref(),
                 Some("SaveButton")
