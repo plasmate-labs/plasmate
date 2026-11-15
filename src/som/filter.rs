@@ -597,8 +597,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
-    if let Some(attribute_value) = parse_attribute_selector(selector) {
-        return filter_som_by_label(som, selector, &attribute_value);
+    if let Some((attribute, value)) = parse_attribute_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, &attribute, &value)
+        });
     }
 
     if let Some(test_id) = parse_test_id_selector(selector) {
@@ -940,7 +942,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
     Some(normalize_label_text(value))
 }
 
-fn parse_attribute_selector(selector: &str) -> Option<String> {
+fn parse_attribute_selector(selector: &str) -> Option<(String, String)> {
     let inner = selector.strip_prefix('[')?.strip_suffix(']')?.trim();
     let (key, value) = inner.split_once('=')?;
     let key = key.trim().to_ascii_lowercase();
@@ -1016,7 +1018,7 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
     supported
         .then(|| strip_selector_quotes(value.trim()))
         .filter(|value| !value.is_empty())
-        .map(normalize_label_text)
+        .map(|value| (key, normalize_label_text(value)))
 }
 
 fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
@@ -1131,8 +1133,47 @@ fn element_has_attribute_key(element: &Element, key: &str) -> bool {
                 .get("aria")
                 .and_then(serde_json::Value::as_object)
                 .is_some_and(|aria| {
-                    let nested_key = normalized_key.strip_prefix("aria").unwrap_or(&normalized_key);
+                    let nested_key = normalized_key
+                        .strip_prefix("aria")
+                        .unwrap_or(&normalized_key);
                     aria.keys().any(|attribute| normalize(attribute) == nested_key)
+                })
+        })
+}
+
+fn element_has_attribute_value(element: &Element, key: &str, expected: &str) -> bool {
+    let normalize_key = |value: &str| {
+        value
+            .chars()
+            .filter(|character| character.is_ascii_alphanumeric())
+            .flat_map(char::to_lowercase)
+            .collect::<String>()
+    };
+    let normalize_value = |value: &serde_json::Value| match value {
+        serde_json::Value::String(value) => normalize_label_text(value),
+        serde_json::Value::Bool(value) => value.to_string(),
+        serde_json::Value::Number(value) => value.to_string(),
+        _ => String::new(),
+    };
+    let normalized_key = normalize_key(key);
+    let matches_key = |candidate: &str| normalize_key(candidate) == normalized_key;
+    let matches_value = |value: &serde_json::Value| normalize_value(value) == expected;
+
+    element
+        .attrs
+        .as_ref()
+        .and_then(serde_json::Value::as_object)
+        .is_some_and(|attrs| {
+            attrs.iter().any(|(attribute, value)| {
+                matches_key(attribute) && matches_value(value)
+            }) || attrs
+                .get("aria")
+                .and_then(serde_json::Value::as_object)
+                .is_some_and(|aria| {
+                    let nested_key = normalized_key.strip_prefix("aria").unwrap_or(&normalized_key);
+                    aria.iter().any(|(attribute, value)| {
+                        normalize_key(attribute) == nested_key && matches_value(value)
+                    })
                 })
         })
 }
@@ -2317,6 +2358,43 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-aria-value-hook");
         }
+    }
+
+    #[test]
+    fn test_selector_matches_css_attribute_values_on_the_named_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-modal-false-label-true".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: None,
+                label: Some("true".to_string()),
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-modal": "false"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-modal-true".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: None,
+                label: Some("dialog".to_string()),
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-modal": "true"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        let filtered = apply_selector(&som, "[aria-modal='true']");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-modal-true");
     }
 
     #[test]
