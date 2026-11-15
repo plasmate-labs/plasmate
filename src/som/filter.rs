@@ -139,7 +139,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-hidden]`, `[aria-modal]`, `[aria-activedescendant]`, `[aria-details]`,
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
-///   `[aria-valuenow]`, `[aria-valuetext]`, `[inert]`, and `[title]` match;
+///   `[aria-valuenow]`, `[aria-valuetext]`, `[role]`, `[inert]`, and `[title]` match;
 ///   value selectors such as `[role="button"]` match the normalized SOM role
 ///   elements exposing the corresponding attribute without requiring a
 ///   particular value, and
@@ -1096,6 +1096,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_valuetext"
             | "aria-live"
             | "aria_live"
+            | "role"
             | "inert"
             | "title"
             | "placeholder"
@@ -1124,6 +1125,9 @@ fn element_has_attribute_key(element: &Element, key: &str) -> bool {
             .collect::<String>()
     };
     let normalized_key = normalize(key);
+    if normalized_key == "role" {
+        return true;
+    }
     let is_test_hook = |key: &str| {
         matches!(
             key,
@@ -2215,6 +2219,31 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-css-presence-hook");
         }
+    }
+
+    #[test]
+    fn test_selector_matches_css_role_presence() {
+        let mut som = make_test_som();
+        for region in &mut som.regions {
+            region.elements.clear();
+        }
+        som.regions[1].elements.push(Element {
+            id: "e-role-presence".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "[role]");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-role-presence");
     }
 
     #[test]
