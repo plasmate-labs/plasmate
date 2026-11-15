@@ -984,6 +984,8 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
             | "aria_owns"
             | "aria-roledescription"
             | "aria_roledescription"
+            | "aria-live"
+            | "aria_live"
             | "title"
             | "placeholder"
             | "alt"
@@ -1049,6 +1051,8 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_owns"
             | "aria-roledescription"
             | "aria_roledescription"
+            | "aria-live"
+            | "aria_live"
             | "title"
             | "placeholder"
             | "alt"
@@ -2098,6 +2102,30 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-css-presence-hook");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_aria_live_presence_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-live-region".to_string(),
+            role: ElementRole::Status,
+            html_id: None,
+            text: Some("Saved".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria": {"live": "polite"}})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[aria-live]", "[aria_live]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-live-region");
         }
     }
 
