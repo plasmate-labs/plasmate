@@ -138,7 +138,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-expanded]`, `[aria-selected]`, `[aria-busy]`, `[aria-disabled]`,
 ///   `[aria-hidden]`, `[aria-activedescendant]`, `[aria-details]`,
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
-///   `[aria-roledescription]`, and `[title]` match
+///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
+///   `[aria-valuenow]`, `[aria-valuetext]`, and `[title]` match
 ///   elements exposing the corresponding attribute without requiring a
 ///   particular value, and
 ///   `aria-label:<text>` / `aria-label=<text>` and
@@ -984,6 +985,14 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
             | "aria_owns"
             | "aria-roledescription"
             | "aria_roledescription"
+            | "aria-valuemax"
+            | "aria_valuemax"
+            | "aria-valuemin"
+            | "aria_valuemin"
+            | "aria-valuenow"
+            | "aria_valuenow"
+            | "aria-valuetext"
+            | "aria_valuetext"
             | "aria-live"
             | "aria_live"
             | "title"
@@ -1051,6 +1060,14 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_owns"
             | "aria-roledescription"
             | "aria_roledescription"
+            | "aria-valuemax"
+            | "aria_valuemax"
+            | "aria-valuemin"
+            | "aria_valuemin"
+            | "aria-valuenow"
+            | "aria_valuenow"
+            | "aria-valuetext"
+            | "aria_valuetext"
             | "aria-live"
             | "aria_live"
             | "title"
@@ -2273,6 +2290,42 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-aria-value-hook");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_css_aria_range_value_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-aria-range-hook".to_string(),
+            role: ElementRole::Slider,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({
+                "aria": {
+                    "valuemax": "100",
+                    "valuemin": "0",
+                    "valuenow": "50",
+                    "valuetext": "Half"
+                }
+            })),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "[aria-valuemax]",
+            "[aria_valuemin]",
+            "[aria-valuenow='50']",
+            "[aria-valuetext='Half']",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-aria-range-hook");
         }
     }
 
