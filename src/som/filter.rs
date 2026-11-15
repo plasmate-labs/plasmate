@@ -139,7 +139,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-hidden]`, `[aria-modal]`, `[aria-activedescendant]`, `[aria-details]`,
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
-///   `[aria-valuenow]`, `[aria-valuetext]`, `[inert]`, and `[title]` match
+///   `[aria-valuenow]`, `[aria-valuetext]`, `[inert]`, and `[title]` match;
+///   value selectors such as `[role="button"]` match the normalized SOM role
 ///   elements exposing the corresponding attribute without requiring a
 ///   particular value, and
 ///   `aria-label:<text>` / `aria-label=<text>` and
@@ -1002,6 +1003,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String)> {
             | "aria_valuetext"
             | "aria-live"
             | "aria_live"
+            | "role"
             | "inert"
             | "title"
             | "placeholder"
@@ -1158,6 +1160,10 @@ fn element_has_attribute_value(element: &Element, key: &str, expected: &str) -> 
     let normalized_key = normalize_key(key);
     let matches_key = |candidate: &str| normalize_key(candidate) == normalized_key;
     let matches_value = |value: &serde_json::Value| normalize_value(value) == expected;
+
+    if normalized_key == "role" {
+        return normalize_label_text(element.role.as_str()) == expected;
+    }
 
     element
         .attrs
@@ -2395,6 +2401,47 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-modal-true");
+    }
+
+    #[test]
+    fn test_selector_matches_css_role_values() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-role-button".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: Some("Save".to_string()),
+                label: None,
+                actions: None,
+                attrs: None,
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-role-link".to_string(),
+                role: ElementRole::Link,
+                html_id: None,
+                text: Some("Cancel".to_string()),
+                label: None,
+                actions: None,
+                attrs: None,
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        let filtered = apply_selector(&som, "[ROLE='BUTTON']");
+
+        let ids: Vec<_> = filtered.regions[0]
+            .elements
+            .iter()
+            .map(|element| element.id.as_str())
+            .collect();
+        assert!(ids.contains(&"e-role-button"));
+        assert!(!ids.contains(&"e-role-link"));
     }
 
     #[test]
