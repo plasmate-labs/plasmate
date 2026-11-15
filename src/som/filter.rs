@@ -136,7 +136,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `data-test`, `data-qa`, `data-cy`, and `data-automation-id`). CSS presence
 ///   forms such as `[data-testid]`, `[aria-label]`, `[aria-description]`,
 ///   `[aria-expanded]`, `[aria-selected]`, `[aria-busy]`, `[aria-disabled]`,
-///   `[aria-hidden]`, `[aria-activedescendant]`, `[aria-details]`,
+///   `[aria-hidden]`, `[aria-modal]`, `[aria-activedescendant]`, `[aria-details]`,
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, and `[title]` match
@@ -966,6 +966,8 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
             | "aria_disabled"
             | "aria-hidden"
             | "aria_hidden"
+            | "aria-modal"
+            | "aria_modal"
             | "aria-haspopup"
             | "aria_haspopup"
             | "aria-pressed"
@@ -1041,6 +1043,8 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_disabled"
             | "aria-hidden"
             | "aria_hidden"
+            | "aria-modal"
+            | "aria_modal"
             | "aria-haspopup"
             | "aria_haspopup"
             | "aria-pressed"
@@ -2253,14 +2257,21 @@ mod tests {
             attrs: Some(serde_json::json!({
                 "aria-busy": "true",
                 "aria-disabled": "false",
-                "aria-hidden": "false"
+                "aria-hidden": "false",
+                "aria-modal": "true"
             })),
             children: None,
             hints: None,
             shadow: None,
         });
 
-        for selector in ["[aria-busy]", "[aria_disabled]", "[aria-hidden]"] {
+        for selector in [
+            "[aria-busy]",
+            "[aria_disabled]",
+            "[aria-hidden]",
+            "[aria-modal]",
+            "[aria_modal]",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
