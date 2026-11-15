@@ -136,7 +136,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `data-test`, `data-qa`, `data-cy`, and `data-automation-id`). CSS presence
 ///   forms such as `[data-testid]`, `[aria-label]`, `[aria-description]`,
 ///   `[aria-expanded]`, `[aria-selected]`, `[aria-busy]`, `[aria-disabled]`,
-///   `[aria-hidden]`, and `[title]` match
+///   `[aria-hidden]`, `[aria-activedescendant]`, `[aria-details]`,
+///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
+///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
+///   `[aria-valuenow]`, `[aria-valuetext]`, and `[title]` match
 ///   elements exposing the corresponding attribute without requiring a
 ///   particular value, and
 ///   `aria-label:<text>` / `aria-label=<text>` and
@@ -970,6 +973,28 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
             | "aria_invalid"
             | "aria-required"
             | "aria_required"
+            | "aria-activedescendant"
+            | "aria_activedescendant"
+            | "aria-details"
+            | "aria_details"
+            | "aria-flowto"
+            | "aria_flowto"
+            | "aria-keyshortcuts"
+            | "aria_keyshortcuts"
+            | "aria-owns"
+            | "aria_owns"
+            | "aria-roledescription"
+            | "aria_roledescription"
+            | "aria-valuemax"
+            | "aria_valuemax"
+            | "aria-valuemin"
+            | "aria_valuemin"
+            | "aria-valuenow"
+            | "aria_valuenow"
+            | "aria-valuetext"
+            | "aria_valuetext"
+            | "aria-live"
+            | "aria_live"
             | "title"
             | "placeholder"
             | "alt"
@@ -1023,6 +1048,28 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_invalid"
             | "aria-required"
             | "aria_required"
+            | "aria-activedescendant"
+            | "aria_activedescendant"
+            | "aria-details"
+            | "aria_details"
+            | "aria-flowto"
+            | "aria_flowto"
+            | "aria-keyshortcuts"
+            | "aria_keyshortcuts"
+            | "aria-owns"
+            | "aria_owns"
+            | "aria-roledescription"
+            | "aria_roledescription"
+            | "aria-valuemax"
+            | "aria_valuemax"
+            | "aria-valuemin"
+            | "aria_valuemin"
+            | "aria-valuenow"
+            | "aria_valuenow"
+            | "aria-valuetext"
+            | "aria_valuetext"
+            | "aria-live"
+            | "aria_live"
             | "title"
             | "placeholder"
             | "alt"
@@ -1071,7 +1118,13 @@ fn element_has_attribute_key(element: &Element, key: &str) -> bool {
                 let normalized_attribute = normalize(attribute);
                 normalized_attribute == normalized_key
                     || (is_test_hook(&normalized_attribute) && is_test_hook(&normalized_key))
-            })
+            }) || attrs
+                .get("aria")
+                .and_then(serde_json::Value::as_object)
+                .is_some_and(|aria| {
+                    let nested_key = normalized_key.strip_prefix("aria").unwrap_or(&normalized_key);
+                    aria.keys().any(|attribute| normalize(attribute) == nested_key)
+                })
         })
 }
 
@@ -1205,6 +1258,16 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
             | "ariaselected"
             | "ariainvalid"
             | "ariarequired"
+            | "ariaactivedescendant"
+            | "ariadetails"
+            | "ariaflowto"
+            | "ariakeyshortcuts"
+            | "ariaowns"
+            | "ariaroledescription"
+            | "ariavaluemax"
+            | "ariavaluemin"
+            | "ariavaluenow"
+            | "ariavaluetext"
             ) && value.as_str().is_some_and(matches)
         }) || attrs
             .get("aria")
@@ -1232,6 +1295,17 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                         | "ariaselected"
                         | "ariainvalid"
                         | "ariarequired"
+                        | "active_descendant"
+                        | "activedescendant"
+                        | "details"
+                        | "flowto"
+                        | "keyshortcuts"
+                        | "owns"
+                        | "roledescription"
+                        | "valuemax"
+                        | "valuemin"
+                        | "valuenow"
+                        | "valuetext"
                     )
                         && value.as_str().is_some_and(matches)
                 })
@@ -2057,6 +2131,30 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_matches_aria_live_presence_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-live-region".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Saved".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria": {"live": "polite"}})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[aria-live]", "[aria_live]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-live-region");
+        }
+    }
+
+    #[test]
     fn test_selector_matches_css_accessible_attribute_presence() {
         let mut som = make_test_som();
         som.regions[1].elements.push(Element {
@@ -2201,6 +2299,85 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-aria-value-hook");
         }
+    }
+
+    #[test]
+    fn test_selector_matches_css_aria_range_value_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-aria-range-hook".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({
+                "aria": {
+                    "valuemax": "100",
+                    "valuemin": "0",
+                    "valuenow": "50",
+                    "valuetext": "Half"
+                }
+            })),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "[aria-valuemax]",
+            "[aria_valuemin]",
+            "[aria-valuenow='50']",
+            "[aria-valuetext='Half']",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-aria-range-hook");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_nested_aria_reference_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-nested-aria-reference-hook".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({
+                "aria": {
+                    "active_descendant": "option-1",
+                    "details": "save-details",
+                    "flowto": "next-step",
+                    "keyshortcuts": "Meta+S",
+                    "owns": "menu",
+                    "roledescription": "primary action"
+                }
+            })),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "[aria-activedescendant]",
+            "[aria-details]",
+            "[aria-flowto]",
+            "[aria-keyshortcuts]",
+            "[aria-owns]",
+            "[aria-roledescription]",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-nested-aria-reference-hook");
+        }
+
+        let filtered = apply_selector(&som, "[aria-roledescription='primary action']");
+        assert_eq!(filtered.regions[0].elements[0].id, "e-nested-aria-reference-hook");
     }
 
     #[test]
