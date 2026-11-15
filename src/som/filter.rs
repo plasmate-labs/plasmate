@@ -183,6 +183,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         })
         .filter(|value| !value.is_empty())
         .unwrap_or(selector);
+    // Keep the caller's spelling for id selectors. Roles and actions are
+    // case-insensitive, but HTML/SOM ids are case-sensitive.
+    let selector_for_id = selector;
     let selector_lower = selector.to_ascii_lowercase();
     let selector = selector_lower
         .strip_prefix("role")
@@ -698,7 +701,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // Try id selectors: #my-id, id=my-id, and id:my-id. Prefer documented
     // region ids, then SOM element ids or HTML ids. If neither matches,
     // return the full SOM.
-    if let Some(id) = parse_id_selector(selector) {
+    if let Some(id) = parse_id_selector(selector_for_id) {
         let region_matches: Vec<_> = som.regions.iter().filter(|r| r.id == id).cloned().collect();
         if !region_matches.is_empty() {
             let mut result = som.clone();
@@ -4928,6 +4931,33 @@ mod tests {
         }
         for selector in ["id=e3", "id:e3", "id=\"e3\""] {
             assert_eq!(apply_selector(&som, selector).regions[0].elements[0].id, "e3");
+        }
+    }
+
+    #[test]
+    fn test_selector_id_preserves_case() {
+        let mut som = make_test_som();
+        som.regions[1].id = "CheckoutRegion".to_string();
+        som.regions[1].elements[1].html_id = Some("SaveButton".to_string());
+
+        for selector in [
+            "#CheckoutRegion",
+            "id=CheckoutRegion",
+            "selector=#CheckoutRegion",
+            "selector: '#CheckoutRegion'",
+        ] {
+            assert_eq!(apply_selector(&som, selector).regions[0].id, "CheckoutRegion");
+        }
+        for selector in [
+            "#SaveButton",
+            "id:SaveButton",
+            "selector = id=SaveButton",
+            "selector: 'id:SaveButton'",
+        ] {
+            assert_eq!(
+                apply_selector(&som, selector).regions[0].elements[0].html_id.as_deref(),
+                Some("SaveButton")
+            );
         }
     }
 
