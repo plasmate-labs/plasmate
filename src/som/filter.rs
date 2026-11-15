@@ -962,6 +962,10 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
             | "aria_pressed"
             | "aria-selected"
             | "aria_selected"
+            | "aria-invalid"
+            | "aria_invalid"
+            | "aria-required"
+            | "aria_required"
             | "title"
             | "placeholder"
             | "alt"
@@ -1007,6 +1011,10 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_pressed"
             | "aria-selected"
             | "aria_selected"
+            | "aria-invalid"
+            | "aria_invalid"
+            | "aria-required"
+            | "aria_required"
             | "title"
             | "placeholder"
             | "alt"
@@ -1178,6 +1186,17 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                     | "describedby"
                     | "ariadescription"
                     | "ariadescribedby"
+            | "ariacontrols"
+            | "ariacurrent"
+            | "ariaexpanded"
+            | "ariabusy"
+            | "ariadisabled"
+            | "ariahidden"
+            | "ariahaspopup"
+            | "ariapressed"
+            | "ariaselected"
+            | "ariainvalid"
+            | "ariarequired"
             ) && value.as_str().is_some_and(matches)
         }) || attrs
             .get("aria")
@@ -1194,6 +1213,17 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                             | "describedby"
                             | "ariadescription"
                             | "ariadescribedby"
+                        | "ariacontrols"
+                        | "ariacurrent"
+                        | "ariaexpanded"
+                        | "ariabusy"
+                        | "ariadisabled"
+                        | "ariahidden"
+                        | "ariahaspopup"
+                        | "ariapressed"
+                        | "ariaselected"
+                        | "ariainvalid"
+                        | "ariarequired"
                     )
                         && value.as_str().is_some_and(matches)
                 })
@@ -2123,6 +2153,39 @@ mod tests {
                 filtered.regions[0].elements[0].id,
                 "e-common-aria-state-presence-hook"
             );
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_css_aria_state_values_and_validation_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-aria-value-hook".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({
+                "aria-expanded": "false",
+                "aria-invalid": "true",
+                "aria-required": "true"
+            })),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "[aria-expanded='false']",
+            "[aria-invalid]",
+            "[aria_invalid='true']",
+            "[aria-required]",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-aria-value-hook");
         }
     }
 
