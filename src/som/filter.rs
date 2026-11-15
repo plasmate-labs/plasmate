@@ -598,9 +598,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
-    if let Some((attribute, value)) = parse_attribute_selector(selector) {
+    if let Some((attribute, value, token_match)) = parse_attribute_selector(selector) {
         return filter_som_elements(som, selector, |element| {
-            element_has_attribute_value(element, &attribute, &value)
+            element_has_attribute_value(element, &attribute, &value, token_match)
         });
     }
 
@@ -943,9 +943,14 @@ fn parse_label_selector(selector: &str) -> Option<String> {
     Some(normalize_label_text(value))
 }
 
-fn parse_attribute_selector(selector: &str) -> Option<(String, String)> {
+fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
     let inner = selector.strip_prefix('[')?.strip_suffix(']')?.trim();
-    let (key, value) = inner.split_once('=')?;
+    let (key, value, token_match) = if let Some((key, value)) = inner.split_once("~=") {
+        (key, value, true)
+    } else {
+        let (key, value) = inner.split_once('=')?;
+        (key, value, false)
+    };
     let key = key.trim().to_ascii_lowercase();
     let supported = matches!(
         key.as_str(),
@@ -1020,7 +1025,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String)> {
     supported
         .then(|| strip_selector_quotes(value.trim()))
         .filter(|value| !value.is_empty())
-        .map(|value| (key, normalize_label_text(value)))
+        .map(|value| (key, normalize_label_text(value), token_match))
 }
 
 fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
@@ -1143,7 +1148,12 @@ fn element_has_attribute_key(element: &Element, key: &str) -> bool {
         })
 }
 
-fn element_has_attribute_value(element: &Element, key: &str, expected: &str) -> bool {
+fn element_has_attribute_value(
+    element: &Element,
+    key: &str,
+    expected: &str,
+    token_match: bool,
+) -> bool {
     let normalize_key = |value: &str| {
         value
             .chars()
@@ -1159,10 +1169,22 @@ fn element_has_attribute_value(element: &Element, key: &str, expected: &str) -> 
     };
     let normalized_key = normalize_key(key);
     let matches_key = |candidate: &str| normalize_key(candidate) == normalized_key;
-    let matches_value = |value: &serde_json::Value| normalize_value(value) == expected;
+    let matches_value = |value: &serde_json::Value| {
+        let value = normalize_value(value);
+        if token_match {
+            value.split_whitespace().any(|token| token == expected)
+        } else {
+            value == expected
+        }
+    };
 
     if normalized_key == "role" {
-        return normalize_label_text(element.role.as_str()) == expected;
+        let role = normalize_label_text(element.role.as_str());
+        return if token_match {
+            role.split_whitespace().any(|token| token == expected)
+        } else {
+            role == expected
+        };
     }
 
     element
@@ -5564,6 +5586,46 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert!(filtered.regions[0].elements[0].shadow.is_none());
+    }
+
+    #[test]
+    fn test_selector_matches_css_attribute_tokens() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-described-by-help-and-status".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: Some("Save".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-describedby": "help status"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-described-by-helper".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: Some("Cancel".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-describedby": "helper"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        let filtered = apply_selector(&som, "[aria-describedby~='help']");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(
+            filtered.regions[0].elements[0].id,
+            "e-described-by-help-and-status"
+        );
     }
 
     #[test]
