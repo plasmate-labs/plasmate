@@ -134,7 +134,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `testid:<text>` / `testid=<text>` (also `test-id`, `test_id`,
 ///   `data-testid`, `datatestid`, `data-test-id`, `data_test_id`,
 ///   `data-test`, `data-qa`, `data-cy`, and `data-automation-id`). CSS presence
-///   forms such as `[data-testid]`, `[aria-label]`, and `[title]` match
+///   forms such as `[data-testid]`, `[aria-label]`, `[aria-description]`, and
+///   `[title]` match
 ///   elements exposing the corresponding attribute without requiring a
 ///   particular value, and
 ///   `aria-label:<text>` / `aria-label=<text>` and
@@ -940,6 +941,8 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
         key.as_str(),
         "aria-label"
             | "aria_label"
+            | "aria-description"
+            | "aria_description"
             | "title"
             | "placeholder"
             | "alt"
@@ -965,6 +968,8 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
         key.as_str(),
         "aria-label"
             | "aria_label"
+            | "aria-description"
+            | "aria_description"
             | "title"
             | "placeholder"
             | "alt"
@@ -1988,6 +1993,7 @@ mod tests {
             actions: None,
             attrs: Some(serde_json::json!({
                 "aria-label": "Save",
+                "aria-description": "Save this document",
                 "title": "Save",
                 "placeholder": "Save",
                 "alt": "Save"
@@ -1997,7 +2003,15 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["[aria-label]", "[aria_label]", "[title]", "[placeholder]", "[alt]"] {
+        for selector in [
+            "[aria-label]",
+            "[aria_label]",
+            "[aria-description]",
+            "[aria_description]",
+            "[title]",
+            "[placeholder]",
+            "[alt]",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
