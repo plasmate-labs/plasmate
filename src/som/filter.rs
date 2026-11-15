@@ -134,8 +134,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `testid:<text>` / `testid=<text>` (also `test-id`, `test_id`,
 ///   `data-testid`, `datatestid`, `data-test-id`, `data_test_id`,
 ///   `data-test`, `data-qa`, `data-cy`, and `data-automation-id`). CSS presence
-///   forms such as `[data-testid]` match elements exposing a stable test hook
-///   without requiring a particular value, and
+///   forms such as `[data-testid]`, `[aria-label]`, and `[title]` match
+///   elements exposing the corresponding attribute without requiring a
+///   particular value, and
 ///   `aria-label:<text>` / `aria-label=<text>` and
 ///   `alt:<text>` / `alt=<text>` (also `alttext`, `alternative`, `alt-text`, `alt_text`,
 ///   `alt text`,
@@ -962,7 +963,12 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
     let key = key.to_ascii_lowercase();
     matches!(
         key.as_str(),
-        "testid"
+        "aria-label"
+            | "aria_label"
+            | "title"
+            | "placeholder"
+            | "alt"
+            | "testid"
             | "test-id"
             | "test_id"
             | "data-testid"
@@ -1967,6 +1973,35 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-css-presence-hook");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_css_accessible_attribute_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-accessible-presence-hook".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({
+                "aria-label": "Save",
+                "title": "Save",
+                "placeholder": "Save",
+                "alt": "Save"
+            })),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[aria-label]", "[aria_label]", "[title]", "[placeholder]", "[alt]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-accessible-presence-hook");
         }
     }
 
