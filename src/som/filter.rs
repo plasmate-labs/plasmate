@@ -945,6 +945,12 @@ fn parse_label_selector(selector: &str) -> Option<String> {
 
 fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
     let inner = selector.strip_prefix('[')?.strip_suffix(']')?.trim();
+    // CSS permits whitespace around the token-match operator. Normalize only
+    // the operator spelling so quoted attribute values can retain spaces.
+    let inner = inner
+        .replace(" ~ =", "~=")
+        .replace("~ =", "~=")
+        .replace(" ~=", "~=");
     let (key, value, token_match) = if let Some((key, value)) = inner.split_once("~=") {
         (key, value, true)
     } else {
@@ -5626,6 +5632,29 @@ mod tests {
             filtered.regions[0].elements[0].id,
             "e-described-by-help-and-status"
         );
+    }
+
+    #[test]
+    fn test_selector_matches_css_attribute_tokens_with_operator_whitespace() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-described-by-help".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-describedby": "help status"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "[aria-describedby ~ = 'help']");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-described-by-help");
     }
 
     #[test]
