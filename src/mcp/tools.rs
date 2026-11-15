@@ -56,6 +56,8 @@ const SOM_PROGRESS_SELECTOR_DESCRIPTION: &str =
     " Progress controls also accept progress_bar and progress-bar aliases, plus progress_bars, progress-bars, and progress bars.";
 const SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION: &str =
     " Action aliases also accept type text and select option forms, including action:type text and action:select option. Clear actions also accept clear_text, clear-text, and clear text aliases, including action:clear-text.";
+const SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION: &str =
+    " Explicit CSS presence selectors `[aria-modal]` and `[inert]` match modal or inert elements without requiring a value; value forms such as `[aria-modal='true']` are also supported.";
 
 const SOM_TABLE_SELECTOR_DESCRIPTION: &str = " Table-like element selectors also include data_table/data_tables and data-table/data-tables, data-grid/data-grids, data_grid/data_grids, datagrid/datagrids, table_grid/table_grids, table-grid/table-grids, tablegrid/tablegrids, and spaced data table/data tables, data grid/data grids, or table grid/table grids forms.";
 const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements, and picture/pictures/image_item/image-item/image item/imageitems for image elements.";
@@ -527,7 +529,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -564,7 +566,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -1149,7 +1151,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 },
                 "max_links": {
                     "type": "integer",
@@ -1296,7 +1298,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
                 },
                 "visual_mode": {
                     "type": "string",
