@@ -139,7 +139,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-hidden]`, `[aria-modal]`, `[aria-activedescendant]`, `[aria-details]`,
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
-///   `[aria-valuenow]`, `[aria-valuetext]`, and `[title]` match
+///   `[aria-valuenow]`, `[aria-valuetext]`, `[inert]`, and `[title]` match
 ///   elements exposing the corresponding attribute without requiring a
 ///   particular value, and
 ///   `aria-label:<text>` / `aria-label=<text>` and
@@ -1000,6 +1000,7 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
             | "aria_valuetext"
             | "aria-live"
             | "aria_live"
+            | "inert"
             | "title"
             | "placeholder"
             | "alt"
@@ -1077,6 +1078,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_valuetext"
             | "aria-live"
             | "aria_live"
+            | "inert"
             | "title"
             | "placeholder"
             | "alt"
@@ -2258,7 +2260,8 @@ mod tests {
                 "aria-busy": "true",
                 "aria-disabled": "false",
                 "aria-hidden": "false",
-                "aria-modal": "true"
+                "aria-modal": "true",
+                "inert": ""
             })),
             children: None,
             hints: None,
@@ -2271,6 +2274,7 @@ mod tests {
             "[aria-hidden]",
             "[aria-modal]",
             "[aria_modal]",
+            "[inert]",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
