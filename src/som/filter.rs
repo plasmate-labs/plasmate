@@ -134,8 +134,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `testid:<text>` / `testid=<text>` (also `test-id`, `test_id`,
 ///   `data-testid`, `datatestid`, `data-test-id`, `data_test_id`,
 ///   `data-test`, `data-qa`, `data-cy`, and `data-automation-id`). CSS presence
-///   forms such as `[data-testid]`, `[aria-label]`, `[aria-description]`, and
-///   `[title]` match
+///   forms such as `[data-testid]`, `[aria-label]`, `[aria-description]`,
+///   `[aria-expanded]`, `[aria-selected]`, and `[title]` match
 ///   elements exposing the corresponding attribute without requiring a
 ///   particular value, and
 ///   `aria-label:<text>` / `aria-label=<text>` and
@@ -943,6 +943,18 @@ fn parse_attribute_selector(selector: &str) -> Option<String> {
             | "aria_label"
             | "aria-description"
             | "aria_description"
+            | "aria-controls"
+            | "aria_controls"
+            | "aria-current"
+            | "aria_current"
+            | "aria-expanded"
+            | "aria_expanded"
+            | "aria-haspopup"
+            | "aria_haspopup"
+            | "aria-pressed"
+            | "aria_pressed"
+            | "aria-selected"
+            | "aria_selected"
             | "title"
             | "placeholder"
             | "alt"
@@ -970,6 +982,18 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_label"
             | "aria-description"
             | "aria_description"
+            | "aria-controls"
+            | "aria_controls"
+            | "aria-current"
+            | "aria_current"
+            | "aria-expanded"
+            | "aria_expanded"
+            | "aria-haspopup"
+            | "aria_haspopup"
+            | "aria-pressed"
+            | "aria_pressed"
+            | "aria-selected"
+            | "aria_selected"
             | "title"
             | "placeholder"
             | "alt"
@@ -2016,6 +2040,45 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-accessible-presence-hook");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_css_aria_state_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-aria-state-presence-hook".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({
+                "aria-controls": "menu",
+                "aria-current": "page",
+                "aria-expanded": "false",
+                "aria-haspopup": "menu",
+                "aria-pressed": "false",
+                "aria-selected": "true"
+            })),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "[aria-controls]",
+            "[aria_controls]",
+            "[aria-current]",
+            "[aria-expanded]",
+            "[aria_haspopup]",
+            "[aria-pressed]",
+            "[aria-selected]",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-aria-state-presence-hook");
         }
     }
 
