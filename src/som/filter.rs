@@ -140,6 +140,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[role]`, `[inert]`, and `[title]` match;
+///   `[id]` matches authored HTML ids (not generated SOM element ids),
 ///   value selectors such as `[role="button"]` match the normalized SOM role
 ///   elements exposing the corresponding attribute without requiring a
 ///   particular value, and
@@ -1018,6 +1019,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
             | "aria-live"
             | "aria_live"
             | "role"
+            | "id"
             | "inert"
             | "title"
             | "placeholder"
@@ -1097,6 +1099,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria-live"
             | "aria_live"
             | "role"
+            | "id"
             | "inert"
             | "title"
             | "placeholder"
@@ -1127,6 +1130,9 @@ fn element_has_attribute_key(element: &Element, key: &str) -> bool {
     let normalized_key = normalize(key);
     if normalized_key == "role" {
         return true;
+    }
+    if normalized_key == "id" {
+        return element.html_id.is_some();
     }
     let is_test_hook = |key: &str| {
         matches!(
@@ -1198,6 +1204,12 @@ fn element_has_attribute_value(
         } else {
             role == expected
         };
+    }
+    if normalized_key == "id" {
+        return element
+            .html_id
+            .as_deref()
+            .is_some_and(|value| matches_value(&serde_json::Value::String(value.to_string())));
     }
 
     element
@@ -2244,6 +2256,35 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-role-presence");
+    }
+
+    #[test]
+    fn test_selector_matches_authored_html_id_presence_and_value() {
+        let mut som = make_test_som();
+        for region in &mut som.regions {
+            for element in &mut region.elements {
+                element.html_id = None;
+            }
+        }
+        som.regions[1].elements.push(Element {
+            id: "e-generated-id".to_string(),
+            role: ElementRole::Button,
+            html_id: Some("save-action".to_string()),
+            text: None,
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[id]", "[id=save-action]", "[id=\"SAVE-ACTION\"]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-generated-id");
+        }
     }
 
     #[test]
