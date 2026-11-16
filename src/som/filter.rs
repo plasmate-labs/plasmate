@@ -616,6 +616,15 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    // Accept the common CSS class shorthand in addition to the explicit
+    // attribute form (`[class~="token"]`). Class matching is token-aware so
+    // `.card` does not accidentally match `.card-header`.
+    if let Some(class_name) = parse_class_selector(selector_for_id) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, "class", &class_name, true)
+        });
+    }
+
     if let Some(test_id) = parse_test_id_selector(selector) {
         return filter_som_elements(som, selector, |element| {
             element_has_test_id(element, &test_id)
@@ -772,6 +781,13 @@ fn parse_id_selector(selector: &str) -> Option<&str> {
         })?
         .trim_matches(['\'', '"', '`']);
     (!id.is_empty()).then_some(id)
+}
+
+fn parse_class_selector(selector: &str) -> Option<String> {
+    let class_name = selector.strip_prefix('.')?.trim();
+    let class_name = strip_selector_quotes(class_name);
+    (!class_name.is_empty() && !class_name.chars().any(char::is_whitespace))
+        .then(|| normalize_label_text(class_name))
 }
 
 fn strip_selector_quotes(value: &str) -> &str {
@@ -1050,6 +1066,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
             | "title"
             | "placeholder"
             | "alt"
+            | "class"
             | "testid"
             | "data-testid"
             | "data-test-id"
@@ -1137,6 +1154,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "title"
             | "placeholder"
             | "alt"
+            | "class"
             | "testid"
             | "test-id"
             | "test_id"
@@ -2250,6 +2268,34 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-css-hook");
+    }
+
+    #[test]
+    fn test_selector_matches_css_class_tokens() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-card".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"class": "card featured"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [".card", "[class~='FEATURED']", "[class=card featured]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-card");
+        }
+
+        let prefix_collision = apply_selector(&som, ".car");
+        assert_eq!(prefix_collision.regions.len(), som.regions.len());
+        assert_eq!(prefix_collision.regions[1].elements.len(), som.regions[1].elements.len());
     }
 
     #[test]
