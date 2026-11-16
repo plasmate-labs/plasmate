@@ -23,6 +23,33 @@ def test_sync_start_does_not_pipe_unread_stderr() -> None:
     )
 
 
+def test_sync_ensure_started_is_idempotent() -> None:
+    browser = Plasmate(binary="fixture")
+    starts = Mock(side_effect=lambda: setattr(browser, "_initialized", True))
+    browser._start = starts  # type: ignore[method-assign]
+
+    browser._ensure_started()
+    browser._ensure_started()
+
+    starts.assert_called_once_with()
+
+
+def test_async_ensure_started_is_idempotent() -> None:
+    async def exercise() -> None:
+        browser = AsyncPlasmate(binary="fixture")
+
+        async def start_once() -> None:
+            browser._initialized = True
+
+        browser._start = AsyncMock(side_effect=start_once)  # type: ignore[method-assign]
+        await browser._ensure_started()
+        await browser._ensure_started()
+
+        browser._start.assert_awaited_once_with()  # type: ignore[attr-defined]
+
+    asyncio.run(exercise())
+
+
 def test_async_start_does_not_pipe_unread_stderr() -> None:
     async def exercise() -> None:
         browser = AsyncPlasmate(binary="fixture")

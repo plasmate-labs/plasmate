@@ -172,12 +172,15 @@ class Plasmate:
         self._process: Optional[subprocess.Popen] = None
         self._next_id = 1
         self._lock = threading.Lock()
+        self._start_lock = threading.Lock()
         self._initialized = False
 
     def _ensure_started(self) -> None:
         if self._initialized:
             return
-        self._start()
+        with self._start_lock:
+            if not self._initialized:
+                self._start()
 
     def _start(self) -> None:
         self._process = subprocess.Popen(
@@ -548,12 +551,15 @@ class AsyncPlasmate:
         self._process: Optional[asyncio.subprocess.Process] = None
         self._next_id = 1
         self._lock = asyncio.Lock()
+        self._start_lock = asyncio.Lock()
         self._initialized = False
 
     async def _ensure_started(self) -> None:
         if self._initialized:
             return
-        await self._start()
+        async with self._start_lock:
+            if not self._initialized:
+                await self._start()
 
     async def _start(self) -> None:
         self._process = await asyncio.create_subprocess_exec(
