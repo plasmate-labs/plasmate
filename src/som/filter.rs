@@ -1209,7 +1209,13 @@ fn element_has_attribute_value(
         return element
             .html_id
             .as_deref()
-            .is_some_and(|value| matches_value(&serde_json::Value::String(value.to_string())));
+            .is_some_and(|value| {
+                if token_match {
+                    value.split_whitespace().any(|token| token == expected)
+                } else {
+                    value == expected
+                }
+            });
     }
 
     element
@@ -2279,12 +2285,16 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["[id]", "[id=save-action]", "[id=\"SAVE-ACTION\"]"] {
+        for selector in ["[id]", "[id=save-action]"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-generated-id");
         }
+
+        let case_mismatch = apply_selector(&som, "[id=SAVE-ACTION]");
+        assert_eq!(case_mismatch.regions.len(), som.regions.len());
+        assert_eq!(case_mismatch.regions[1].elements.len(), 1);
     }
 
     #[test]
