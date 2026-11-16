@@ -308,7 +308,8 @@ export class Plasmate extends EventEmitter {
   // ---- Lifecycle ----
 
   private async ensureStarted(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized && this.process && this.process.exitCode === null) return;
+    if (this.initialized) this.initialized = false;
     if (this.initPromise) return this.initPromise;
 
     this.initPromise = this.start();

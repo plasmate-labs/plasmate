@@ -35,6 +35,31 @@ describe('read selectors', () => {
   });
 });
 
+describe('transport lifecycle', () => {
+  it('restarts when the initialized MCP process has exited', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      initialized: boolean;
+      process: { exitCode: number | null } | null;
+      start: () => Promise<void>;
+      ensureStarted: () => Promise<void>;
+    };
+    client.initialized = true;
+    client.process = { exitCode: 1 };
+    let starts = 0;
+    client.start = async () => {
+      starts += 1;
+      client.initialized = true;
+    };
+
+    await client.ensureStarted();
+
+    assert.equal(starts, 1);
+    client.process = null;
+    browser.close();
+  });
+});
+
 describe('extractText payload', () => {
   it('keeps JSON-looking and empty extract_text as strings', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));
