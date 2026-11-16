@@ -140,7 +140,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[role]`, `[inert]`,
-///   and `[title]` match;
+///   and `[title]` match. Any `data-*` or `data_*` attribute can also be
+///   selected by presence or value, which covers application-specific test and
+///   state hooks;
 ///   `[id]` matches authored HTML ids (not generated SOM element ids),
 ///   value selectors such as `[role="button"]` match the normalized SOM role
 ///   elements exposing the corresponding attribute without requiring a
@@ -974,8 +976,10 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
         (key, value, false)
     };
     let key = key.trim().to_ascii_lowercase();
-    let supported = matches!(
-        key.as_str(),
+    let supported = key.starts_with("data-")
+        || key.starts_with("data_")
+        || matches!(
+            key.as_str(),
         "aria-label"
             | "aria_label"
             | "aria-labelledby"
@@ -1046,7 +1050,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
             | "data-qa"
             | "data-cy"
             | "data-automation-id"
-    );
+        );
     supported
         .then(|| strip_selector_quotes(value.trim()))
         .filter(|value| !value.is_empty())
@@ -1055,9 +1059,14 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
 
 fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
     let key = selector.strip_prefix('[')?.strip_suffix(']')?.trim();
+    if key.contains('=') || key.contains('~') {
+        return None;
+    }
     let key = key.to_ascii_lowercase();
-    matches!(
-        key.as_str(),
+    (key.starts_with("data-")
+        || key.starts_with("data_")
+        || matches!(
+            key.as_str(),
         "aria-label"
             | "aria_label"
             | "aria-labelledby"
@@ -1131,7 +1140,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "data-qa"
             | "data-cy"
             | "data-automation-id"
-    )
+        ))
     .then_some(key)
 }
 
@@ -2443,6 +2452,29 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-aria-sort-value");
+    }
+
+    #[test]
+    fn test_selector_matches_arbitrary_data_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-data-state".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-state": "open", "data_test_variant": "primary"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[data-state]", "[data-state=open]", "[data_test_variant=primary]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-data-state", "selector: {selector}");
+        }
     }
 
     #[test]
