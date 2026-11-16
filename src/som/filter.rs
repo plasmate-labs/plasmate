@@ -608,6 +608,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    // Keep compact selectors consistent with the CSS-style form for arbitrary
+    // data attributes, e.g. `data-state:open` or `data-state=open`.
+    if let Some((attribute, value)) = parse_named_data_attribute_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, &attribute, &value, false)
+        });
+    }
+
     if let Some(test_id) = parse_test_id_selector(selector) {
         return filter_som_elements(som, selector, |element| {
             element_has_test_id(element, &test_id)
@@ -1142,6 +1150,17 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "data-automation-id"
         ))
     .then_some(key)
+}
+
+fn parse_named_data_attribute_selector(selector: &str) -> Option<(String, String)> {
+    let (key, value) = selector
+        .split_once(':')
+        .or_else(|| selector.split_once('='))?;
+    let key = key.trim().to_ascii_lowercase();
+    let value = strip_selector_quotes(value.trim());
+    (key.starts_with("data-") || key.starts_with("data_"))
+        .then_some((key, normalize_label_text(value)))
+        .filter(|(_, value)| !value.is_empty())
 }
 
 fn element_has_attribute_key(element: &Element, key: &str) -> bool {
@@ -2474,6 +2493,30 @@ mod tests {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-data-state", "selector: {selector}");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compact_arbitrary_data_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-compact-data-state".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-state": "open"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["data-state:open", "data-state=OPEN"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-compact-data-state");
         }
     }
 
