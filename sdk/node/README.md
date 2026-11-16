@@ -68,6 +68,7 @@ browser.close();
 ### Lifecycle
 
 - **`close()`** - Shut down the plasmate process
+- **`isStarted`** - Read-only boolean showing whether the MCP transport is initialized
 
 ## SOM Types
 

@@ -305,6 +305,11 @@ export class Plasmate extends EventEmitter {
     this.timeout = options.timeout ?? 30000;
   }
 
+  /** Whether the MCP transport is currently initialized and running. */
+  get isStarted(): boolean {
+    return this.initialized && this.process?.exitCode === null;
+  }
+
   // ---- Lifecycle ----
 
   private async ensureStarted(): Promise<void> {

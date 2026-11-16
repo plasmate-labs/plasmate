@@ -36,6 +36,26 @@ describe('read selectors', () => {
 });
 
 describe('transport lifecycle', () => {
+  it('reports whether the MCP transport is initialized', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+
+    assert.equal(browser.isStarted, false);
+
+    const client = browser as unknown as {
+      initialized: boolean;
+      process: { exitCode: number | null } | null;
+    };
+    client.process = { exitCode: null };
+    client.initialized = true;
+
+    assert.equal(browser.isStarted, true);
+
+    client.process = { exitCode: 1 };
+    assert.equal(browser.isStarted, false);
+    client.process = null;
+    browser.close();
+  });
+
   it('rejects pending requests when the client closes', async () => {
     const browser = new Plasmate({ binary: 'unused', timeout: 60_000 });
     const client = browser as unknown as {
