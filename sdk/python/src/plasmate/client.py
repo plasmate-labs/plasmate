@@ -176,8 +176,12 @@ class Plasmate:
         self._initialized = False
 
     def _ensure_started(self) -> None:
-        if self._initialized:
+        if self._initialized and (
+            self._process is None or self._process.poll() is None
+        ):
             return
+        if self._initialized:
+            self._initialized = False
         with self._start_lock:
             if not self._initialized:
                 self._start()
@@ -568,8 +572,12 @@ class AsyncPlasmate:
         self._initialized = False
 
     async def _ensure_started(self) -> None:
-        if self._initialized:
+        if self._initialized and (
+            self._process is None or self._process.returncode is None
+        ):
             return
+        if self._initialized:
+            self._initialized = False
         async with self._start_lock:
             if not self._initialized:
                 await self._start()

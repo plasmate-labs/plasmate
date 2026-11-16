@@ -34,6 +34,20 @@ def test_sync_ensure_started_is_idempotent() -> None:
     starts.assert_called_once_with()
 
 
+def test_sync_ensure_started_restarts_after_process_exit() -> None:
+    browser = Plasmate(binary="fixture")
+    process = Mock()
+    process.poll.return_value = 1
+    browser._process = process
+    browser._initialized = True
+    starts = Mock(side_effect=lambda: setattr(browser, "_initialized", True))
+    browser._start = starts  # type: ignore[method-assign]
+
+    browser._ensure_started()
+
+    starts.assert_called_once_with()
+
+
 def test_sync_start_exposes_eager_startup() -> None:
     browser = Plasmate(binary="fixture")
     starts = Mock(side_effect=lambda: setattr(browser, "_initialized", True))
@@ -60,6 +74,25 @@ def test_async_ensure_started_is_idempotent() -> None:
 
         browser._start = AsyncMock(side_effect=start_once)  # type: ignore[method-assign]
         await browser._ensure_started()
+        await browser._ensure_started()
+
+        browser._start.assert_awaited_once_with()  # type: ignore[attr-defined]
+
+    asyncio.run(exercise())
+
+
+def test_async_ensure_started_restarts_after_process_exit() -> None:
+    async def exercise() -> None:
+        browser = AsyncPlasmate(binary="fixture")
+        process = Mock()
+        process.returncode = 1
+        browser._process = process
+        browser._initialized = True
+
+        async def start_once() -> None:
+            browser._initialized = True
+
+        browser._start = AsyncMock(side_effect=start_once)  # type: ignore[method-assign]
         await browser._ensure_started()
 
         browser._start.assert_awaited_once_with()  # type: ignore[attr-defined]
