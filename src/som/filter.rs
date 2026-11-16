@@ -139,7 +139,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-hidden]`, `[aria-modal]`, `[aria-activedescendant]`, `[aria-details]`,
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
-///   `[aria-valuenow]`, `[aria-valuetext]`, `[role]`, `[inert]`, and `[title]` match;
+///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[role]`, `[inert]`,
+///   and `[title]` match;
 ///   `[id]` matches authored HTML ids (not generated SOM element ids),
 ///   value selectors such as `[role="button"]` match the normalized SOM role
 ///   elements exposing the corresponding attribute without requiring a
@@ -1016,6 +1017,8 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
             | "aria_valuenow"
             | "aria-valuetext"
             | "aria_valuetext"
+            | "aria-sort"
+            | "aria_sort"
             | "aria-live"
             | "aria_live"
             | "role"
@@ -1096,6 +1099,8 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_valuenow"
             | "aria-valuetext"
             | "aria_valuetext"
+            | "aria-sort"
+            | "aria_sort"
             | "aria-live"
             | "aria_live"
             | "role"
@@ -2381,7 +2386,8 @@ mod tests {
                 "aria-expanded": "false",
                 "aria-haspopup": "menu",
                 "aria-pressed": "false",
-                "aria-selected": "true"
+                "aria-selected": "true",
+                "aria-sort": "ascending"
             })),
             children: None,
             hints: None,
@@ -2396,12 +2402,36 @@ mod tests {
             "[aria_haspopup]",
             "[aria-pressed]",
             "[aria-selected]",
+            "[aria-sort]",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-aria-state-presence-hook");
         }
+    }
+
+    #[test]
+    fn test_selector_matches_css_aria_sort_value() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-aria-sort-value".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Name".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-sort": "ascending"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "[aria-sort=ascending]");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-aria-sort-value");
     }
 
     #[test]
