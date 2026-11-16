@@ -140,7 +140,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[role]`, `[inert]`,
-///   and `[title]` match;
+///   and `[title]` match. Any `data-*` or `data_*` attribute can also be
+///   selected by presence or value, which covers application-specific test and
+///   state hooks;
 ///   `[id]` matches authored HTML ids (not generated SOM element ids),
 ///   value selectors such as `[role="button"]` match the normalized SOM role
 ///   elements exposing the corresponding attribute without requiring a
@@ -606,6 +608,23 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    // Keep compact selectors consistent with the CSS-style form for arbitrary
+    // data attributes, e.g. `data-state:open` or `data-state=open`.
+    if let Some((attribute, value, token_match)) = parse_named_data_attribute_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, &attribute, &value, token_match)
+        });
+    }
+
+    // Accept the common CSS class shorthand in addition to the explicit
+    // attribute form (`[class~="token"]`). Class matching is token-aware so
+    // `.card` does not accidentally match `.card-header`.
+    if let Some(class_name) = parse_class_selector(selector_for_id) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, "class", &class_name, true)
+        });
+    }
+
     if let Some(test_id) = parse_test_id_selector(selector) {
         return filter_som_elements(som, selector, |element| {
             element_has_test_id(element, &test_id)
@@ -762,6 +781,13 @@ fn parse_id_selector(selector: &str) -> Option<&str> {
         })?
         .trim_matches(['\'', '"', '`']);
     (!id.is_empty()).then_some(id)
+}
+
+fn parse_class_selector(selector: &str) -> Option<String> {
+    let class_name = selector.strip_prefix('.')?.trim();
+    let class_name = strip_selector_quotes(class_name);
+    (!class_name.is_empty() && !class_name.chars().any(char::is_whitespace))
+        .then(|| normalize_label_text(class_name))
 }
 
 fn strip_selector_quotes(value: &str) -> &str {
@@ -974,8 +1000,10 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
         (key, value, false)
     };
     let key = key.trim().to_ascii_lowercase();
-    let supported = matches!(
-        key.as_str(),
+    let supported = key.starts_with("data-")
+        || key.starts_with("data_")
+        || matches!(
+            key.as_str(),
         "aria-label"
             | "aria_label"
             | "aria-labelledby"
@@ -1038,6 +1066,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
             | "title"
             | "placeholder"
             | "alt"
+            | "class"
             | "testid"
             | "data-testid"
             | "data-test-id"
@@ -1046,7 +1075,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
             | "data-qa"
             | "data-cy"
             | "data-automation-id"
-    );
+        );
     supported
         .then(|| strip_selector_quotes(value.trim()))
         .filter(|value| !value.is_empty())
@@ -1055,9 +1084,14 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
 
 fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
     let key = selector.strip_prefix('[')?.strip_suffix(']')?.trim();
+    if key.contains('=') || key.contains('~') {
+        return None;
+    }
     let key = key.to_ascii_lowercase();
-    matches!(
-        key.as_str(),
+    (key.starts_with("data-")
+        || key.starts_with("data_")
+        || matches!(
+            key.as_str(),
         "aria-label"
             | "aria_label"
             | "aria-labelledby"
@@ -1120,6 +1154,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "title"
             | "placeholder"
             | "alt"
+            | "class"
             | "testid"
             | "test-id"
             | "test_id"
@@ -1131,8 +1166,24 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "data-qa"
             | "data-cy"
             | "data-automation-id"
-    )
+        ))
     .then_some(key)
+}
+
+fn parse_named_data_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
+    let (key, value, token_match) = if let Some((key, value)) = selector.split_once('~') {
+        (key, value.strip_prefix('=')?, true)
+    } else if let Some((key, value)) = selector.split_once(':') {
+        (key, value, false)
+    } else {
+        let (key, value) = selector.split_once('=')?;
+        (key, value, false)
+    };
+    let key = key.trim().to_ascii_lowercase();
+    let value = strip_selector_quotes(value.trim());
+    (key.starts_with("data-") || key.starts_with("data_"))
+        .then_some((key, normalize_label_text(value), token_match))
+        .filter(|(_, value, _)| !value.is_empty())
 }
 
 fn element_has_attribute_key(element: &Element, key: &str) -> bool {
@@ -2220,6 +2271,34 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_matches_css_class_tokens() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-card".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"class": "card featured"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [".card", "[class~='FEATURED']", "[class=card featured]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-card");
+        }
+
+        let prefix_collision = apply_selector(&som, ".car");
+        assert_eq!(prefix_collision.regions.len(), som.regions.len());
+        assert_eq!(prefix_collision.regions[1].elements.len(), som.regions[1].elements.len());
+    }
+
+    #[test]
     fn test_selector_matches_css_attribute_presence_aliases() {
         let mut som = make_test_som();
         som.regions[1].elements.push(Element {
@@ -2443,6 +2522,74 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-aria-sort-value");
+    }
+
+    #[test]
+    fn test_selector_matches_arbitrary_data_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-data-state".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-state": "open", "data_test_variant": "primary"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[data-state]", "[data-state=open]", "[data_test_variant=primary]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-data-state", "selector: {selector}");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compact_arbitrary_data_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-compact-data-state".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-state": "open"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["data-state:open", "data-state=OPEN"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-compact-data-state");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compact_data_attribute_tokens() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-compact-data-tags".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-tags": "primary compact"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "data-tags~=PRIMARY");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-compact-data-tags");
     }
 
     #[test]
