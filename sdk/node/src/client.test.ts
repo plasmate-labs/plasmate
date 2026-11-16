@@ -75,13 +75,13 @@ describe('transport lifecycle', () => {
     const client = browser as unknown as {
       initialized: boolean;
       process: { exitCode: number | null } | null;
-      start: () => Promise<void>;
+      startTransport: () => Promise<void>;
       ensureStarted: () => Promise<void>;
     };
     client.initialized = true;
     client.process = { exitCode: 1 };
     let starts = 0;
-    client.start = async () => {
+    client.startTransport = async () => {
       starts += 1;
       client.initialized = true;
     };
@@ -95,11 +95,11 @@ describe('transport lifecycle', () => {
   it('allows a later request to retry after startup fails', async () => {
     const browser = new Plasmate({ binary: 'unused' });
     const client = browser as unknown as {
-      start: () => Promise<void>;
+      startTransport: () => Promise<void>;
       ensureStarted: () => Promise<void>;
     };
     let starts = 0;
-    client.start = async () => {
+    client.startTransport = async () => {
       starts += 1;
       if (starts === 1) throw new Error('startup failed');
     };
@@ -108,6 +108,27 @@ describe('transport lifecycle', () => {
     await client.ensureStarted();
 
     assert.equal(starts, 2);
+    browser.close();
+  });
+
+  it('allows callers to eagerly start the transport', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      startTransport: () => Promise<void>;
+      initialized: boolean;
+      process: { exitCode: number | null; kill: () => void } | null;
+    };
+    let starts = 0;
+    client.startTransport = async () => {
+      starts += 1;
+      client.initialized = true;
+      client.process = { exitCode: null, kill: () => {} };
+    };
+
+    await browser.start();
+
+    assert.equal(starts, 1);
+    assert.equal(browser.isStarted, true);
     browser.close();
   });
 });

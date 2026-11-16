@@ -317,7 +317,7 @@ export class Plasmate extends EventEmitter {
     if (this.initialized) this.initialized = false;
     if (this.initPromise) return this.initPromise;
 
-    const initPromise = this.start();
+    const initPromise = this.startTransport();
     this.initPromise = initPromise;
     try {
       await initPromise;
@@ -330,7 +330,7 @@ export class Plasmate extends EventEmitter {
     }
   }
 
-  private async start(): Promise<void> {
+  private async startTransport(): Promise<void> {
     this.process = spawn(this.binary, ['mcp'], {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
@@ -391,6 +391,11 @@ export class Plasmate extends EventEmitter {
     });
 
     this.initialized = true;
+  }
+
+  /** Start the MCP transport without sending a tool request. */
+  async start(): Promise<void> {
+    await this.ensureStarted();
   }
 
   /** Shut down the plasmate process. */
