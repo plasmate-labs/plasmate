@@ -493,6 +493,19 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
         // `apply_selector` accepts both #id and #'id'/#"id" forms while
         // preserving ID case. Keep those spellings on the same cache entry.
         Some(format!("#{id}", id = strip_selector_quotes(id.trim())))
+    } else if let Some(classes) = selector.strip_prefix('.') {
+        // `apply_selector` treats class tokens case-insensitively and matches
+        // each token independently. Keep equivalent CSS shorthand selectors
+        // on one derived-cache entry as well.
+        let classes = classes
+            .split('.')
+            .map(|class_name| strip_selector_quotes(class_name.trim()).to_ascii_lowercase())
+            .collect::<Vec<_>>();
+        if !classes.is_empty() && classes.iter().all(|class_name| !class_name.is_empty()) {
+            Some(format!(".{}", classes.join(".")))
+        } else {
+            Some(selector.to_ascii_lowercase())
+        }
     } else {
         // Keep cache keys aligned with `apply_selector`: equivalent quoted
         // and whitespace-separated forms should share one selector entry.
@@ -1192,6 +1205,23 @@ mod tests {
         assert!(matches!(
             cache.lookup_with_selector("https://example.com/app", 111, Some("#savebutton")),
             CacheLookup::Miss
+        ));
+    }
+
+    #[test]
+    fn test_class_selector_cache_keys_ignore_token_case() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store_with_selector(
+            "https://example.com/app",
+            111,
+            Some(".Card.Featured"),
+            b"class-filtered".to_vec(),
+            100,
+        );
+
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some(".card.featured")),
+            CacheLookup::Hit(_)
         ));
     }
 
