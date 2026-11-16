@@ -312,8 +312,17 @@ export class Plasmate extends EventEmitter {
     if (this.initialized) this.initialized = false;
     if (this.initPromise) return this.initPromise;
 
-    this.initPromise = this.start();
-    return this.initPromise;
+    const initPromise = this.start();
+    this.initPromise = initPromise;
+    try {
+      await initPromise;
+    } catch (error) {
+      // A spawn or initialize failure must not make every later call reuse the
+      // same rejected promise. The next request should be able to retry.
+      if (this.initPromise === initPromise) this.initPromise = null;
+      this.initialized = false;
+      throw error;
+    }
   }
 
   private async start(): Promise<void> {

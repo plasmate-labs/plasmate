@@ -58,6 +58,25 @@ describe('transport lifecycle', () => {
     client.process = null;
     browser.close();
   });
+
+  it('allows a later request to retry after startup fails', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      start: () => Promise<void>;
+      ensureStarted: () => Promise<void>;
+    };
+    let starts = 0;
+    client.start = async () => {
+      starts += 1;
+      if (starts === 1) throw new Error('startup failed');
+    };
+
+    await assert.rejects(client.ensureStarted(), /startup failed/);
+    await client.ensureStarted();
+
+    assert.equal(starts, 2);
+    browser.close();
+  });
 });
 
 describe('extractText payload', () => {
