@@ -35,6 +35,84 @@ describe('read selectors', () => {
   });
 });
 
+describe('transport lifecycle', () => {
+  it('reports whether the MCP transport is initialized', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+
+    assert.equal(browser.isStarted, false);
+
+    const client = browser as unknown as {
+      initialized: boolean;
+      process: { exitCode: number | null } | null;
+    };
+    client.process = { exitCode: null };
+    client.initialized = true;
+
+    assert.equal(browser.isStarted, true);
+
+    client.process = { exitCode: 1 };
+    assert.equal(browser.isStarted, false);
+    client.process = null;
+    browser.close();
+  });
+
+  it('rejects pending requests when the client closes', async () => {
+    const browser = new Plasmate({ binary: 'unused', timeout: 60_000 });
+    const client = browser as unknown as {
+      rpc: (method: string) => Promise<unknown>;
+      send: (request: unknown) => void;
+    };
+    client.send = () => {};
+
+    const request = client.rpc('slow_request');
+    browser.close();
+
+    await assert.rejects(request, /Plasmate client closed/);
+  });
+
+  it('restarts when the initialized MCP process has exited', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      initialized: boolean;
+      process: { exitCode: number | null } | null;
+      start: () => Promise<void>;
+      ensureStarted: () => Promise<void>;
+    };
+    client.initialized = true;
+    client.process = { exitCode: 1 };
+    let starts = 0;
+    client.start = async () => {
+      starts += 1;
+      client.initialized = true;
+    };
+
+    await client.ensureStarted();
+
+    assert.equal(starts, 1);
+    client.process = null;
+    browser.close();
+  });
+
+  it('allows a later request to retry after startup fails', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      start: () => Promise<void>;
+      ensureStarted: () => Promise<void>;
+    };
+    let starts = 0;
+    client.start = async () => {
+      starts += 1;
+      if (starts === 1) throw new Error('startup failed');
+    };
+
+    await assert.rejects(client.ensureStarted(), /startup failed/);
+    await client.ensureStarted();
+
+    assert.equal(starts, 2);
+    browser.close();
+  });
+});
+
 describe('extractText payload', () => {
   it('keeps JSON-looking and empty extract_text as strings', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'plasmate-node-sdk-'));

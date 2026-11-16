@@ -305,14 +305,29 @@ export class Plasmate extends EventEmitter {
     this.timeout = options.timeout ?? 30000;
   }
 
+  /** Whether the MCP transport is currently initialized and running. */
+  get isStarted(): boolean {
+    return this.initialized && this.process?.exitCode === null;
+  }
+
   // ---- Lifecycle ----
 
   private async ensureStarted(): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized && this.process && this.process.exitCode === null) return;
+    if (this.initialized) this.initialized = false;
     if (this.initPromise) return this.initPromise;
 
-    this.initPromise = this.start();
-    return this.initPromise;
+    const initPromise = this.start();
+    this.initPromise = initPromise;
+    try {
+      await initPromise;
+    } catch (error) {
+      // A spawn or initialize failure must not make every later call reuse the
+      // same rejected promise. The next request should be able to retry.
+      if (this.initPromise === initPromise) this.initPromise = null;
+      this.initialized = false;
+      throw error;
+    }
   }
 
   private async start(): Promise<void> {
@@ -380,6 +395,11 @@ export class Plasmate extends EventEmitter {
 
   /** Shut down the plasmate process. */
   close(): void {
+    for (const [, entry] of this.pending) {
+      clearTimeout(entry.timer);
+      entry.reject(new Error('Plasmate client closed'));
+    }
+    this.pending.clear();
     if (this.process) {
       this.process.kill();
       this.process = null;
