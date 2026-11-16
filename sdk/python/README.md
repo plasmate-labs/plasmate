@@ -87,6 +87,7 @@ with Plasmate() as browser:
 
 - **`close()`** - Shut down the plasmate process
 - **`start()`** - Eagerly start the process; otherwise startup happens on the first tool call
+- **`is_started`** - Read-only boolean showing whether the MCP transport is initialized
 
 ### Pydantic Models
 

@@ -44,6 +44,13 @@ def test_sync_start_exposes_eager_startup() -> None:
     starts.assert_called_once_with()
 
 
+def test_sync_is_started_reports_transport_state() -> None:
+    browser = Plasmate(binary="fixture")
+    assert browser.is_started is False
+    browser._initialized = True
+    assert browser.is_started is True
+
+
 def test_async_ensure_started_is_idempotent() -> None:
     async def exercise() -> None:
         browser = AsyncPlasmate(binary="fixture")
@@ -71,6 +78,16 @@ def test_async_start_exposes_eager_startup() -> None:
         await browser.start()
 
         browser._start.assert_awaited_once_with()  # type: ignore[attr-defined]
+
+    asyncio.run(exercise())
+
+
+def test_async_is_started_reports_transport_state() -> None:
+    async def exercise() -> None:
+        browser = AsyncPlasmate(binary="fixture")
+        assert browser.is_started is False
+        browser._initialized = True
+        assert browser.is_started is True
 
     asyncio.run(exercise())
 

@@ -241,6 +241,11 @@ class Plasmate:
         """
         self._ensure_started()
 
+    @property
+    def is_started(self) -> bool:
+        """Whether the MCP transport has completed initialization."""
+        return self._initialized
+
     def __enter__(self) -> "Plasmate":
         return self
 
@@ -625,6 +630,11 @@ class AsyncPlasmate:
         when startup errors should be reported before doing browser work.
         """
         await self._ensure_started()
+
+    @property
+    def is_started(self) -> bool:
+        """Whether the MCP transport has completed initialization."""
+        return self._initialized
 
     async def __aenter__(self) -> "AsyncPlasmate":
         return self
