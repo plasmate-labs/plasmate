@@ -390,6 +390,11 @@ export class Plasmate extends EventEmitter {
 
   /** Shut down the plasmate process. */
   close(): void {
+    for (const [, entry] of this.pending) {
+      clearTimeout(entry.timer);
+      entry.reject(new Error('Plasmate client closed'));
+    }
+    this.pending.clear();
     if (this.process) {
       this.process.kill();
       this.process = null;

@@ -36,6 +36,20 @@ describe('read selectors', () => {
 });
 
 describe('transport lifecycle', () => {
+  it('rejects pending requests when the client closes', async () => {
+    const browser = new Plasmate({ binary: 'unused', timeout: 60_000 });
+    const client = browser as unknown as {
+      rpc: (method: string) => Promise<unknown>;
+      send: (request: unknown) => void;
+    };
+    client.send = () => {};
+
+    const request = client.rpc('slow_request');
+    browser.close();
+
+    await assert.rejects(request, /Plasmate client closed/);
+  });
+
   it('restarts when the initialized MCP process has exited', async () => {
     const browser = new Plasmate({ binary: 'unused' });
     const client = browser as unknown as {
