@@ -627,6 +627,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    if let Some(class_name) = parse_named_class_selector(selector_for_id) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, "class", &class_name, true)
+        });
+    }
+
     if let Some(test_id) = parse_test_id_selector(selector) {
         return filter_som_elements(som, selector, |element| {
             element_has_test_id(element, &test_id)
@@ -802,6 +808,24 @@ fn parse_class_selector(selector: &str) -> Option<Vec<String>> {
                 .map(normalize_label_text)
                 .collect()
         })
+}
+
+fn parse_named_class_selector(selector: &str) -> Option<String> {
+    let rest = selector
+        .get(..5)
+        .filter(|prefix| prefix.eq_ignore_ascii_case("class"))
+        .and_then(|_| selector.get(5..))?;
+    let value = rest
+        .trim_start()
+        .strip_prefix(['=', ':'])
+        .map(str::trim)
+        .or_else(|| {
+            (!rest.trim().is_empty() && rest.chars().next().is_some_and(char::is_whitespace))
+                .then_some(rest.trim())
+        })
+        .map(strip_selector_quotes)?;
+    (!value.is_empty() && !value.chars().any(char::is_whitespace))
+        .then(|| normalize_label_text(value))
 }
 
 fn strip_selector_quotes(value: &str) -> &str {
@@ -2311,6 +2335,13 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-card");
+
+        for selector in ["class:card", "class=FEATURED", "CLASS card"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-card");
+        }
 
         let prefix_collision = apply_selector(&som, ".car");
         assert_eq!(prefix_collision.regions.len(), som.regions.len());
