@@ -86,6 +86,7 @@ with Plasmate() as browser:
 ### Lifecycle
 
 - **`close()`** - Shut down the plasmate process
+- **`start()`** - Eagerly start the process; otherwise startup happens on the first tool call
 
 ### Pydantic Models
 

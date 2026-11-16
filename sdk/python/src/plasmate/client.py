@@ -233,6 +233,14 @@ class Plasmate:
                 except (ProcessLookupError, subprocess.TimeoutExpired):
                     pass
 
+    def start(self) -> None:
+        """Start the plasmate process eagerly.
+
+        Clients start lazily on the first tool call by default. Use this method
+        when startup errors should be reported before doing browser work.
+        """
+        self._ensure_started()
+
     def __enter__(self) -> "Plasmate":
         return self
 
@@ -609,6 +617,14 @@ class AsyncPlasmate:
                     await asyncio.wait_for(process.wait(), timeout=5)
                 except (ProcessLookupError, asyncio.TimeoutError):
                     pass
+
+    async def start(self) -> None:
+        """Start the plasmate process eagerly.
+
+        Clients start lazily on the first tool call by default. Use this method
+        when startup errors should be reported before doing browser work.
+        """
+        await self._ensure_started()
 
     async def __aenter__(self) -> "AsyncPlasmate":
         return self
