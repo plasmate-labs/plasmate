@@ -752,10 +752,14 @@ fn parse_id_selector(selector: &str) -> Option<&str> {
         .get(..2)
         .filter(|prefix| prefix.eq_ignore_ascii_case("id"))
         .and_then(|_| selector.get(2..))?;
-    let id = rest
-        .trim_start()
-        .strip_prefix(['=', ':'])?
-        .trim()
+    let trimmed = rest.trim_start();
+    let id = trimmed
+        .strip_prefix(['=', ':'])
+        .map(str::trim)
+        .or_else(|| {
+            (!trimmed.is_empty() && rest.chars().next().is_some_and(char::is_whitespace))
+                .then_some(trimmed)
+        })?
         .trim_matches(['\'', '"', '`']);
     (!id.is_empty()).then_some(id)
 }
@@ -5815,6 +5819,18 @@ mod tests {
         let som = make_test_som();
 
         for selector in ["ID=save", "Id:save"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("save"));
+        }
+    }
+
+    #[test]
+    fn test_selector_id_prefix_accepts_whitespace_separator() {
+        let som = make_test_som();
+
+        for selector in ["id save", "ID 'save'"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
