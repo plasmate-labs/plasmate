@@ -36,6 +36,7 @@ describe('read selectors', () => {
 });
 
 describe('transport lifecycle', () => {
+<<<<<<< HEAD
   it('reports whether the MCP transport is initialized', async () => {
     const browser = new Plasmate({ binary: 'unused' });
 
@@ -92,7 +93,6 @@ describe('transport lifecycle', () => {
     client.process = null;
     browser.close();
   });
-
   it('allows a later request to retry after startup fails', async () => {
     const browser = new Plasmate({ binary: 'unused' });
     const client = browser as unknown as {
