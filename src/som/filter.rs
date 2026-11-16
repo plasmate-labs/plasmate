@@ -748,11 +748,18 @@ fn parse_id_selector(selector: &str) -> Option<&str> {
     if let Some(id) = selector.strip_prefix('#') {
         return Some(strip_selector_quotes(id.trim()));
     }
-    let rest = selector.strip_prefix("id")?;
-    let id = rest
-        .trim_start()
-        .strip_prefix(['=', ':'])?
-        .trim()
+    let rest = selector
+        .get(..2)
+        .filter(|prefix| prefix.eq_ignore_ascii_case("id"))
+        .and_then(|_| selector.get(2..))?;
+    let trimmed = rest.trim_start();
+    let id = trimmed
+        .strip_prefix(['=', ':'])
+        .map(str::trim)
+        .or_else(|| {
+            (!trimmed.is_empty() && rest.chars().next().is_some_and(char::is_whitespace))
+                .then_some(trimmed)
+        })?
         .trim_matches(['\'', '"', '`']);
     (!id.is_empty()).then_some(id)
 }
@@ -956,8 +963,12 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
             .map(|_| tilde)
     });
     let (key, value, token_match) = if let Some(tilde) = token_operator {
-        let value = inner[tilde + 1..].trim_start();
-        (inner[..tilde].trim_end(), value[1..].trim_start(), true)
+        let value = inner[tilde + 1..]
+            .trim_start()
+            .strip_prefix('=')
+            .unwrap_or_default()
+            .trim_start();
+        (inner[..tilde].trim_end(), value, true)
     } else {
         let (key, value) = inner.split_once('=')?;
         (key, value, false)
@@ -5745,6 +5756,14 @@ mod tests {
             filtered.regions[0].elements[0].id,
             "e-described-by-help-and-status"
         );
+
+        let unquoted = apply_selector(&som, "[aria-describedby~=help]");
+        assert_eq!(unquoted.regions.len(), 1);
+        assert_eq!(unquoted.regions[0].elements.len(), 1);
+        assert_eq!(
+            unquoted.regions[0].elements[0].id,
+            "e-described-by-help-and-status"
+        );
     }
 
     #[test]
@@ -5805,5 +5824,29 @@ mod tests {
         let som = make_test_som();
         let filtered = apply_selector(&som, "foobar");
         assert_eq!(filtered.regions.len(), 2);
+    }
+
+    #[test]
+    fn test_selector_id_prefix_is_case_insensitive() {
+        let som = make_test_som();
+
+        for selector in ["ID=save", "Id:save"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("save"));
+        }
+    }
+
+    #[test]
+    fn test_selector_id_prefix_accepts_whitespace_separator() {
+        let som = make_test_som();
+
+        for selector in ["id save", "ID 'save'"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("save"));
+        }
     }
 }
