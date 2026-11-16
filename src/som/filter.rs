@@ -610,9 +610,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Keep compact selectors consistent with the CSS-style form for arbitrary
     // data attributes, e.g. `data-state:open` or `data-state=open`.
-    if let Some((attribute, value)) = parse_named_data_attribute_selector(selector) {
+    if let Some((attribute, value, token_match)) = parse_named_data_attribute_selector(selector) {
         return filter_som_elements(som, selector, |element| {
-            element_has_attribute_value(element, &attribute, &value, false)
+            element_has_attribute_value(element, &attribute, &value, token_match)
         });
     }
 
@@ -1152,15 +1152,20 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
     .then_some(key)
 }
 
-fn parse_named_data_attribute_selector(selector: &str) -> Option<(String, String)> {
-    let (key, value) = selector
-        .split_once(':')
-        .or_else(|| selector.split_once('='))?;
+fn parse_named_data_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
+    let (key, value, token_match) = if let Some((key, value)) = selector.split_once('~') {
+        (key, value.strip_prefix('=')?, true)
+    } else if let Some((key, value)) = selector.split_once(':') {
+        (key, value, false)
+    } else {
+        let (key, value) = selector.split_once('=')?;
+        (key, value, false)
+    };
     let key = key.trim().to_ascii_lowercase();
     let value = strip_selector_quotes(value.trim());
     (key.starts_with("data-") || key.starts_with("data_"))
-        .then_some((key, normalize_label_text(value)))
-        .filter(|(_, value)| !value.is_empty())
+        .then_some((key, normalize_label_text(value), token_match))
+        .filter(|(_, value, _)| !value.is_empty())
 }
 
 fn element_has_attribute_key(element: &Element, key: &str) -> bool {
@@ -2518,6 +2523,27 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-compact-data-state");
         }
+    }
+
+    #[test]
+    fn test_selector_matches_compact_data_attribute_tokens() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-compact-data-tags".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-tags": "primary compact"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, "data-tags~=PRIMARY");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-compact-data-tags");
     }
 
     #[test]
