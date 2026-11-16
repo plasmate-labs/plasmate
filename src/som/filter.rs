@@ -963,8 +963,12 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
             .map(|_| tilde)
     });
     let (key, value, token_match) = if let Some(tilde) = token_operator {
-        let value = inner[tilde + 1..].trim_start();
-        (inner[..tilde].trim_end(), value[1..].trim_start(), true)
+        let value = inner[tilde + 1..]
+            .trim_start()
+            .strip_prefix('=')
+            .unwrap_or_default()
+            .trim_start();
+        (inner[..tilde].trim_end(), value, true)
     } else {
         let (key, value) = inner.split_once('=')?;
         (key, value, false)
@@ -5750,6 +5754,14 @@ mod tests {
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(
             filtered.regions[0].elements[0].id,
+            "e-described-by-help-and-status"
+        );
+
+        let unquoted = apply_selector(&som, "[aria-describedby~=help]");
+        assert_eq!(unquoted.regions.len(), 1);
+        assert_eq!(unquoted.regions[0].elements.len(), 1);
+        assert_eq!(
+            unquoted.regions[0].elements[0].id,
             "e-described-by-help-and-status"
         );
     }
