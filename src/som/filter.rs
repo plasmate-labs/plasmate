@@ -1034,11 +1034,7 @@ enum AttributeMatcher {
 
 fn parse_attribute_selector(selector: &str) -> Option<(String, String, AttributeMatcher)> {
     let inner = selector.strip_prefix('[')?.strip_suffix(']')?.trim();
-    let operator = ["~=", "^=", "$=", "*="]
-        .into_iter()
-        .find_map(|operator| inner.find(operator).map(|index| (index, operator)))
-        .or_else(|| inner.find('=').map(|index| (index, "=")))?;
-    let (index, operator) = operator;
+    let (index, operator) = find_attribute_operator(inner)?;
     let key = inner[..index].trim();
     let value = inner[index + operator.len()..].trim();
     // CSS permits an `i` modifier after the value for ASCII-insensitive
@@ -1046,7 +1042,12 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
     // already normalized case-insensitively, so only discard the modifier.
     let value = value
         .strip_suffix(['i', 'I'])
-        .filter(|value| value.chars().last().is_some_and(char::is_ascii_whitespace))
+        .filter(|value| {
+            value
+                .chars()
+                .last()
+                .is_some_and(|character| character.is_ascii_whitespace())
+        })
         .map(str::trim_end)
         .unwrap_or(value);
     let matcher = match operator {
@@ -1138,6 +1139,26 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
         .then(|| strip_selector_quotes(value.trim()))
         .filter(|value| !value.is_empty())
         .map(|value| (key, normalize_label_text(value), matcher))
+}
+
+fn find_attribute_operator(inner: &str) -> Option<(usize, &str)> {
+    let mut quote = None;
+    for (index, character) in inner.char_indices() {
+        match character {
+            '\'' | '"' if quote == Some(character) => quote = None,
+            '\'' | '"' if quote.is_none() => quote = Some(character),
+            _ if quote.is_some() => continue,
+            '~' | '^' | '$' | '*' if inner[index..]
+                .as_bytes()
+                .starts_with(&[character as u8, b'=']) =>
+            {
+                return Some((index, &inner[index..index + 2]));
+            }
+            '=' => return Some((index, "=")),
+            _ => {}
+        }
+    }
+    None
 }
 
 fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
@@ -6091,6 +6112,29 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-described-by-status");
+    }
+
+    #[test]
+    fn test_selector_ignores_operator_like_text_inside_quoted_value() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-data-label".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-label": "a^=b"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, r#"[data-label="a^=b"]"#);
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-data-label");
     }
 
     #[test]
