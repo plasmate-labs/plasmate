@@ -140,7 +140,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
-///   `[aria-atomic]`, and `[title]` match. Any `data-*` or `data_*` attribute can
+///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, and `[title]`
+///   match. Any `data-*` or `data_*` attribute can
 ///   also be
 ///   selected by presence or value, which covers application-specific test and
 ///   state hooks. CSS prefix (`^=`), suffix (`$=`), and substring (`*=`)
@@ -1124,6 +1125,10 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "aria_relevant"
             | "aria-atomic"
             | "aria_atomic"
+            | "aria-errormessage"
+            | "aria_errormessage"
+            | "aria-placeholder"
+            | "aria_placeholder"
             | "aria-live"
             | "aria_live"
             | "role"
@@ -1237,6 +1242,10 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_relevant"
             | "aria-atomic"
             | "aria_atomic"
+            | "aria-errormessage"
+            | "aria_errormessage"
+            | "aria-placeholder"
+            | "aria_placeholder"
             | "aria-live"
             | "aria_live"
             | "role"
@@ -2698,6 +2707,38 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_matches_css_aria_error_and_placeholder_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-aria-error-placeholder".to_string(),
+            role: ElementRole::TextInput,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({
+                "aria-errormessage": "email-error",
+                "aria-placeholder": "name@example.com"
+            })),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "[aria-errormessage]",
+            "[aria-errormessage=email-error]",
+            "[aria-placeholder]",
+            "[aria-placeholder='name@example.com']",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-aria-error-placeholder");
+        }
+    }
+
+    #[test]
     fn test_selector_matches_css_dash_prefix_values() {
         let mut som = make_test_som();
         som.regions[1].elements.push(Element {
@@ -2721,7 +2762,10 @@ mod tests {
         }
 
         let filtered = apply_selector(&som, "[lang|=fr]");
-        assert_eq!(filtered, som);
+        assert_eq!(
+            serde_json::to_value(filtered).unwrap(),
+            serde_json::to_value(som).unwrap()
+        );
     }
 
     #[test]
