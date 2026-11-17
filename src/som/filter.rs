@@ -475,6 +475,16 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         }
     }
 
+    // A generic live-region selector is useful when the caller does not care
+    // whether the source role is `log`, `status`, or an application-specific
+    // ARIA live region. Keep both flattened and nested ARIA metadata forms.
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "live" | "lives" | "live_region" | "live_regions" | "live-region" | "live-regions"
+    ) {
+        return filter_som_elements(som, selector, has_aria_live);
+    }
+
     // Explicit time-input selectors are useful when a page contains both a
     // native <time> element and a time form control. Keep the bare `time`
     // selector's backwards-compatible mixed behavior above.
@@ -959,6 +969,17 @@ fn has_source_role(element: &Element, source_role: &str) -> bool {
         .and_then(|attrs| attrs.get("source_role"))
         .and_then(serde_json::Value::as_str)
         .is_some_and(|value| value.eq_ignore_ascii_case(source_role))
+}
+
+fn has_aria_live(element: &Element) -> bool {
+    element.attrs.as_ref().is_some_and(|attrs| {
+        attrs.get("aria-live").is_some()
+            || attrs.get("aria_live").is_some()
+            || attrs
+                .get("aria")
+                .and_then(serde_json::Value::as_object)
+                .is_some_and(|aria| aria.contains_key("live"))
+    })
 }
 
 fn parse_heading_level_selector(selector: &str) -> Option<u8> {
@@ -3349,6 +3370,30 @@ mod tests {
         });
 
         for selector in ["live:polite", "aria-live=POLITE", "aria live:polite"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-live-region");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_generic_aria_live_regions() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-live-region".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Updated".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria": {"live": "polite"}})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["live", "live-region", "live_regions"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
