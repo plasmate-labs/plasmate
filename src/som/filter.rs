@@ -1019,6 +1019,10 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "aria-roledescription",
         "aria_roledescription",
         "aria roledescription",
+        "live",
+        "aria-live",
+        "aria_live",
+        "aria live",
     ]
         .into_iter()
         .find_map(|prefix| {
@@ -1563,7 +1567,8 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
             | "ariaflowto"
             | "ariakeyshortcuts"
             | "ariaowns"
-            | "ariaroledescription"
+                    | "ariaroledescription"
+                    | "arialive"
             | "ariavaluemax"
             | "ariavaluemin"
             | "ariavaluenow"
@@ -1602,6 +1607,7 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                         | "keyshortcuts"
                         | "owns"
                         | "roledescription"
+                        | "live"
                         | "valuemax"
                         | "valuemin"
                         | "valuenow"
@@ -3323,6 +3329,30 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-roledescription");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_named_aria_live_values() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-live-region".to_string(),
+            role: ElementRole::Group,
+            html_id: None,
+            text: Some("Updated".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-live": "polite"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["live:polite", "aria-live=POLITE", "aria live:polite"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-live-region");
         }
     }
 
