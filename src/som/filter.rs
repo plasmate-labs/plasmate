@@ -1139,6 +1139,8 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "aria_modal"
             | "aria-haspopup"
             | "aria_haspopup"
+            | "aria-checked"
+            | "aria_checked"
             | "aria-pressed"
             | "aria_pressed"
             | "aria-selected"
@@ -2926,6 +2928,7 @@ mod tests {
             actions: None,
             attrs: Some(serde_json::json!({
                 "aria-busy": "true",
+                "aria-checked": "true",
                 "aria-disabled": "false",
                 "aria-hidden": "false",
                 "aria-modal": "true",
@@ -2938,6 +2941,7 @@ mod tests {
 
         for selector in [
             "[aria-busy]",
+            "[aria-checked]",
             "[aria_disabled]",
             "[aria-hidden]",
             "[aria-modal]",
