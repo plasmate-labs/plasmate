@@ -1189,6 +1189,8 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "aria_modal"
             | "aria-haspopup"
             | "aria_haspopup"
+            | "aria-checked"
+            | "aria_checked"
             | "aria-pressed"
             | "aria_pressed"
             | "aria-selected"
@@ -1306,6 +1308,8 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_modal"
             | "aria-haspopup"
             | "aria_haspopup"
+            | "aria-checked"
+            | "aria_checked"
             | "aria-pressed"
             | "aria_pressed"
             | "aria-selected"
@@ -2999,6 +3003,7 @@ mod tests {
             actions: None,
             attrs: Some(serde_json::json!({
                 "aria-busy": "true",
+                "aria-checked": "true",
                 "aria-disabled": "false",
                 "aria-hidden": "false",
                 "aria-modal": "true",
@@ -3008,9 +3013,22 @@ mod tests {
             hints: None,
             shadow: None,
         });
+        som.regions[1].elements.push(Element {
+            id: "e-common-aria-state-without-checked".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-disabled": "false"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
 
         for selector in [
             "[aria-busy]",
+            "[aria-checked]",
             "[aria_disabled]",
             "[aria-hidden]",
             "[aria-modal]",
