@@ -140,7 +140,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
-///   and `[title]` match. Any `data-*` or `data_*` attribute can also be
+///   `[aria-atomic]`, and `[title]` match. Any `data-*` or `data_*` attribute can
+///   also be
 ///   selected by presence or value, which covers application-specific test and
 ///   state hooks. CSS prefix (`^=`), suffix (`$=`), and substring (`*=`)
 ///   attribute matches are supported alongside exact (`=`) and token (`~=`)
@@ -1121,6 +1122,8 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "aria_sort"
             | "aria-relevant"
             | "aria_relevant"
+            | "aria-atomic"
+            | "aria_atomic"
             | "aria-live"
             | "aria_live"
             | "role"
@@ -1232,6 +1235,8 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_sort"
             | "aria-relevant"
             | "aria_relevant"
+            | "aria-atomic"
+            | "aria_atomic"
             | "aria-live"
             | "aria_live"
             | "role"
@@ -2665,6 +2670,30 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-aria-relevant");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_css_aria_atomic_presence_and_value() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-aria-atomic".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Atomic update".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-atomic": "true"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[aria-atomic]", "[aria-atomic=true]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-aria-atomic");
         }
     }
 
