@@ -851,12 +851,25 @@ fn strip_selector_quotes(value: &str) -> &str {
     let value = value.trim();
     match value.as_bytes().first().copied() {
         Some(quote @ (b'"' | b'\'' | b'`'))
-            if value.as_bytes().last().copied() == Some(quote) =>
+            if value.as_bytes().last().copied() == Some(quote)
+                && !is_escaped_delimiter(value) =>
         {
             value[1..value.len() - 1].trim()
         }
         _ => value,
     }
+}
+
+fn is_escaped_delimiter(value: &str) -> bool {
+    let mut backslashes = 0;
+    for character in value[..value.len() - 1].chars().rev() {
+        if character == '\\' {
+            backslashes += 1;
+        } else {
+            break;
+        }
+    }
+    backslashes % 2 == 1
 }
 
 fn collapse_selector_whitespace(value: &str) -> String {
@@ -2343,6 +2356,13 @@ mod tests {
             collapse_selector_whitespace(r#"label: "New \" York"  =  value"#),
             r#"label: "New \" York" = value"#
         );
+    }
+
+    #[test]
+    fn selector_quote_stripping_keeps_escaped_final_delimiters() {
+        assert_eq!(strip_selector_quotes(r#""account\""#), r#""account\""#);
+        assert_eq!(strip_selector_quotes(r#"'account\\'"#), r#"account\\"#);
+        assert_eq!(strip_selector_quotes(r#"`account`"#), "account");
     }
 
     #[test]
