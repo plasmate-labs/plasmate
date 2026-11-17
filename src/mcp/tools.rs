@@ -58,7 +58,7 @@ const SOM_PROGRESS_SELECTOR_DESCRIPTION: &str =
 const SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION: &str =
     " Action aliases also accept type text and select option forms, including action:type text and action:select option. Clear actions also accept clear_text, clear-text, and clear text aliases, including action:clear-text.";
 const SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION: &str =
-    " Explicit CSS presence selectors `[aria-modal]` and `[inert]` match modal or inert elements without requiring a value; value forms such as `[aria-modal='true']` are also supported.";
+    " Explicit CSS presence selectors `[aria-modal]`, `[aria-checked]`, and `[inert]` match modal, checked-state, or inert elements without requiring a value; value forms such as `[aria-modal='true']` are also supported.";
 
 const SOM_TABLE_SELECTOR_DESCRIPTION: &str = " Table-like element selectors also include data_table/data_tables and data-table/data-tables, data-grid/data-grids, data_grid/data_grids, datagrid/datagrids, table_grid/table_grids, table-grid/table-grids, tablegrid/tablegrids, and spaced data table/data tables, data grid/data grids, or table grid/table grids forms.";
 const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements, and picture/pictures/image_item/image-item/image item/imageitems for image elements.";
@@ -7082,7 +7082,9 @@ mod tests {
                 definition.name
             );
             assert!(
-                description.contains("[aria-current]") && description.contains("[aria-sort]"),
+                description.contains("[aria-current]")
+                    && description.contains("[aria-checked]")
+                    && description.contains("[aria-sort]"),
                 "{} should advertise common ARIA state selectors",
                 definition.name
             );
