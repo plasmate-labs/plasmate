@@ -142,7 +142,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[role]`, `[inert]`,
 ///   and `[title]` match. Any `data-*` or `data_*` attribute can also be
 ///   selected by presence or value, which covers application-specific test and
-///   state hooks;
+///   state hooks. CSS prefix (`^=`), suffix (`$=`), and substring (`*=`)
+///   attribute matches are supported alongside exact (`=`) and token (`~=`)
+///   matches;
 ///   `[id]` matches authored HTML ids (not generated SOM element ids),
 ///   value selectors such as `[role="button"]` match the normalized SOM role
 ///   elements exposing the corresponding attribute without requiring a
@@ -602,9 +604,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
-    if let Some((attribute, value, token_match)) = parse_attribute_selector(selector) {
+    if let Some((attribute, value, matcher)) = parse_attribute_selector(selector) {
         return filter_som_elements(som, selector, |element| {
-            element_has_attribute_value(element, &attribute, &value, token_match)
+            element_has_attribute_value(element, &attribute, &value, matcher)
         });
     }
 
@@ -612,7 +614,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // data attributes, e.g. `data-state:open` or `data-state=open`.
     if let Some((attribute, value, token_match)) = parse_named_data_attribute_selector(selector) {
         return filter_som_elements(som, selector, |element| {
-            element_has_attribute_value(element, &attribute, &value, token_match)
+            element_has_attribute_value(
+                element,
+                &attribute,
+                &value,
+                if token_match { AttributeMatcher::Token } else { AttributeMatcher::Exact },
+            )
         });
     }
 
@@ -622,14 +629,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     if let Some(class_names) = parse_class_selector(selector_for_id) {
         return filter_som_elements(som, selector, |element| {
             class_names.iter().all(|class_name| {
-                element_has_attribute_value(element, "class", class_name, true)
+                element_has_attribute_value(element, "class", class_name, AttributeMatcher::Token)
             })
         });
     }
 
     if let Some(class_name) = parse_named_class_selector(selector_for_id) {
         return filter_som_elements(som, selector, |element| {
-            element_has_attribute_value(element, "class", &class_name, true)
+            element_has_attribute_value(element, "class", &class_name, AttributeMatcher::Token)
         });
     }
 
@@ -1016,26 +1023,31 @@ fn parse_label_selector(selector: &str) -> Option<String> {
     Some(normalize_label_text(value))
 }
 
-fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
+#[derive(Clone, Copy)]
+enum AttributeMatcher {
+    Exact,
+    Token,
+    Prefix,
+    Suffix,
+    Substring,
+}
+
+fn parse_attribute_selector(selector: &str) -> Option<(String, String, AttributeMatcher)> {
     let inner = selector.strip_prefix('[')?.strip_suffix(']')?.trim();
-    // CSS permits any whitespace around the token-match operator. Normalize
-    // only the operator boundary so quoted attribute values can retain spaces.
-    let token_operator = inner.find('~').and_then(|tilde| {
-        inner[tilde + 1..]
-            .trim_start()
-            .strip_prefix('=')
-            .map(|_| tilde)
-    });
-    let (key, value, token_match) = if let Some(tilde) = token_operator {
-        let value = inner[tilde + 1..]
-            .trim_start()
-            .strip_prefix('=')
-            .unwrap_or_default()
-            .trim_start();
-        (inner[..tilde].trim_end(), value, true)
-    } else {
-        let (key, value) = inner.split_once('=')?;
-        (key, value, false)
+    let operator = ["~=", "^=", "$=", "*="]
+        .into_iter()
+        .find_map(|operator| inner.find(operator).map(|index| (index, operator)))
+        .or_else(|| inner.find('=').map(|index| (index, "=")))?;
+    let (index, operator) = operator;
+    let key = inner[..index].trim();
+    let value = inner[index + operator.len()..].trim();
+    let matcher = match operator {
+        "~=" => AttributeMatcher::Token,
+        "^=" => AttributeMatcher::Prefix,
+        "$=" => AttributeMatcher::Suffix,
+        "*=" => AttributeMatcher::Substring,
+        "=" => AttributeMatcher::Exact,
+        _ => return None,
     };
     let key = key.trim().to_ascii_lowercase();
     let supported = key.starts_with("data-")
@@ -1117,7 +1129,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
     supported
         .then(|| strip_selector_quotes(value.trim()))
         .filter(|value| !value.is_empty())
-        .map(|value| (key, normalize_label_text(value), token_match))
+        .map(|value| (key, normalize_label_text(value), matcher))
 }
 
 fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
@@ -1276,7 +1288,7 @@ fn element_has_attribute_value(
     element: &Element,
     key: &str,
     expected: &str,
-    token_match: bool,
+    matcher: AttributeMatcher,
 ) -> bool {
     let normalize_key = |value: &str| {
         value
@@ -1295,19 +1307,23 @@ fn element_has_attribute_value(
     let matches_key = |candidate: &str| normalize_key(candidate) == normalized_key;
     let matches_value = |value: &serde_json::Value| {
         let value = normalize_value(value);
-        if token_match {
-            value.split_whitespace().any(|token| token == expected)
-        } else {
-            value == expected
+        match matcher {
+            AttributeMatcher::Token => value.split_whitespace().any(|token| token == expected),
+            AttributeMatcher::Prefix => value.starts_with(expected),
+            AttributeMatcher::Suffix => value.ends_with(expected),
+            AttributeMatcher::Substring => value.contains(expected),
+            AttributeMatcher::Exact => value == expected,
         }
     };
 
     if normalized_key == "role" {
         let role = normalize_label_text(element.role.as_str());
-        return if token_match {
-            role.split_whitespace().any(|token| token == expected)
-        } else {
-            role == expected
+        return match matcher {
+            AttributeMatcher::Token => role.split_whitespace().any(|token| token == expected),
+            AttributeMatcher::Prefix => role.starts_with(expected),
+            AttributeMatcher::Suffix => role.ends_with(expected),
+            AttributeMatcher::Substring => role.contains(expected),
+            AttributeMatcher::Exact => role == expected,
         };
     }
     if normalized_key == "id" {
@@ -1315,10 +1331,12 @@ fn element_has_attribute_value(
             .html_id
             .as_deref()
             .is_some_and(|value| {
-                if token_match {
-                    value.split_whitespace().any(|token| token == expected)
-                } else {
-                    value == expected
+                match matcher {
+                    AttributeMatcher::Token => value.split_whitespace().any(|token| token == expected),
+                    AttributeMatcher::Prefix => value.starts_with(expected),
+                    AttributeMatcher::Suffix => value.ends_with(expected),
+                    AttributeMatcher::Substring => value.contains(expected),
+                    AttributeMatcher::Exact => value == expected,
                 }
             });
     }
@@ -2306,6 +2324,34 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-css-hook");
+    }
+
+    #[test]
+    fn test_selector_matches_css_attribute_string_operators() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-css-string-operators".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-testid": "save-primary-action"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "[data-testid^='save-']",
+            "[data-testid$='-action']",
+            "[data-testid*='primary']",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-css-string-operators");
+        }
     }
 
     #[test]
