@@ -862,12 +862,17 @@ fn strip_selector_quotes(value: &str) -> &str {
 fn collapse_selector_whitespace(value: &str) -> String {
     let mut collapsed = String::with_capacity(value.len());
     let mut quote = None;
+    let mut escaped = false;
     let mut pending_space = false;
 
     for character in value.chars() {
         if let Some(active_quote) = quote {
             collapsed.push(character);
-            if character == active_quote {
+            if escaped {
+                escaped = false;
+            } else if character == '\\' {
+                escaped = true;
+            } else if character == active_quote {
                 quote = None;
             }
             continue;
@@ -879,6 +884,7 @@ fn collapse_selector_whitespace(value: &str) -> String {
             }
             pending_space = false;
             quote = Some(character);
+            escaped = false;
             collapsed.push(character);
         } else if character.is_whitespace() {
             pending_space = true;
@@ -2332,6 +2338,10 @@ mod tests {
         assert_eq!(
             collapse_selector_whitespace("label: 'New   York'"),
             "label: 'New   York'"
+        );
+        assert_eq!(
+            collapse_selector_whitespace(r#"label: "New \" York"  =  value"#),
+            r#"label: "New \" York" = value"#
         );
     }
 
