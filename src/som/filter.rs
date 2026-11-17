@@ -979,6 +979,15 @@ fn has_aria_live(element: &Element) -> bool {
                 .get("aria")
                 .and_then(serde_json::Value::as_object)
                 .is_some_and(|aria| aria.contains_key("live"))
+            || attrs
+                .get("source_role")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|role| {
+                    matches!(
+                        role.to_ascii_lowercase().as_str(),
+                        "alert" | "log" | "marquee" | "status" | "timer"
+                    )
+                })
     })
 }
 
@@ -3392,12 +3401,25 @@ mod tests {
             hints: None,
             shadow: None,
         });
+        som.regions[1].elements.push(Element {
+            id: "e-status-region".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Saved".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"source_role": "status"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
 
         for selector in ["live", "live-region", "live_regions"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 2, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-live-region");
+            assert_eq!(filtered.regions[0].elements[1].id, "e-status-region");
         }
     }
 
