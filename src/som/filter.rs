@@ -960,7 +960,12 @@ fn elements_contain_source_role(elements: &[Element], source_role: &str) -> bool
 }
 
 fn is_source_role_element(element: &Element, source_role: &str) -> bool {
-    element.role == ElementRole::Group
+    let compiled_live_region = element.role == ElementRole::Paragraph
+        && matches!(
+            source_role,
+            "alert" | "log" | "marquee" | "status" | "timer"
+        );
+    (element.role == ElementRole::Group || compiled_live_region)
         && has_source_role(element, source_role)
 }
 
