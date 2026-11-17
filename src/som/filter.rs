@@ -1027,6 +1027,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
 enum AttributeMatcher {
     Exact,
     Token,
+    DashPrefix,
     Prefix,
     Suffix,
     Substring,
@@ -1052,6 +1053,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
         .unwrap_or(value);
     let matcher = match operator {
         "~=" => AttributeMatcher::Token,
+        "|=" => AttributeMatcher::DashPrefix,
         "^=" => AttributeMatcher::Prefix,
         "$=" => AttributeMatcher::Suffix,
         "*=" => AttributeMatcher::Substring,
@@ -1127,6 +1129,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "title"
             | "placeholder"
             | "alt"
+            | "lang"
             | "class"
             | "testid"
             | "data-testid"
@@ -1150,7 +1153,7 @@ fn find_attribute_operator(inner: &str) -> Option<(usize, &str)> {
             '\'' | '"' if quote == Some(character) => quote = None,
             '\'' | '"' if quote.is_none() => quote = Some(character),
             _ if quote.is_some() => continue,
-            '~' | '^' | '$' | '*' if inner[index..]
+            '~' | '|' | '^' | '$' | '*' if inner[index..]
                 .as_bytes()
                 .starts_with(&[character as u8, b'=']) =>
             {
@@ -1237,6 +1240,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "title"
             | "placeholder"
             | "alt"
+            | "lang"
             | "class"
             | "testid"
             | "test-id"
@@ -1342,6 +1346,9 @@ fn element_has_attribute_value(
         let value = normalize_value(value);
         match matcher {
             AttributeMatcher::Token => value.split_whitespace().any(|token| token == expected),
+            AttributeMatcher::DashPrefix => {
+                value == expected || value.starts_with(&format!("{expected}-"))
+            }
             AttributeMatcher::Prefix => value.starts_with(expected),
             AttributeMatcher::Suffix => value.ends_with(expected),
             AttributeMatcher::Substring => value.contains(expected),
@@ -1353,6 +1360,9 @@ fn element_has_attribute_value(
         let role = normalize_label_text(element.role.as_str());
         return match matcher {
             AttributeMatcher::Token => role.split_whitespace().any(|token| token == expected),
+            AttributeMatcher::DashPrefix => {
+                role == expected || role.starts_with(&format!("{expected}-"))
+            }
             AttributeMatcher::Prefix => role.starts_with(expected),
             AttributeMatcher::Suffix => role.ends_with(expected),
             AttributeMatcher::Substring => role.contains(expected),
@@ -1367,6 +1377,9 @@ fn element_has_attribute_value(
                 let value = normalize_label_text(value);
                 match matcher {
                     AttributeMatcher::Token => value.split_whitespace().any(|token| token == expected),
+                    AttributeMatcher::DashPrefix => {
+                        value == expected || value.starts_with(&format!("{expected}-"))
+                    }
                     AttributeMatcher::Prefix => value.starts_with(expected),
                     AttributeMatcher::Suffix => value.ends_with(expected),
                     AttributeMatcher::Substring => value.contains(expected),
@@ -2653,6 +2666,33 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-aria-relevant");
         }
+    }
+
+    #[test]
+    fn test_selector_matches_css_dash_prefix_values() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-language".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Localized content".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"lang": "en-US"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[lang|=en]", "[lang|='en']"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-language");
+        }
+
+        let filtered = apply_selector(&som, "[lang|=fr]");
+        assert_eq!(filtered, som);
     }
 
     #[test]
