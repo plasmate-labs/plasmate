@@ -139,7 +139,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-hidden]`, `[aria-modal]`, `[aria-activedescendant]`, `[aria-details]`,
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
-///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[role]`, `[inert]`,
+///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
 ///   and `[title]` match. Any `data-*` or `data_*` attribute can also be
 ///   selected by presence or value, which covers application-specific test and
 ///   state hooks. CSS prefix (`^=`), suffix (`$=`), and substring (`*=`)
@@ -1117,6 +1117,8 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "aria_valuetext"
             | "aria-sort"
             | "aria_sort"
+            | "aria-relevant"
+            | "aria_relevant"
             | "aria-live"
             | "aria_live"
             | "role"
@@ -1225,6 +1227,8 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_valuetext"
             | "aria-sort"
             | "aria_sort"
+            | "aria-relevant"
+            | "aria_relevant"
             | "aria-live"
             | "aria_live"
             | "role"
@@ -2624,6 +2628,30 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-aria-state-presence-hook");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_css_aria_relevant_presence_and_value() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-aria-relevant".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Updates".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-relevant": "additions text"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[aria-relevant]", "[aria-relevant~=text]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-aria-relevant");
         }
     }
 
