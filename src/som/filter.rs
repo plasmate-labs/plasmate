@@ -1331,6 +1331,7 @@ fn element_has_attribute_value(
             .html_id
             .as_deref()
             .is_some_and(|value| {
+                let value = normalize_label_text(value);
                 match matcher {
                     AttributeMatcher::Token => value.split_whitespace().any(|token| token == expected),
                     AttributeMatcher::Prefix => value.starts_with(expected),
@@ -2939,6 +2940,30 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-css-data-test");
+    }
+
+    #[test]
+    fn test_selector_matches_css_id_operators_case_insensitively() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-css-id".to_string(),
+            role: ElementRole::Button,
+            html_id: Some("SavePrimary".to_string()),
+            text: None,
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[id^='save']", "[id$='PRIMARY']", "[id*='vepri']"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-css-id");
+        }
     }
 
     #[test]
