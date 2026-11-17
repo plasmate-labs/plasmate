@@ -805,8 +805,8 @@ fn parse_id_selector(selector: &str) -> Option<&str> {
         .or_else(|| {
             (!trimmed.is_empty() && rest.chars().next().is_some_and(char::is_whitespace))
                 .then_some(trimmed)
-        })?
-        .trim_matches(['\'', '"', '`']);
+        })?;
+    let id = strip_selector_quotes(id);
     (!id.is_empty()).then_some(id)
 }
 
@@ -851,7 +851,8 @@ fn strip_selector_quotes(value: &str) -> &str {
     let value = value.trim();
     match value.as_bytes().first().copied() {
         Some(quote @ (b'"' | b'\'' | b'`'))
-            if value.as_bytes().last().copied() == Some(quote) =>
+            if value.as_bytes().last().copied() == Some(quote)
+                && !is_escaped_delimiter(value) =>
         {
             value[1..value.len() - 1].trim()
         }
@@ -859,8 +860,57 @@ fn strip_selector_quotes(value: &str) -> &str {
     }
 }
 
+fn is_escaped_delimiter(value: &str) -> bool {
+    let mut backslashes = 0;
+    for character in value[..value.len() - 1].chars().rev() {
+        if character == '\\' {
+            backslashes += 1;
+        } else {
+            break;
+        }
+    }
+    backslashes % 2 == 1
+}
+
 fn collapse_selector_whitespace(value: &str) -> String {
-    value.split_whitespace().collect::<Vec<_>>().join(" ")
+    let mut collapsed = String::with_capacity(value.len());
+    let mut quote = None;
+    let mut escaped = false;
+    let mut pending_space = false;
+
+    for character in value.chars() {
+        if let Some(active_quote) = quote {
+            collapsed.push(character);
+            if escaped {
+                escaped = false;
+            } else if character == '\\' {
+                escaped = true;
+            } else if character == active_quote {
+                quote = None;
+            }
+            continue;
+        }
+
+        if matches!(character, '\'' | '"' | '`') {
+            if pending_space && !collapsed.is_empty() {
+                collapsed.push(' ');
+            }
+            pending_space = false;
+            quote = Some(character);
+            escaped = false;
+            collapsed.push(character);
+        } else if character.is_whitespace() {
+            pending_space = true;
+        } else {
+            if pending_space && !collapsed.is_empty() {
+                collapsed.push(' ');
+            }
+            pending_space = false;
+            collapsed.push(character);
+        }
+    }
+
+    collapsed
 }
 
 fn is_media_element(element: &Element) -> bool {
@@ -1139,6 +1189,8 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "aria_modal"
             | "aria-haspopup"
             | "aria_haspopup"
+            | "aria-checked"
+            | "aria_checked"
             | "aria-pressed"
             | "aria_pressed"
             | "aria-selected"
@@ -1256,6 +1308,8 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "aria_modal"
             | "aria-haspopup"
             | "aria_haspopup"
+            | "aria-checked"
+            | "aria_checked"
             | "aria-pressed"
             | "aria_pressed"
             | "aria-selected"
@@ -2293,6 +2347,29 @@ mod tests {
     }
 
     #[test]
+    fn selector_whitespace_collapse_preserves_quoted_values() {
+        assert_eq!(
+            collapse_selector_whitespace("  id = \"account  primary\"  "),
+            "id = \"account  primary\""
+        );
+        assert_eq!(
+            collapse_selector_whitespace("label: 'New   York'"),
+            "label: 'New   York'"
+        );
+        assert_eq!(
+            collapse_selector_whitespace(r#"label: "New \" York"  =  value"#),
+            r#"label: "New \" York" = value"#
+        );
+    }
+
+    #[test]
+    fn selector_quote_stripping_keeps_escaped_final_delimiters() {
+        assert_eq!(strip_selector_quotes(r#""account\""#), r#""account\""#);
+        assert_eq!(strip_selector_quotes(r#"'account\\'"#), r#"account\\"#);
+        assert_eq!(strip_selector_quotes(r#"`account`"#), "account");
+    }
+
+    #[test]
     fn test_selector_accepts_plural_aria_paragraph_aliases() {
         let som = make_test_som();
 
@@ -2926,6 +3003,7 @@ mod tests {
             actions: None,
             attrs: Some(serde_json::json!({
                 "aria-busy": "true",
+                "aria-checked": "true",
                 "aria-disabled": "false",
                 "aria-hidden": "false",
                 "aria-modal": "true",
@@ -2935,9 +3013,22 @@ mod tests {
             hints: None,
             shadow: None,
         });
+        som.regions[1].elements.push(Element {
+            id: "e-common-aria-state-without-checked".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-disabled": "false"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
 
         for selector in [
             "[aria-busy]",
+            "[aria-checked]",
             "[aria_disabled]",
             "[aria-hidden]",
             "[aria-modal]",
@@ -6488,5 +6579,13 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("save"));
         }
+    }
+
+    #[test]
+    fn test_selector_id_prefix_rejects_escaped_closing_quote() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "id=\"save\\\"");
+
+        assert_eq!(filtered.regions.len(), som.regions.len());
     }
 }
