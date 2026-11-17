@@ -805,8 +805,8 @@ fn parse_id_selector(selector: &str) -> Option<&str> {
         .or_else(|| {
             (!trimmed.is_empty() && rest.chars().next().is_some_and(char::is_whitespace))
                 .then_some(trimmed)
-        })?
-        .trim_matches(['\'', '"', '`']);
+        })?;
+    let id = strip_selector_quotes(id);
     (!id.is_empty()).then_some(id)
 }
 
@@ -6561,5 +6561,13 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("save"));
         }
+    }
+
+    #[test]
+    fn test_selector_id_prefix_rejects_escaped_closing_quote() {
+        let som = make_test_som();
+        let filtered = apply_selector(&som, "id=\"save\\\"");
+
+        assert_eq!(filtered.regions.len(), som.regions.len());
     }
 }
