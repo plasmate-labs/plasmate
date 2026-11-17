@@ -1041,6 +1041,14 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
     let (index, operator) = operator;
     let key = inner[..index].trim();
     let value = inner[index + operator.len()..].trim();
+    // CSS permits an `i` modifier after the value for ASCII-insensitive
+    // matching, e.g. `[data-state="OPEN" i]`. SOM attribute matching is
+    // already normalized case-insensitively, so only discard the modifier.
+    let value = value
+        .strip_suffix(['i', 'I'])
+        .filter(|value| value.chars().last().is_some_and(char::is_ascii_whitespace))
+        .map(str::trim_end)
+        .unwrap_or(value);
     let matcher = match operator {
         "~=" => AttributeMatcher::Token,
         "^=" => AttributeMatcher::Prefix,
@@ -2637,7 +2645,12 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["[data-state]", "[data-state=open]", "[data_test_variant=primary]"] {
+        for selector in [
+            "[data-state]",
+            "[data-state=open]",
+            "[data-state=\"OPEN\" i]",
+            "[data_test_variant=primary]",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-data-state", "selector: {selector}");
