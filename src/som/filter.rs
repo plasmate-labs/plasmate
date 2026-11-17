@@ -915,8 +915,10 @@ fn media_source_role(selector: &str) -> Option<&'static str> {
 
 fn live_region_source_role(selector: &str) -> Option<&'static str> {
     match selector.to_ascii_lowercase().as_str() {
+        "alert" | "alerts" => Some("alert"),
         "log" | "logs" => Some("log"),
         "marquee" | "marquees" => Some("marquee"),
+        "status" | "statuses" => Some("status"),
         "timer" | "timers" => Some("timer"),
         _ => None,
     }
@@ -3420,6 +3422,45 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 2, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-live-region");
             assert_eq!(filtered.regions[0].elements[1].id, "e-status-region");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_implicit_live_roles_without_other_paragraphs() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-status-region".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Saved".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"source_role": "status"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+        som.regions[1].elements.push(Element {
+            id: "e-alert-region".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Failed".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"source_role": "alert"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["status", "role=status", "alert"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            if selector == "alert" {
+                assert_eq!(filtered.regions[0].elements[0].id, "e-alert-region");
+            } else {
+                assert_eq!(filtered.regions[0].elements[0].id, "e-status-region");
+            }
         }
     }
 
