@@ -1012,6 +1012,13 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "aria-description",
         "aria_description",
         "aria description",
+        "roledescription",
+        "role-description",
+        "role_description",
+        "role description",
+        "aria-roledescription",
+        "aria_roledescription",
+        "aria roledescription",
     ]
         .into_iter()
         .find_map(|prefix| {
@@ -3293,6 +3300,30 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_named_aria_roledescription() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-roledescription".to_string(),
+            role: ElementRole::Group,
+            html_id: None,
+            text: Some("Upload".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-roledescription": "drop zone"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["roledescription:drop zone", "aria-roledescription=DROP ZONE"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-roledescription");
+        }
     }
 
     #[test]
