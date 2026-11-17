@@ -860,7 +860,38 @@ fn strip_selector_quotes(value: &str) -> &str {
 }
 
 fn collapse_selector_whitespace(value: &str) -> String {
-    value.split_whitespace().collect::<Vec<_>>().join(" ")
+    let mut collapsed = String::with_capacity(value.len());
+    let mut quote = None;
+    let mut pending_space = false;
+
+    for character in value.chars() {
+        if let Some(active_quote) = quote {
+            collapsed.push(character);
+            if character == active_quote {
+                quote = None;
+            }
+            continue;
+        }
+
+        if matches!(character, '\'' | '"' | '`') {
+            if pending_space && !collapsed.is_empty() {
+                collapsed.push(' ');
+            }
+            pending_space = false;
+            quote = Some(character);
+            collapsed.push(character);
+        } else if character.is_whitespace() {
+            pending_space = true;
+        } else {
+            if pending_space && !collapsed.is_empty() {
+                collapsed.push(' ');
+            }
+            pending_space = false;
+            collapsed.push(character);
+        }
+    }
+
+    collapsed
 }
 
 fn is_media_element(element: &Element) -> bool {
@@ -2290,6 +2321,18 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].role, RegionRole::Main);
         }
+    }
+
+    #[test]
+    fn selector_whitespace_collapse_preserves_quoted_values() {
+        assert_eq!(
+            collapse_selector_whitespace("  id = \"account  primary\"  "),
+            "id = \"account  primary\""
+        );
+        assert_eq!(
+            collapse_selector_whitespace("label: 'New   York'"),
+            "label: 'New   York'"
+        );
     }
 
     #[test]
