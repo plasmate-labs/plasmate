@@ -475,6 +475,16 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         }
     }
 
+    // A generic live-region selector is useful when the caller does not care
+    // whether the source role is `log`, `status`, or an application-specific
+    // ARIA live region. Keep both flattened and nested ARIA metadata forms.
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "live" | "lives" | "live_region" | "live_regions" | "live-region" | "live-regions"
+    ) {
+        return filter_som_elements(som, selector, has_aria_live);
+    }
+
     // Explicit time-input selectors are useful when a page contains both a
     // native <time> element and a time form control. Keep the bare `time`
     // selector's backwards-compatible mixed behavior above.
@@ -905,8 +915,10 @@ fn media_source_role(selector: &str) -> Option<&'static str> {
 
 fn live_region_source_role(selector: &str) -> Option<&'static str> {
     match selector.to_ascii_lowercase().as_str() {
+        "alert" | "alerts" => Some("alert"),
         "log" | "logs" => Some("log"),
         "marquee" | "marquees" => Some("marquee"),
+        "status" | "statuses" => Some("status"),
         "timer" | "timers" => Some("timer"),
         _ => None,
     }
@@ -948,7 +960,12 @@ fn elements_contain_source_role(elements: &[Element], source_role: &str) -> bool
 }
 
 fn is_source_role_element(element: &Element, source_role: &str) -> bool {
-    element.role == ElementRole::Group
+    let compiled_live_region = element.role == ElementRole::Paragraph
+        && matches!(
+            source_role,
+            "alert" | "log" | "marquee" | "status" | "timer"
+        );
+    (element.role == ElementRole::Group || compiled_live_region)
         && has_source_role(element, source_role)
 }
 
@@ -959,6 +976,26 @@ fn has_source_role(element: &Element, source_role: &str) -> bool {
         .and_then(|attrs| attrs.get("source_role"))
         .and_then(serde_json::Value::as_str)
         .is_some_and(|value| value.eq_ignore_ascii_case(source_role))
+}
+
+fn has_aria_live(element: &Element) -> bool {
+    element.attrs.as_ref().is_some_and(|attrs| {
+        attrs.get("aria-live").is_some()
+            || attrs.get("aria_live").is_some()
+            || attrs
+                .get("aria")
+                .and_then(serde_json::Value::as_object)
+                .is_some_and(|aria| aria.contains_key("live"))
+            || attrs
+                .get("source_role")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|role| {
+                    matches!(
+                        role.to_ascii_lowercase().as_str(),
+                        "alert" | "log" | "marquee" | "status" | "timer"
+                    )
+                })
+    })
 }
 
 fn parse_heading_level_selector(selector: &str) -> Option<u8> {
@@ -3353,6 +3390,82 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-live-region");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_generic_aria_live_regions() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-live-region".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Updated".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria": {"live": "polite"}})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+        som.regions[1].elements.push(Element {
+            id: "e-status-region".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Saved".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"source_role": "status"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["live", "live-region", "live_regions"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 2, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-live-region");
+            assert_eq!(filtered.regions[0].elements[1].id, "e-status-region");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_implicit_live_roles_without_other_paragraphs() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-status-region".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Saved".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"source_role": "status"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+        som.regions[1].elements.push(Element {
+            id: "e-alert-region".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("Failed".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"source_role": "alert"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["status", "role=status", "alert"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            if selector == "alert" {
+                assert_eq!(filtered.regions[0].elements[0].id, "e-alert-region");
+            } else {
+                assert_eq!(filtered.regions[0].elements[0].id, "e-status-region");
+            }
         }
     }
 
