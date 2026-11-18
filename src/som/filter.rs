@@ -1292,14 +1292,23 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "data-automation-id"
         );
     supported
-        .then(|| strip_selector_quotes(value.trim()))
+        .then(|| unescape_selector_value(strip_selector_quotes(value.trim())))
         .filter(|value| !value.is_empty())
-        .map(|value| (key, normalize_label_text(value), matcher))
+        .map(|value| (key, normalize_label_text(&value), matcher))
 }
 
 fn find_attribute_operator(inner: &str) -> Option<(usize, &str)> {
     let mut quote = None;
+    let mut escaped = false;
     for (index, character) in inner.char_indices() {
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        if quote.is_some() && character == '\\' {
+            escaped = true;
+            continue;
+        }
         match character {
             '\'' | '"' if quote == Some(character) => quote = None,
             '\'' | '"' if quote.is_none() => quote = Some(character),
@@ -1326,6 +1335,25 @@ fn find_attribute_operator(inner: &str) -> Option<(usize, &str)> {
         }
     }
     None
+}
+
+fn unescape_selector_value(value: &str) -> String {
+    let mut unescaped = String::with_capacity(value.len());
+    let mut escaped = false;
+    for character in value.chars() {
+        if escaped {
+            unescaped.push(character);
+            escaped = false;
+        } else if character == '\\' {
+            escaped = true;
+        } else {
+            unescaped.push(character);
+        }
+    }
+    if escaped {
+        unescaped.push('\\');
+    }
+    unescaped
 }
 
 fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
@@ -6803,6 +6831,29 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-data-label");
+    }
+
+    #[test]
+    fn test_selector_matches_escaped_quotes_in_attribute_values() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-escaped-label".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-label": "a\"=b"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, r#"[data-label=\"a\\\"=b\"]"#);
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-escaped-label");
     }
 
     #[test]
