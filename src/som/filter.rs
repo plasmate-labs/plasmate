@@ -1470,9 +1470,9 @@ fn parse_named_data_attribute_selector(selector: &str) -> Option<(String, String
         (key, value, false)
     };
     let key = key.trim().to_ascii_lowercase();
-    let value = strip_selector_quotes(value.trim());
+    let value = unescape_selector_value(strip_selector_quotes(value.trim()));
     (key.starts_with("data-") || key.starts_with("data_"))
-        .then_some((key, normalize_label_text(value), token_match))
+        .then_some((key, normalize_label_text(&value), token_match))
         .filter(|(_, value, _)| !value.is_empty())
 }
 
@@ -1488,9 +1488,9 @@ fn parse_named_aria_attribute_selector(selector: &str) -> Option<(String, String
         (key, value, false)
     };
     let key = key.trim().to_ascii_lowercase();
-    let value = strip_selector_quotes(value.trim());
+    let value = unescape_selector_value(strip_selector_quotes(value.trim()));
     (key.starts_with("aria-") || key.starts_with("aria_"))
-        .then_some((key, normalize_label_text(value), token_match))
+        .then_some((key, normalize_label_text(&value), token_match))
         .filter(|(_, value, _)| !value.is_empty())
 }
 
@@ -1502,7 +1502,8 @@ fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, St
     if !matches!(key.as_str(), "lang" | "dir") {
         return None;
     }
-    let value = normalize_label_text(strip_selector_quotes(value.trim()));
+    let value = unescape_selector_value(strip_selector_quotes(value.trim()));
+    let value = normalize_label_text(&value);
     (!value.is_empty()).then_some((key, value))
 }
 
@@ -6854,6 +6855,33 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-escaped-label");
+    }
+
+    #[test]
+    fn test_compact_attribute_selectors_unescape_values() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-compact-escaped-value".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({
+                "data-label": "a=b",
+                "aria-label": "a=b"
+            })),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [r#"data-label:a\=b"#, r#"aria-label:a\=b"#] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-compact-escaped-value");
+        }
     }
 
     #[test]
