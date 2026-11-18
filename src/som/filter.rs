@@ -1495,9 +1495,13 @@ fn parse_named_aria_attribute_selector(selector: &str) -> Option<(String, String
 }
 
 fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, String)> {
-    let (key, value) = selector
-        .split_once(':')
-        .or_else(|| selector.split_once('='))?;
+    let (key, value) = if let Some((key, value)) = selector.split_once("|=") {
+        (key, value)
+    } else {
+        selector
+            .split_once(':')
+            .or_else(|| selector.split_once('='))?
+    };
     let key = key.trim().to_ascii_lowercase();
     if !matches!(key.as_str(), "lang" | "dir") {
         return None;
@@ -3044,6 +3048,7 @@ mod tests {
             "[lang|=en]",
             "[lang|='en']",
             "lang:en",
+            "lang|=en",
             "lang:en-US",
             "lang=en-US",
         ] {
