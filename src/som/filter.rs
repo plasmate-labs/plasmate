@@ -661,8 +661,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
-    // Bare document metadata names mirror CSS presence selectors (`lang` / `dir`).
-    if let Some(attribute) = parse_named_document_attribute_presence_selector(selector) {
+    // Bare document, ARIA, and data attribute names mirror CSS presence
+    // selectors without requiring brackets.
+    if let Some(attribute) = parse_named_attribute_presence_selector(selector) {
         return filter_som_elements(som, selector, |element| {
             element_has_attribute_key(element, &attribute)
         });
@@ -1462,9 +1463,14 @@ fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, St
     (!value.is_empty()).then_some((key, value))
 }
 
-fn parse_named_document_attribute_presence_selector(selector: &str) -> Option<String> {
+fn parse_named_attribute_presence_selector(selector: &str) -> Option<String> {
     let key = selector.trim().to_ascii_lowercase();
-    matches!(key.as_str(), "lang" | "dir").then_some(key)
+    (matches!(key.as_str(), "lang" | "dir")
+        || key.starts_with("aria-")
+        || key.starts_with("aria_")
+        || key.starts_with("data-")
+        || key.starts_with("data_"))
+        .then_some(key)
 }
 
 fn element_has_attribute_key(element: &Element, key: &str) -> bool {
@@ -3596,6 +3602,22 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-live-region");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compact_attribute_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "aria-label": "Introduction",
+            "data-testid": "intro"
+        }));
+
+        for selector in ["aria-label", "data-testid"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2");
         }
     }
 
