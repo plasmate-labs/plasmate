@@ -1185,7 +1185,11 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
         })
         .map(str::trim_end)
         .unwrap_or(value);
-    let matcher = match operator {
+    let operator_kind = operator
+        .chars()
+        .filter(|character| !character.is_ascii_whitespace())
+        .collect::<String>();
+    let matcher = match operator_kind.as_str() {
         "~=" => AttributeMatcher::Token,
         "|=" => AttributeMatcher::DashPrefix,
         "^=" => AttributeMatcher::Prefix,
@@ -1300,11 +1304,22 @@ fn find_attribute_operator(inner: &str) -> Option<(usize, &str)> {
             '\'' | '"' if quote == Some(character) => quote = None,
             '\'' | '"' if quote.is_none() => quote = Some(character),
             _ if quote.is_some() => continue,
-            '~' | '|' | '^' | '$' | '*' if inner[index..]
-                .as_bytes()
-                .starts_with(&[character as u8, b'=']) =>
-            {
-                return Some((index, &inner[index..index + 2]));
+            '~' | '|' | '^' | '$' | '*' => {
+                let equals_index = inner[index + character.len_utf8()..]
+                    .char_indices()
+                    .find_map(|(offset, next)| {
+                        if next.is_ascii_whitespace() {
+                            None
+                        } else if next == '=' {
+                            Some(index + character.len_utf8() + offset)
+                        } else {
+                            Some(usize::MAX)
+                        }
+                    });
+                if equals_index.is_some_and(|equals_index| equals_index != usize::MAX) {
+                    let equals_index = equals_index.expect("checked above");
+                    return Some((index, &inner[index..=equals_index]));
+                }
             }
             '=' => return Some((index, "=")),
             _ => {}
