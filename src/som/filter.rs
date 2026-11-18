@@ -141,10 +141,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
 ///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, and `[title]`
-///   match. Any `data-*` or `data_*` attribute can
-///   also be
-///   selected by presence or value, which covers application-specific test and
-///   state hooks. CSS prefix (`^=`), suffix (`$=`), and substring (`*=`)
+///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
+///   selected by presence or value, including ARIA attributes introduced after
+///   this parser. This covers application-specific test and state hooks. CSS
+///   prefix (`^=`), suffix (`$=`), and substring (`*=`)
 ///   attribute matches are supported alongside exact (`=`) and token (`~=`)
 ///   matches;
 ///   `[id]` matches authored HTML ids (not generated SOM element ids),
