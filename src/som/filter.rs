@@ -652,7 +652,20 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // attributes, e.g. `lang:en` and `dir:rtl`.
     if let Some((attribute, value)) = parse_named_document_attribute_selector(selector) {
         return filter_som_elements(som, selector, |element| {
-            element_has_attribute_value(element, &attribute, &value, AttributeMatcher::Exact)
+            let matcher = if attribute == "lang" {
+                AttributeMatcher::DashPrefix
+            } else {
+                AttributeMatcher::Exact
+            };
+            element_has_attribute_value(element, &attribute, &value, matcher)
+        });
+    }
+
+    // Bare document, ARIA, and data attribute names mirror CSS presence
+    // selectors without requiring brackets.
+    if let Some(attribute) = parse_named_attribute_presence_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_key(element, &attribute)
         });
     }
 
@@ -1448,6 +1461,41 @@ fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, St
     }
     let value = normalize_label_text(strip_selector_quotes(value.trim()));
     (!value.is_empty()).then_some((key, value))
+}
+
+fn parse_named_attribute_presence_selector(selector: &str) -> Option<String> {
+    let key = selector.trim().to_ascii_lowercase();
+    (matches!(
+        key.as_str(),
+        "lang"
+            | "dir"
+            | "title"
+            | "inert"
+            | "allowfullscreen"
+            | "async"
+            | "autofocus"
+            | "autoplay"
+            | "checked"
+            | "controls"
+            | "defer"
+            | "disabled"
+            | "itemscope"
+            | "loop"
+            | "multiple"
+            | "muted"
+            | "nomodule"
+            | "novalidate"
+            | "open"
+            | "readonly"
+            | "required"
+            | "reversed"
+            | "selected"
+    )
+        || key.starts_with("aria-")
+        || key.starts_with("aria_")
+        || key.starts_with("data-")
+        || key.starts_with("data_"))
+        .then_some(key)
 }
 
 fn element_has_attribute_key(element: &Element, key: &str) -> bool {
@@ -2942,7 +2990,13 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["[lang|=en]", "[lang|='en']", "lang:en-US", "lang=en-US"] {
+        for selector in [
+            "[lang|=en]",
+            "[lang|='en']",
+            "lang:en",
+            "lang:en-US",
+            "lang=en-US",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
@@ -2976,6 +3030,7 @@ mod tests {
             "[dir]",
             "[dir=rtl]",
             "[dir=\"rtl\"]",
+            "dir",
             "dir:rtl",
             "dir=rtl",
         ] {
@@ -3572,6 +3627,41 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-live-region");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compact_attribute_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "aria-label": "Introduction",
+            "data-testid": "intro",
+            "title": "Intro",
+            "inert": ""
+        }));
+
+        for selector in ["aria-label", "data-testid", "title", "inert"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compact_boolean_attribute_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "disabled": true,
+            "required": "required",
+            "data-state": "open"
+        }));
+
+        for selector in ["disabled", "required"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2");
         }
     }
 
