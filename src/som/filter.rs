@@ -140,7 +140,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
-///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, and `[title]`
+///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, `[lang]`, `[dir]`, and `[title]`
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
 ///   selected by presence or value, including ARIA attributes introduced after
 ///   this parser. This covers application-specific test and state hooks. CSS
@@ -645,6 +645,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 &value,
                 if token_match { AttributeMatcher::Token } else { AttributeMatcher::Exact },
             )
+        });
+    }
+
+    // Document metadata attributes have the same compact ergonomics as ARIA
+    // attributes, e.g. `lang:en` and `dir:rtl`.
+    if let Some((attribute, value)) = parse_named_document_attribute_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, &attribute, &value, AttributeMatcher::Exact)
         });
     }
 
@@ -1255,6 +1263,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "placeholder"
             | "alt"
             | "lang"
+            | "dir"
             | "class"
             | "testid"
             | "data-testid"
@@ -1378,6 +1387,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "placeholder"
             | "alt"
             | "lang"
+            | "dir"
             | "class"
             | "testid"
             | "test-id"
@@ -1426,6 +1436,18 @@ fn parse_named_aria_attribute_selector(selector: &str) -> Option<(String, String
     (key.starts_with("aria-") || key.starts_with("aria_"))
         .then_some((key, normalize_label_text(value), token_match))
         .filter(|(_, value, _)| !value.is_empty())
+}
+
+fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, String)> {
+    let (key, value) = selector
+        .split_once(':')
+        .or_else(|| selector.split_once('='))?;
+    let key = key.trim().to_ascii_lowercase();
+    if !matches!(key.as_str(), "lang" | "dir") {
+        return None;
+    }
+    let value = normalize_label_text(strip_selector_quotes(value.trim()));
+    (!value.is_empty()).then_some((key, value))
 }
 
 fn element_has_attribute_key(element: &Element, key: &str) -> bool {
@@ -2920,7 +2942,7 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["[lang|=en]", "[lang|='en']"] {
+        for selector in ["[lang|=en]", "[lang|='en']", "lang:en-US", "lang=en-US"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
@@ -2932,6 +2954,36 @@ mod tests {
             serde_json::to_value(filtered).unwrap(),
             serde_json::to_value(som).unwrap()
         );
+    }
+
+    #[test]
+    fn test_selector_matches_direction_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-rtl".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("مرحبا".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"dir": "rtl"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "[dir]",
+            "[dir=rtl]",
+            "[dir=\"rtl\"]",
+            "dir:rtl",
+            "dir=rtl",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-rtl");
+        }
     }
 
     #[test]
