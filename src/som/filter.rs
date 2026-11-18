@@ -1185,7 +1185,11 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
         })
         .map(str::trim_end)
         .unwrap_or(value);
-    let matcher = match operator {
+    let operator_kind = operator
+        .chars()
+        .filter(|character| !character.is_ascii_whitespace())
+        .collect::<String>();
+    let matcher = match operator_kind.as_str() {
         "~=" => AttributeMatcher::Token,
         "|=" => AttributeMatcher::DashPrefix,
         "^=" => AttributeMatcher::Prefix,
@@ -1288,29 +1292,68 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "data-automation-id"
         );
     supported
-        .then(|| strip_selector_quotes(value.trim()))
+        .then(|| unescape_selector_value(strip_selector_quotes(value.trim())))
         .filter(|value| !value.is_empty())
-        .map(|value| (key, normalize_label_text(value), matcher))
+        .map(|value| (key, normalize_label_text(&value), matcher))
 }
 
 fn find_attribute_operator(inner: &str) -> Option<(usize, &str)> {
     let mut quote = None;
+    let mut escaped = false;
     for (index, character) in inner.char_indices() {
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        if quote.is_some() && character == '\\' {
+            escaped = true;
+            continue;
+        }
         match character {
             '\'' | '"' if quote == Some(character) => quote = None,
             '\'' | '"' if quote.is_none() => quote = Some(character),
             _ if quote.is_some() => continue,
-            '~' | '|' | '^' | '$' | '*' if inner[index..]
-                .as_bytes()
-                .starts_with(&[character as u8, b'=']) =>
-            {
-                return Some((index, &inner[index..index + 2]));
+            '~' | '|' | '^' | '$' | '*' => {
+                let equals_index = inner[index + character.len_utf8()..]
+                    .char_indices()
+                    .find_map(|(offset, next)| {
+                        if next.is_ascii_whitespace() {
+                            None
+                        } else if next == '=' {
+                            Some(index + character.len_utf8() + offset)
+                        } else {
+                            Some(usize::MAX)
+                        }
+                    });
+                if equals_index.is_some_and(|equals_index| equals_index != usize::MAX) {
+                    let equals_index = equals_index.expect("checked above");
+                    return Some((index, &inner[index..=equals_index]));
+                }
             }
             '=' => return Some((index, "=")),
             _ => {}
         }
     }
     None
+}
+
+fn unescape_selector_value(value: &str) -> String {
+    let mut unescaped = String::with_capacity(value.len());
+    let mut escaped = false;
+    for character in value.chars() {
+        if escaped {
+            unescaped.push(character);
+            escaped = false;
+        } else if character == '\\' {
+            escaped = true;
+        } else {
+            unescaped.push(character);
+        }
+    }
+    if escaped {
+        unescaped.push('\\');
+    }
+    unescaped
 }
 
 fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
@@ -1427,9 +1470,9 @@ fn parse_named_data_attribute_selector(selector: &str) -> Option<(String, String
         (key, value, false)
     };
     let key = key.trim().to_ascii_lowercase();
-    let value = strip_selector_quotes(value.trim());
+    let value = unescape_selector_value(strip_selector_quotes(value.trim()));
     (key.starts_with("data-") || key.starts_with("data_"))
-        .then_some((key, normalize_label_text(value), token_match))
+        .then_some((key, normalize_label_text(&value), token_match))
         .filter(|(_, value, _)| !value.is_empty())
 }
 
@@ -1445,9 +1488,9 @@ fn parse_named_aria_attribute_selector(selector: &str) -> Option<(String, String
         (key, value, false)
     };
     let key = key.trim().to_ascii_lowercase();
-    let value = strip_selector_quotes(value.trim());
+    let value = unescape_selector_value(strip_selector_quotes(value.trim()));
     (key.starts_with("aria-") || key.starts_with("aria_"))
-        .then_some((key, normalize_label_text(value), token_match))
+        .then_some((key, normalize_label_text(&value), token_match))
         .filter(|(_, value, _)| !value.is_empty())
 }
 
@@ -1459,7 +1502,8 @@ fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, St
     if !matches!(key.as_str(), "lang" | "dir") {
         return None;
     }
-    let value = normalize_label_text(strip_selector_quotes(value.trim()));
+    let value = unescape_selector_value(strip_selector_quotes(value.trim()));
+    let value = normalize_label_text(&value);
     (!value.is_empty()).then_some((key, value))
 }
 
@@ -6788,6 +6832,56 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-data-label");
+    }
+
+    #[test]
+    fn test_selector_matches_escaped_quotes_in_attribute_values() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-escaped-label".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-label": "a\"=b"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, r#"[data-label=\"a\\\"=b\"]"#);
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-escaped-label");
+    }
+
+    #[test]
+    fn test_compact_attribute_selectors_unescape_values() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-compact-escaped-value".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({
+                "data-label": "a=b",
+                "aria-label": "a=b"
+            })),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [r#"data-label:a\=b"#, r#"aria-label:a\=b"#] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-compact-escaped-value");
+        }
     }
 
     #[test]
