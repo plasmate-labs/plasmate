@@ -1299,6 +1299,10 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
     let key = key.to_ascii_lowercase();
     (key.starts_with("data-")
         || key.starts_with("data_")
+        // Keep presence selectors forward-compatible with new ARIA
+        // attributes instead of requiring a parser change for every addition.
+        || key.starts_with("aria-")
+        || key.starts_with("aria_")
         || matches!(
             key.as_str(),
         "aria-label"
@@ -6598,7 +6602,7 @@ mod tests {
     }
 
     #[test]
-    fn test_selector_matches_new_aria_attributes_in_css_form() {
+    fn test_selector_matches_forward_compatible_aria_attributes() {
         let mut som = make_test_som();
         som.regions[1].elements.push(Element {
             id: "e-braille-label".to_string(),
