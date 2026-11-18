@@ -652,7 +652,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // attributes, e.g. `lang:en` and `dir:rtl`.
     if let Some((attribute, value)) = parse_named_document_attribute_selector(selector) {
         return filter_som_elements(som, selector, |element| {
-            element_has_attribute_value(element, &attribute, &value, AttributeMatcher::Exact)
+            let matcher = if attribute == "lang" {
+                AttributeMatcher::DashPrefix
+            } else {
+                AttributeMatcher::Exact
+            };
+            element_has_attribute_value(element, &attribute, &value, matcher)
         });
     }
 
@@ -2954,7 +2959,13 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["[lang|=en]", "[lang|='en']", "lang:en-US", "lang=en-US"] {
+        for selector in [
+            "[lang|=en]",
+            "[lang|='en']",
+            "lang:en",
+            "lang:en-US",
+            "lang=en-US",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
