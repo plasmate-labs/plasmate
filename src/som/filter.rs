@@ -1176,6 +1176,10 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
     let key = key.trim().to_ascii_lowercase();
     let supported = key.starts_with("data-")
         || key.starts_with("data_")
+        // Keep CSS attribute selectors forward-compatible with new ARIA
+        // attributes instead of requiring a parser change for every addition.
+        || key.starts_with("aria-")
+        || key.starts_with("aria_")
         || matches!(
             key.as_str(),
         "aria-label"
@@ -6590,6 +6594,30 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-current-page");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_new_aria_attributes_in_css_form() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-braille-label".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-braillelabel": "save action"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[aria-braillelabel]", "[aria-braillelabel='save action']"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-braille-label");
         }
     }
 
