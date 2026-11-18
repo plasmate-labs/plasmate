@@ -648,6 +648,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    // Document metadata attributes have the same compact ergonomics as ARIA
+    // attributes, e.g. `lang:en` and `dir:rtl`.
+    if let Some((attribute, value)) = parse_named_document_attribute_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, &attribute, &value, AttributeMatcher::Exact)
+        });
+    }
+
     // Accept the common CSS class shorthand in addition to the explicit
     // attribute form (`[class~="token"]`). Class matching is token-aware so
     // `.card` does not accidentally match `.card-header`.
@@ -1428,6 +1436,18 @@ fn parse_named_aria_attribute_selector(selector: &str) -> Option<(String, String
     (key.starts_with("aria-") || key.starts_with("aria_"))
         .then_some((key, normalize_label_text(value), token_match))
         .filter(|(_, value, _)| !value.is_empty())
+}
+
+fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, String)> {
+    let (key, value) = selector
+        .split_once(':')
+        .or_else(|| selector.split_once('='))?;
+    let key = key.trim().to_ascii_lowercase();
+    if !matches!(key.as_str(), "lang" | "dir") {
+        return None;
+    }
+    let value = normalize_label_text(strip_selector_quotes(value.trim()));
+    (!value.is_empty()).then_some((key, value))
 }
 
 fn element_has_attribute_key(element: &Element, key: &str) -> bool {
@@ -2922,7 +2942,7 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["[lang|=en]", "[lang|='en']"] {
+        for selector in ["[lang|=en]", "[lang|='en']", "lang:en-US", "lang=en-US"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
@@ -2952,7 +2972,13 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["[dir]", "[dir=rtl]", "[dir=\"rtl\"]"] {
+        for selector in [
+            "[dir]",
+            "[dir=rtl]",
+            "[dir=\"rtl\"]",
+            "dir:rtl",
+            "dir=rtl",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
