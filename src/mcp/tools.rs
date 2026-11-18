@@ -61,7 +61,7 @@ const SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION: &str =
     " Explicit CSS presence selectors `[aria-modal]`, `[aria-checked]`, and `[inert]` match modal, checked-state, or inert elements without requiring a value; value forms such as `[aria-modal='true']` are also supported. Compact ARIA value forms such as `aria-pressed=true` and `aria-current:page` are supported too.";
 
 const SOM_TABLE_SELECTOR_DESCRIPTION: &str = " Table-like element selectors also include data_table/data_tables and data-table/data-tables, data-grid/data-grids, data_grid/data_grids, datagrid/datagrids, table_grid/table_grids, table-grid/table-grids, tablegrid/tablegrids, and spaced data table/data tables, data grid/data grids, or table grid/table grids forms.";
-const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements, and picture/pictures/image_item/image-item/image item/imageitems for image elements.";
+const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements, and picture/pictures/image_item/image-item/image item/imageitems for image elements. Document metadata selectors also include `lang`/`dir` presence, exact, prefix, suffix, substring, token, and dash-prefix forms such as `[lang|=en]` and `dir=rtl`.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -7038,6 +7038,13 @@ mod tests {
                     .as_str()
                     .is_some_and(|description| description.contains("limited to 256 bytes")),
                 "{} must explain the selector size limit",
+                definition.name
+            );
+            assert!(
+                definition.input_schema["properties"]["selector"]["description"]
+                    .as_str()
+                    .is_some_and(|description| description.contains("[lang|=en]")),
+                "{} must advertise document metadata selectors",
                 definition.name
             );
         }
