@@ -1465,7 +1465,32 @@ fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, St
 
 fn parse_named_attribute_presence_selector(selector: &str) -> Option<String> {
     let key = selector.trim().to_ascii_lowercase();
-    (matches!(key.as_str(), "lang" | "dir" | "title" | "inert")
+    (matches!(
+        key.as_str(),
+        "lang"
+            | "dir"
+            | "title"
+            | "inert"
+            | "allowfullscreen"
+            | "async"
+            | "autofocus"
+            | "autoplay"
+            | "checked"
+            | "controls"
+            | "defer"
+            | "disabled"
+            | "itemscope"
+            | "loop"
+            | "multiple"
+            | "muted"
+            | "nomodule"
+            | "novalidate"
+            | "open"
+            | "readonly"
+            | "required"
+            | "reversed"
+            | "selected"
+    )
         || key.starts_with("aria-")
         || key.starts_with("aria_")
         || key.starts_with("data-")
@@ -3616,6 +3641,23 @@ mod tests {
         }));
 
         for selector in ["aria-label", "data-testid", "title", "inert"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compact_boolean_attribute_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "disabled": true,
+            "required": "required",
+            "data-state": "open"
+        }));
+
+        for selector in ["disabled", "required"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
