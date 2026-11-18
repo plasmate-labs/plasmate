@@ -1255,6 +1255,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "placeholder"
             | "alt"
             | "lang"
+            | "dir"
             | "class"
             | "testid"
             | "data-testid"
@@ -1378,6 +1379,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "placeholder"
             | "alt"
             | "lang"
+            | "dir"
             | "class"
             | "testid"
             | "test-id"
@@ -2932,6 +2934,30 @@ mod tests {
             serde_json::to_value(filtered).unwrap(),
             serde_json::to_value(som).unwrap()
         );
+    }
+
+    #[test]
+    fn test_selector_matches_direction_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-rtl".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("مرحبا".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"dir": "rtl"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[dir]", "[dir=rtl]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-rtl");
+        }
     }
 
     #[test]

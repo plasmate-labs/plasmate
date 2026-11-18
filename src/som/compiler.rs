@@ -2493,6 +2493,11 @@ fn build_element_attrs(
             map.insert("lang".into(), json!(value));
         }
     }
+    if let Some((_, value)) = attrs.iter().find(|(n, _)| n == "dir") {
+        if !value.trim().is_empty() {
+            map.insert("dir".into(), json!(value));
+        }
+    }
     if attrs
         .iter()
         .any(|(n, v)| n == "hidden" && v.trim().eq_ignore_ascii_case("until-found"))
@@ -4986,7 +4991,7 @@ mod tests {
 <html lang="en"><head><title>Mixed language</title></head>
 <body>
 <main>
-  <p lang="fr">Bonjour</p>
+  <p lang="fr" dir="rtl">Bonjour</p>
   <p lang="   ">Whitespace lang</p>
   <p>Just text</p>
   <a href="/docs" hreflang="de">Docs</a>
@@ -5012,6 +5017,11 @@ mod tests {
             french.attrs.as_ref().and_then(|attrs| attrs.get("lang")),
             Some(&json!("fr")),
             "native element lang must compile: {french:?}"
+        );
+        assert_eq!(
+            french.attrs.as_ref().and_then(|attrs| attrs.get("dir")),
+            Some(&json!("rtl")),
+            "native element dir must compile: {french:?}"
         );
 
         let whitespace = elements
