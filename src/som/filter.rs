@@ -635,6 +635,19 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    // Accept compact value selectors for ARIA attributes, e.g.
+    // `aria-current:page` or `aria-pressed=true`, alongside the CSS form.
+    if let Some((attribute, value, token_match)) = parse_named_aria_attribute_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(
+                element,
+                &attribute,
+                &value,
+                if token_match { AttributeMatcher::Token } else { AttributeMatcher::Exact },
+            )
+        });
+    }
+
     // Accept the common CSS class shorthand in addition to the explicit
     // attribute form (`[class~="token"]`). Class matching is token-aware so
     // `.card` does not accidentally match `.card-header`.
@@ -1385,6 +1398,24 @@ fn parse_named_data_attribute_selector(selector: &str) -> Option<(String, String
     let key = key.trim().to_ascii_lowercase();
     let value = strip_selector_quotes(value.trim());
     (key.starts_with("data-") || key.starts_with("data_"))
+        .then_some((key, normalize_label_text(value), token_match))
+        .filter(|(_, value, _)| !value.is_empty())
+}
+
+fn parse_named_aria_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
+    let (key, value, token_match) = if let Some(index) = selector.find('~') {
+        let (key, rest) = selector.split_at(index);
+        let value = rest.strip_prefix('~')?.trim_start().strip_prefix('=')?;
+        (key, value, true)
+    } else if let Some((key, value)) = selector.split_once(':') {
+        (key, value, false)
+    } else {
+        let (key, value) = selector.split_once('=')?;
+        (key, value, false)
+    };
+    let key = key.trim().to_ascii_lowercase();
+    let value = strip_selector_quotes(value.trim());
+    (key.starts_with("aria-") || key.starts_with("aria_"))
         .then_some((key, normalize_label_text(value), token_match))
         .filter(|(_, value, _)| !value.is_empty())
 }
@@ -6518,6 +6549,48 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-described-by-status");
+    }
+
+    #[test]
+    fn test_selector_matches_compact_aria_attribute_values() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-current-page".to_string(),
+                role: ElementRole::Link,
+                html_id: None,
+                text: Some("Home".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-current": "page"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-current-step".to_string(),
+                role: ElementRole::Link,
+                html_id: None,
+                text: Some("Checkout".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-current": "step"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        for selector in [
+            "aria-current:page",
+            "aria-current=page",
+            "aria-current ~= page",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-current-page");
+        }
     }
 
     #[test]
