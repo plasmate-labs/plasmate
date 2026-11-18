@@ -656,6 +656,13 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    // Bare document metadata names mirror CSS presence selectors (`lang` / `dir`).
+    if let Some(attribute) = parse_named_document_attribute_presence_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_key(element, &attribute)
+        });
+    }
+
     // Accept the common CSS class shorthand in addition to the explicit
     // attribute form (`[class~="token"]`). Class matching is token-aware so
     // `.card` does not accidentally match `.card-header`.
@@ -1448,6 +1455,11 @@ fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, St
     }
     let value = normalize_label_text(strip_selector_quotes(value.trim()));
     (!value.is_empty()).then_some((key, value))
+}
+
+fn parse_named_document_attribute_presence_selector(selector: &str) -> Option<String> {
+    let key = selector.trim().to_ascii_lowercase();
+    matches!(key.as_str(), "lang" | "dir").then_some(key)
 }
 
 fn element_has_attribute_key(element: &Element, key: &str) -> bool {
@@ -2976,6 +2988,7 @@ mod tests {
             "[dir]",
             "[dir=rtl]",
             "[dir=\"rtl\"]",
+            "dir",
             "dir:rtl",
             "dir=rtl",
         ] {
