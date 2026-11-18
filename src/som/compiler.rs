@@ -4992,7 +4992,7 @@ mod tests {
 <body>
 <main>
   <p lang="fr" dir="rtl">Bonjour</p>
-  <p lang="   ">Whitespace lang</p>
+  <p lang="   " dir="   ">Whitespace lang and dir</p>
   <p>Just text</p>
   <a href="/docs" hreflang="de">Docs</a>
   <a href="/fr" lang="fr" hreflang="fr">Francais</a>
@@ -5026,8 +5026,8 @@ mod tests {
 
         let whitespace = elements
             .iter()
-            .find(|element| element.text.as_deref() == Some("Whitespace lang"))
-            .expect("whitespace lang paragraph should compile");
+            .find(|element| element.text.as_deref() == Some("Whitespace lang and dir"))
+            .expect("whitespace lang and dir paragraph should compile");
         assert!(
             whitespace
                 .attrs
@@ -5035,6 +5035,14 @@ mod tests {
                 .and_then(|attrs| attrs.get("lang"))
                 .is_none(),
             "whitespace lang must not be invented: {whitespace:?}"
+        );
+        assert!(
+            whitespace
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("dir"))
+                .is_none(),
+            "whitespace dir must not be invented: {whitespace:?}"
         );
 
         let paragraph = elements
