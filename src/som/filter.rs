@@ -6019,6 +6019,7 @@ mod tests {
             "action:clear_text",
             "action:clear-text",
             "action : clear text",
+            "action = clear_text",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
