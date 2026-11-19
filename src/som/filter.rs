@@ -149,6 +149,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   prefix (`^=`), suffix (`$=`), and substring (`*=`)
 ///   attribute matches are supported alongside exact (`=`) and token (`~=`)
 ///   matches;
+///   compact `accesskey:<value>` / `accesskey=<value>` forms are also
+///   supported for keyboard shortcut discovery;
 ///   `[id]` matches authored HTML ids (not generated SOM element ids),
 ///   value selectors such as `[role="button"]` match the normalized SOM role
 ///   elements exposing the corresponding attribute without requiring a
@@ -656,6 +658,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    if let Some(value) = parse_named_accesskey_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, "accesskey", &value, AttributeMatcher::Exact)
+        });
+    }
+
     // Document metadata attributes have the same compact ergonomics as ARIA
     // attributes, e.g. `lang:en` and `dir:rtl`.
     if let Some((attribute, value)) = parse_named_document_attribute_selector(selector) {
@@ -1127,6 +1135,12 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "aria-label",
         "aria_label",
         "aria label",
+        "aria-braillelabel",
+        "aria-braille-label",
+        "aria_braillelabel",
+        "aria_braille_label",
+        "aria braillelabel",
+        "aria braille label",
         "alt",
         "accessible-name",
         "accessible_name",
@@ -1287,6 +1301,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "title"
             | "placeholder"
             | "alt"
+            | "accesskey"
             | "lang"
             | "dir"
             | "class"
@@ -1450,6 +1465,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "title"
             | "placeholder"
             | "alt"
+            | "accesskey"
             | "lang"
             | "dir"
             | "class"
@@ -1502,6 +1518,17 @@ fn parse_named_aria_attribute_selector(selector: &str) -> Option<(String, String
         .filter(|(_, value, _)| !value.is_empty())
 }
 
+fn parse_named_accesskey_selector(selector: &str) -> Option<String> {
+    let (key, value) = selector
+        .split_once(':')
+        .or_else(|| selector.split_once('='))?;
+    if !key.trim().eq_ignore_ascii_case("accesskey") {
+        return None;
+    }
+    let value = unescape_selector_value(strip_selector_quotes(value.trim()));
+    (!value.is_empty()).then(|| normalize_label_text(&value))
+}
+
 fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, String)> {
     let (key, value) = if let Some((key, value)) = selector.split_once("|=") {
         (key, value)
@@ -1526,6 +1553,7 @@ fn parse_named_attribute_presence_selector(selector: &str) -> Option<String> {
         key.as_str(),
         "lang"
             | "dir"
+            | "accesskey"
             | "title"
             | "inert"
             | "allowfullscreen"
@@ -2585,6 +2613,37 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_matches_aria_braille_label_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-braille-label".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-braillelabel": "Save"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "aria-braillelabel:save",
+            "aria-braille-label:save",
+            "aria_braillelabel=SAVE",
+            "aria_braille_label=SAVE",
+            "aria braillelabel:save",
+            "aria braille label:save",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-braille-label");
+        }
+    }
+
+    #[test]
     fn test_selector_matches_legacy_label_fallback_attributes() {
         let mut som = make_test_som();
         som.regions[1].elements.push(Element {
@@ -3329,6 +3388,35 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-modal-true");
+    }
+
+    #[test]
+    fn test_selector_matches_accesskey_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-accesskey".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"accesskey": "s"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "[accesskey]",
+            "[accesskey='s']",
+            "accesskey:s",
+            "accesskey='s'",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-accesskey");
+        }
     }
 
     #[test]
