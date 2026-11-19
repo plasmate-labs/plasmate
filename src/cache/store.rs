@@ -489,6 +489,19 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
     // IDs retain the same case-sensitive cache semantics as unquoted IDs.
     let selector = strip_selector_quotes(selector);
     let selector = selector.split_whitespace().collect::<Vec<_>>().join(" ");
+    // Keep forwarded key/value forms aligned with `apply_selector`, which
+    // accepts `selector=<value>` and `selector:<value>` from shell/JSON
+    // configuration layers.
+    let selector = selector
+        .get(..8)
+        .filter(|prefix| prefix.eq_ignore_ascii_case("selector"))
+        .and_then(|_| selector.get(8..))
+        .and_then(|rest| {
+            let rest = rest.trim_start();
+            rest.strip_prefix(['=', ':']).map(str::trim)
+        })
+        .filter(|value| !value.is_empty())
+        .unwrap_or(&selector);
     if let Some(id) = selector.strip_prefix('#') {
         // `apply_selector` accepts both #id and #'id'/#"id" forms while
         // preserving ID case. Keep those spellings on the same cache entry.
@@ -830,6 +843,27 @@ mod tests {
             CacheLookup::Hit(entry) => assert_eq!(entry.som_json, b"button".to_vec()),
             _ => panic!("Expected equivalent selector cache hit"),
         }
+    }
+
+    #[test]
+    fn test_selector_cache_keys_canonicalize_forwarded_selector_options() {
+        let cache = SomCache::new(CacheConfig::default());
+        cache.store_with_selector(
+            "https://example.com/app",
+            111,
+            Some("selector:article"),
+            b"article".to_vec(),
+            100,
+        );
+
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("content")),
+            CacheLookup::Hit(_)
+        ));
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("selector=article")),
+            CacheLookup::Hit(_)
+        ));
     }
 
     #[test]
