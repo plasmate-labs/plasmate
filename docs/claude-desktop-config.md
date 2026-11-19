@@ -40,6 +40,7 @@ Claude now has access to these tools:
 | `fetch_page` | Fetch a URL and return the Semantic Object Model (SOM); output size is page- and selector-dependent |
 | `extract_text` | Get clean, readable text from any web page |
 | `extract_links` | Get all outbound URLs from a page (deduplicated) |
+| `selector` parameter | Narrow page output with compact aliases such as `main`, `content`, `interactive`, `action:click`, or `action:type-text`; use it on fetch/extraction tools when you do not need the whole page |
 | `ard_discover` | Inspect bounded static ARD tool-discovery signals without invoking page tools |
 | `crawl_policy` | Check a URL's robots.txt policy without changing fetch behavior |
 | `inspect_page` | Return bounded SOM with an optional deterministic visual fallback |
