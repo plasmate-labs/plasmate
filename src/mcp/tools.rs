@@ -56,7 +56,7 @@ const SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION: &str = " Source HTML text tags `abb
 const SOM_PROGRESS_SELECTOR_DESCRIPTION: &str =
     " Progress controls also accept progress_bar and progress-bar aliases, plus progress_bars, progress-bars, and progress bars.";
 const SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION: &str =
-    " Action aliases also accept type text and select option forms, including action:type text and action:select option. Clear actions also accept clear_text, clear-text, and clear text aliases, including action:clear-text.";
+    " Action aliases also accept type text and select option forms, including action:type text and action:select option. Clear actions also accept clear_text, clear-text, and clear text aliases, including action:clear_text, action:clear-text, and action:clear text.";
 const SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION: &str =
     " Explicit CSS presence selectors `[aria-modal]`, `[aria-checked]`, and `[inert]` match modal, checked-state, or inert elements without requiring a value; value forms such as `[aria-modal='true']` are also supported. Compact ARIA value forms such as `aria-pressed=true` and `aria-current:page` are supported too.";
 
@@ -7335,6 +7335,7 @@ mod tests {
             assert!(description.contains("Selector names are case-insensitive"));
             assert!(description.contains("action:clear"));
             assert!(description.contains("clear_text, clear-text, and clear text aliases"));
+            assert!(description.contains("action:clear_text, action:clear-text, and action:clear text"));
             assert!(description.contains("type text"));
             assert!(description.contains("select option"));
             assert!(description.contains("action:toggle"));
