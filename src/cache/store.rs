@@ -584,8 +584,10 @@ fn canonical_selector_alias(value: &str) -> String {
         | "alert-dialog" | "alert-dialogs" | "alert dialog" | "alert dialogs" => {
             "dialog".to_string()
         }
-        "contents" | "article" | "articles" | "content_region" | "content-region"
-        | "content region" | "content_regions" | "content-regions" | "content regions" => {
+        "contents" | "article" | "articles" | "article_region" | "article_regions"
+        | "article-region" | "article-regions" | "article region" | "article regions"
+        | "content_region" | "content-region" | "content region" | "content_regions"
+        | "content-regions" | "content regions" => {
             "content".to_string()
         }
         // Keep cache entries shared across the most common plural and ARIA
@@ -1135,6 +1137,9 @@ mod tests {
             ("content infos", "footer"),
             ("forms", "form"),
             ("dialogs", "dialog"),
+            ("article_region", "content"),
+            ("article-region", "content"),
+            ("article region", "content"),
             ("alertdialog", "dialog"),
             ("alertdialogs", "dialog"),
             ("alert_dialog", "dialog"),
