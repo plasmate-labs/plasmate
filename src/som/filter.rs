@@ -3421,7 +3421,7 @@ mod tests {
             assert_eq!(filtered.regions[0].elements[0].id, "e-accesskey");
         }
 
-        som.regions[1].elements[0].attrs = Some(serde_json::json!({"accesskey": "x s"}));
+        som.regions[1].elements[2].attrs = Some(serde_json::json!({"accesskey": "x s"}));
         let filtered = apply_selector(&som, "accesskey:s");
         assert_eq!(filtered.regions[0].elements[0].id, "e-accesskey");
     }
