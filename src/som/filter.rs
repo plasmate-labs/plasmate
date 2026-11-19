@@ -1127,6 +1127,9 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "aria-label",
         "aria_label",
         "aria label",
+        "aria-braillelabel",
+        "aria_braillelabel",
+        "aria braillelabel",
         "alt",
         "accessible-name",
         "accessible_name",
@@ -2582,6 +2585,34 @@ mod tests {
         let filtered = apply_selector(&som, "label:save");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].html_id.as_deref(), Some("save"));
+    }
+
+    #[test]
+    fn test_selector_matches_aria_braille_label_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-braille-label".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"aria-braillelabel": "Save"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [
+            "aria-braillelabel:save",
+            "aria_braillelabel=SAVE",
+            "aria braillelabel:save",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-braille-label");
+        }
     }
 
     #[test]
