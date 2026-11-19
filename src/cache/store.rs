@@ -497,8 +497,14 @@ fn normalized_selector(selector: Option<&str>) -> Option<String> {
         .filter(|prefix| prefix.eq_ignore_ascii_case("selector"))
         .and_then(|_| selector.get(8..))
         .and_then(|rest| {
-            let rest = rest.trim_start();
-            rest.strip_prefix(['=', ':']).map(str::trim)
+            let trimmed = rest.trim_start();
+            trimmed
+                .strip_prefix(['=', ':'])
+                .map(str::trim)
+                .or_else(|| {
+                    (!rest.is_empty() && rest.chars().next().is_some_and(char::is_whitespace))
+                        .then_some(trimmed)
+                })
         })
         .filter(|value| !value.is_empty())
         .unwrap_or(&selector);
@@ -862,6 +868,10 @@ mod tests {
         ));
         assert!(matches!(
             cache.lookup_with_selector("https://example.com/app", 111, Some("selector=article")),
+            CacheLookup::Hit(_)
+        ));
+        assert!(matches!(
+            cache.lookup_with_selector("https://example.com/app", 111, Some("selector article")),
             CacheLookup::Hit(_)
         ));
     }
