@@ -18475,7 +18475,10 @@ mod tests {
 
     #[test]
     fn selector_description_advertises_accesskey_discovery() {
-        let description = fetch_page_definition().description;
+        let definition = fetch_page_definition();
+        let description = definition.input_schema["properties"]["selector"]["description"]
+            .as_str()
+            .expect("selector schema should have a description");
 
         assert!(description.contains("`accesskey`"));
         assert!(description.contains("`[accesskey]`"));
