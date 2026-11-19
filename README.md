@@ -226,10 +226,12 @@ to return only actionable elements, `selector="h1"` through `selector="h6"`
 `selector="action:reset"`, including `action : reset` and `action = reset`)
 to build a compact
 action menu before the LLM sees the content. The MCP tool-name aliases
-`selector="type_text"`, `selector="clear_text"`, and
-`selector="select_option"` (including their `action:type_text`,
-`action:clear_text`, and `action:select_option` forms) are also accepted for
-typing, clearing, and selection targets.
+`selector="type_text"`/`selector="type-text"`,
+`selector="clear_text"`/`selector="clear-text"`, and
+`selector="select_option"`/`selector="select-option"` (including their
+`action:type_text`/`action:type-text`, `action:clear_text`/`action:clear-text`,
+and `action:select_option`/`action:select-option` forms) are also accepted
+for typing, clearing, and selection targets.
 Use `selector="landmark"` (or `selector="landmarks"`) first when you need a
 compact inventory of the page's compiled regions before choosing a narrower
 region selector; the inventory keeps region metadata and removes their
