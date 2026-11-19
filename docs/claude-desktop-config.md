@@ -106,6 +106,8 @@ authored-text matching on regions and elements. Use `testid:<text>` or
 `data_test_id:<text>`) to match compiled stable test hooks.
 When a compiled label is unavailable, element matching also checks `aria-label`,
 `title`, `placeholder`, and `alt`; whitespace is normalized before matching.
+Use `accesskey:<value>` or `accesskey=<value>` to find controls that expose a
+keyboard access key when exploring keyboard-oriented page flows.
 
 ## Using with Cursor
 
