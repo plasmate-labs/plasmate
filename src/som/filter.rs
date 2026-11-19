@@ -1500,7 +1500,8 @@ fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, St
     } else {
         selector
             .split_once(':')
-            .or_else(|| selector.split_once('='))?
+            .or_else(|| selector.split_once('='))
+            .or_else(|| selector.split_once(char::is_whitespace))?
     };
     let key = key.trim().to_ascii_lowercase();
     if !matches!(key.as_str(), "lang" | "dir") {
@@ -3051,6 +3052,7 @@ mod tests {
             "lang|=en",
             "lang:en-US",
             "lang=en-US",
+            "lang en-US",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
