@@ -149,6 +149,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   prefix (`^=`), suffix (`$=`), and substring (`*=`)
 ///   attribute matches are supported alongside exact (`=`) and token (`~=`)
 ///   matches;
+///   compact `accesskey:<value>` / `accesskey=<value>` forms are also
+///   supported for keyboard shortcut discovery;
 ///   `[id]` matches authored HTML ids (not generated SOM element ids),
 ///   value selectors such as `[role="button"]` match the normalized SOM role
 ///   elements exposing the corresponding attribute without requiring a
@@ -653,6 +655,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 &value,
                 if token_match { AttributeMatcher::Token } else { AttributeMatcher::Exact },
             )
+        });
+    }
+
+    if let Some(value) = parse_named_accesskey_selector(selector) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, "accesskey", &value, AttributeMatcher::Exact)
         });
     }
 
@@ -1508,6 +1516,17 @@ fn parse_named_aria_attribute_selector(selector: &str) -> Option<(String, String
     (key.starts_with("aria-") || key.starts_with("aria_"))
         .then_some((key, normalize_label_text(&value), token_match))
         .filter(|(_, value, _)| !value.is_empty())
+}
+
+fn parse_named_accesskey_selector(selector: &str) -> Option<String> {
+    let (key, value) = selector
+        .split_once(':')
+        .or_else(|| selector.split_once('='))?;
+    if !key.trim().eq_ignore_ascii_case("accesskey") {
+        return None;
+    }
+    let value = unescape_selector_value(strip_selector_quotes(value.trim()));
+    (!value.is_empty()).then(|| normalize_label_text(&value))
 }
 
 fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, String)> {
@@ -3387,7 +3406,12 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["[accesskey]", "[accesskey='s']"] {
+        for selector in [
+            "[accesskey]",
+            "[accesskey='s']",
+            "accesskey:s",
+            "accesskey='s'",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
