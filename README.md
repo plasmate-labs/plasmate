@@ -252,9 +252,9 @@ hooks. The explicit
 `description:<text>` / `description=<text>`, `aria-description`, and
 `accessible-description` aliases also match compiled description metadata;
 whitespace is normalized so labels split across lines still match.
-Use `accesskey:<value>` or `accesskey=<value>` to find controls that expose a
-keyboard access key, which is useful when replaying keyboard-oriented page
-flows.
+Use `selector="accesskey"` or `selector="[accesskey]"` to discover elements
+with keyboard shortcuts, or `selector="accesskey:<value>"` /
+`selector="accesskey=<value>"` to match one exact access-key value.
 Element selectors also accept common HTML tag aliases: `a`/`area`/`areas`/`anchor`/`anchors`/`hyperlink`/`hyperlinks`/`link`/`links`,
 `p`/`s`/`ins`/`del`/`mark`/`paragraph`, and `ul`, `ol`, `dl`, or `menu`/`list`/`lists` (plus the explicit
 `unordered_list`, `ordered_list`, and `definition_list` forms). Definition-list
