@@ -660,7 +660,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     if let Some(value) = parse_named_accesskey_selector(selector) {
         return filter_som_elements(som, selector, |element| {
-            element_has_attribute_value(element, "accesskey", &value, AttributeMatcher::Exact)
+            // HTML accesskey is a space-separated list of shortcut tokens.
+            // Keep the compact selector token-aware while CSS attribute
+            // selectors below retain their exact-match semantics.
+            element_has_attribute_value(element, "accesskey", &value, AttributeMatcher::Token)
         });
     }
 
@@ -3417,6 +3420,10 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-accesskey");
         }
+
+        som.regions[1].elements[2].attrs = Some(serde_json::json!({"accesskey": "x s"}));
+        let filtered = apply_selector(&som, "accesskey:s");
+        assert_eq!(filtered.regions[0].elements[0].id, "e-accesskey");
     }
 
     #[test]
