@@ -1293,6 +1293,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "title"
             | "placeholder"
             | "alt"
+            | "accesskey"
             | "lang"
             | "dir"
             | "class"
@@ -1456,6 +1457,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "title"
             | "placeholder"
             | "alt"
+            | "accesskey"
             | "lang"
             | "dir"
             | "class"
@@ -1532,6 +1534,7 @@ fn parse_named_attribute_presence_selector(selector: &str) -> Option<String> {
         key.as_str(),
         "lang"
             | "dir"
+            | "accesskey"
             | "title"
             | "inert"
             | "allowfullscreen"
@@ -3366,6 +3369,30 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-modal-true");
+    }
+
+    #[test]
+    fn test_selector_matches_accesskey_attribute() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-accesskey".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"accesskey": "s"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[accesskey]", "[accesskey='s']"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-accesskey");
+        }
     }
 
     #[test]
