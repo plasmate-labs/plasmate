@@ -1629,9 +1629,9 @@ fn element_has_attribute_value(
             AttributeMatcher::DashPrefix => {
                 value == expected || value.starts_with(&format!("{expected}-"))
             }
-            AttributeMatcher::Prefix => value.starts_with(expected),
-            AttributeMatcher::Suffix => value.ends_with(expected),
-            AttributeMatcher::Substring => value.contains(expected),
+            AttributeMatcher::Prefix => value.starts_with(&expected),
+            AttributeMatcher::Suffix => value.ends_with(&expected),
+            AttributeMatcher::Substring => value.contains(&expected),
             AttributeMatcher::Exact => value == expected,
         }
     };
