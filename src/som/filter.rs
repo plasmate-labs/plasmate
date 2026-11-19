@@ -1495,9 +1495,14 @@ fn parse_named_aria_attribute_selector(selector: &str) -> Option<(String, String
 }
 
 fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, String)> {
-    let (key, value) = selector
-        .split_once(':')
-        .or_else(|| selector.split_once('='))?;
+    let (key, value) = if let Some((key, value)) = selector.split_once("|=") {
+        (key, value)
+    } else {
+        selector
+            .split_once(':')
+            .or_else(|| selector.split_once('='))
+            .or_else(|| selector.split_once(char::is_whitespace))?
+    };
     let key = key.trim().to_ascii_lowercase();
     if !matches!(key.as_str(), "lang" | "dir") {
         return None;
@@ -1610,17 +1615,23 @@ fn element_has_attribute_value(
         _ => String::new(),
     };
     let normalized_key = normalize_key(key);
+    let case_insensitive_value = matches!(normalized_key.as_str(), "lang" | "dir");
     let matches_key = |candidate: &str| normalize_key(candidate) == normalized_key;
     let matches_value = |value: &serde_json::Value| {
-        let value = normalize_value(value);
+        let mut value = normalize_value(value);
+        let mut expected = expected.to_string();
+        if case_insensitive_value {
+            value.make_ascii_lowercase();
+            expected.make_ascii_lowercase();
+        }
         match matcher {
             AttributeMatcher::Token => value.split_whitespace().any(|token| token == expected),
             AttributeMatcher::DashPrefix => {
                 value == expected || value.starts_with(&format!("{expected}-"))
             }
-            AttributeMatcher::Prefix => value.starts_with(expected),
-            AttributeMatcher::Suffix => value.ends_with(expected),
-            AttributeMatcher::Substring => value.contains(expected),
+            AttributeMatcher::Prefix => value.starts_with(&expected),
+            AttributeMatcher::Suffix => value.ends_with(&expected),
+            AttributeMatcher::Substring => value.contains(&expected),
             AttributeMatcher::Exact => value == expected,
         }
     };
@@ -3038,8 +3049,10 @@ mod tests {
             "[lang|=en]",
             "[lang|='en']",
             "lang:en",
+            "lang|=en",
             "lang:en-US",
             "lang=en-US",
+            "lang en-US",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
@@ -3083,6 +3096,11 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-rtl");
         }
+
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"dir": "RTL"}));
+        let filtered = apply_selector(&som, "dir=rtl");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-rtl");
     }
 
     #[test]
