@@ -25,6 +25,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
 ///   `main-region`/`main region`/`main-regions`/`main regions`/
 ///   `maincontent`/`maincontents`/
+///   `article_region`/`article_regions`/`article-region`/`article-regions`/
+///   `article region`/`article regions`/
 ///   `region`/`regions`/`content-region`/`content region`/`content-regions`/
 ///   `content regions` (or `role=<region>` / `role:<region>`;
 ///   optional whitespace around the separator is accepted). The same `role=`
@@ -344,6 +346,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "contents"
         | "article"
         | "articles"
+        | "article_region"
+        | "article_regions"
+        | "article-region"
+        | "article-regions"
+        | "article region"
+        | "article regions"
         | "region"
         | "regions"
         | "content_region"
@@ -6411,9 +6419,16 @@ mod tests {
     fn test_selector_article_alias_matches_content_region() {
         let mut som = make_test_som();
         som.regions[1].role = RegionRole::Content;
-        let filtered = apply_selector(&som, "article");
-        assert_eq!(filtered.regions.len(), 1);
-        assert_eq!(filtered.regions[0].role, RegionRole::Content);
+        for selector in [
+            "article",
+            "article_region",
+            "article-region",
+            "article region",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Content);
+        }
     }
 
     #[test]
