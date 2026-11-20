@@ -481,3 +481,33 @@ done
 		t.Fatalf("FetchPage title = %q, want canonical structured page", som.Title)
 	}
 }
+
+func TestToolResultUsesFirstNonEmptyContentText(t *testing.T) {
+	dir := t.TempDir()
+	fixture := filepath.Join(dir, "mcp-fixture.sh")
+	script := `#!/bin/sh
+while IFS= read -r request; do
+  case "$request" in
+    *'"method":"initialize"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05"}}'
+      ;;
+    *'"method":"tools/call"'*)
+      printf '%s\n' '{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"image","text":""},{"type":"text","text":"{\"title\":\"Later block\",\"regions\":[]}"}]}}'
+      ;;
+  esac
+done
+`
+	if err := os.WriteFile(fixture, []byte(script), 0o700); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	client := NewClient(WithBinary(fixture))
+	defer client.Close()
+	som, err := client.FetchPage("fixture")
+	if err != nil {
+		t.Fatalf("FetchPage error = %v, want later text block decoded", err)
+	}
+	if som.Title != "Later block" {
+		t.Fatalf("FetchPage title = %q, want later block", som.Title)
+	}
+}

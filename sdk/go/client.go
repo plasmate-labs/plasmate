@@ -263,10 +263,12 @@ func (c *Client) callTool(name string, args map[string]interface{}) (json.RawMes
 	if result.StructuredContent != nil && len(result.StructuredContent.Result) > 0 {
 		return result.StructuredContent.Result, nil
 	}
-	if len(result.Content) == 0 || result.Content[0].Text == "" {
-		return nil, nil
+	for _, item := range result.Content {
+		if item.Text != "" {
+			return json.RawMessage(item.Text), nil
+		}
 	}
-	return json.RawMessage(result.Content[0].Text), nil
+	return nil, nil
 }
 
 // FetchPage fetches a page and returns its Semantic Object Model.
