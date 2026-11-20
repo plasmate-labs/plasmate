@@ -30,6 +30,10 @@ print(f"{som['title']}: {len(som['regions'])} regions")
 text = browser.extract_text("https://example.com")
 print(text)
 
+# Inspect structured content with an optional bounded visual fallback
+report = browser.inspect_page("https://example.com", selector="main")
+print(report["som"]["title"])
+
 # Interactive browsing
 session = browser.open_page("https://example.com", trace=True)
 print(session["session_id"], session["som"]["title"])
@@ -73,6 +77,7 @@ with Plasmate() as browser:
 - **`fetch_page(url, *, budget=None, javascript=True, selector=None)`** - Returns SOM dict; optionally scopes the result to a region, role, action, or element ID
 - **`extract_text(url, *, javascript=True, max_chars=None, selector=None)`** - Returns clean text string; optionally disables JavaScript or scopes extraction before text collection
 - **`extract_links(url, *, javascript=True, max_links=None, selector=None)`** - Returns deduplicated outbound URLs; optionally disables JavaScript, caps results, or scopes link discovery
+- **`inspect_page(url, *, javascript=False, selector=None, visual_mode="auto", width=None, height=None, screenshot_timeout_ms=None)`** - Returns a bounded structured report; optionally requests a screenshot with `visual_mode="never"`, `"auto"`, or `"always"`
 
 ### Stateful (interactive sessions)
 
