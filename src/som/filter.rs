@@ -1209,6 +1209,10 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "aria_braille_label",
         "aria braillelabel",
         "aria braille label",
+        "braillelabel",
+        "braille-label",
+        "braille label",
+        "braille",
         "alt",
         "accessible-name",
         "accessible_name",
@@ -2705,6 +2709,10 @@ mod tests {
             "aria_braille_label=BRAILLE SAVE",
             "aria braillelabel:braille save",
             "aria braille label:braille save",
+            "braillelabel:braille save",
+            "braille-label=BRAILLE SAVE",
+            "braille label:braille save",
+            "braille:braille save",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
