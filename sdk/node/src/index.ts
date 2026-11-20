@@ -91,11 +91,14 @@ export interface OpenPageOptions {
   trace?: boolean;
 }
 
+/** Screenshot behavior for bounded structured-first inspection. */
+export type VisualMode = 'never' | 'auto' | 'always';
+
 /** Options for bounded structured-first inspection with optional pixels. */
 export interface InspectPageOptions {
   javascript?: boolean;
   selector?: string;
-  visualMode?: 'never' | 'auto' | 'always';
+  visualMode?: VisualMode;
   width?: number;
   height?: number;
   screenshotTimeoutMs?: number;
