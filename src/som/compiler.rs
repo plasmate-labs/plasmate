@@ -2347,7 +2347,9 @@ fn build_element_attrs(
         "iframe" => {
             // Core iframe attributes for agents
             if let Some(src) = attrs.iter().find(|(n, _)| n == "src") {
-                map.insert("src".into(), json!(src.1));
+                if !src.1.trim().is_empty() {
+                    map.insert("src".into(), json!(src.1));
+                }
             }
             if let Some(srcdoc) = attrs.iter().find(|(n, _)| n == "srcdoc") {
                 // For srcdoc, we just note it exists (content is inline HTML)
@@ -13765,6 +13767,42 @@ plasmate fetch https://example.test</code></pre>
                 .iter()
                 .all(|element| element.html_id.as_deref() != Some("share")),
             "selector=paragraph should drop buttons: {filtered_elements:?}"
+        );
+    }
+
+    #[test]
+    fn test_iframe_omits_blank_src() {
+        let html = r#"
+            <main>
+                <iframe id="valid" src="/embed"></iframe>
+                <iframe id="blank" src="   "></iframe>
+            </main>
+        "#;
+
+        let som = compile(html, "https://example.test/frames").unwrap();
+        let elements: Vec<_> = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .collect();
+
+        let valid = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("valid"))
+            .expect("valid iframe should compile");
+        assert_eq!(valid.attrs.as_ref().and_then(|attrs| attrs.get("src")), Some(&json!("/embed")));
+
+        let blank = elements
+            .iter()
+            .find(|element| element.html_id.as_deref() == Some("blank"))
+            .expect("blank iframe should compile");
+        assert!(
+            blank
+                .attrs
+                .as_ref()
+                .and_then(|attrs| attrs.get("src"))
+                .is_none(),
+            "whitespace src must be omitted: {blank:?}"
         );
     }
 }
