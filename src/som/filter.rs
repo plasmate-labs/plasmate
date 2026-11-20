@@ -150,7 +150,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-expanded]`, `[aria-selected]`, `[aria-busy]`, `[aria-disabled]`,
 ///   `[aria-hidden]`, `[aria-modal]`, `[aria-activedescendant]`, `[aria-details]`,
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
-///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
+///   `[aria-roledescription]`, `[aria-braillelabel]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
 ///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, `[lang]`, `[dir]`, and `[title]`
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
@@ -1910,6 +1910,7 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                     | "describedby"
                     | "ariadescription"
                     | "ariadescribedby"
+                    | "ariabraillelabel"
             | "ariacontrols"
             | "ariacurrent"
             | "ariaexpanded"
@@ -1948,6 +1949,7 @@ fn element_matches_label(element: &Element, label: &str) -> bool {
                             | "describedby"
                             | "ariadescription"
                             | "ariadescribedby"
+                            | "ariabraillelabel"
                         | "ariacontrols"
                         | "ariacurrent"
                         | "ariaexpanded"
@@ -2690,25 +2692,30 @@ mod tests {
             text: None,
             label: None,
             actions: None,
-            attrs: Some(serde_json::json!({"aria-braillelabel": "Save"})),
+            attrs: Some(serde_json::json!({"aria-braillelabel": "Braille Save"})),
             children: None,
             hints: None,
             shadow: None,
         });
 
         for selector in [
-            "aria-braillelabel:save",
-            "aria-braille-label:save",
-            "aria_braillelabel=SAVE",
-            "aria_braille_label=SAVE",
-            "aria braillelabel:save",
-            "aria braille label:save",
+            "aria-braillelabel:braille save",
+            "aria-braille-label:braille save",
+            "aria_braillelabel=BRAILLE SAVE",
+            "aria_braille_label=BRAILLE SAVE",
+            "aria braillelabel:braille save",
+            "aria braille label:braille save",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-braille-label");
         }
+
+        let filtered = apply_selector(&som, "[aria-braillelabel]");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-braille-label");
     }
 
     #[test]

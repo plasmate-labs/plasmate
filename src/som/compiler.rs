@@ -2635,6 +2635,7 @@ fn build_element_attrs(
         ("aria-valuenow", "valuenow"),
         ("aria-valuetext", "valuetext"),
         ("aria-label", "label"),
+        ("aria-braillelabel", "braillelabel"),
         ("aria-labelledby", "labelledby"),
         ("aria-describedby", "describedby"),
     ];
@@ -4031,6 +4032,27 @@ mod tests {
         assert_eq!(attrs["test_id"], "save-action");
         assert_eq!(attrs["aria"]["keyshortcuts"], "Meta+S");
         assert_eq!(attrs["aria"]["roledescription"], "primary action");
+    }
+
+    #[test]
+    fn test_braille_label_is_preserved_in_aria_state() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Labels</title></head>
+<body><main><button aria-label="Save" aria-braillelabel="Save action">Save</button></main></body></html>"#;
+
+        let som = compile(html, "https://example.com").unwrap();
+        let button = som
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter())
+            .find(|element| element.role == ElementRole::Button)
+            .expect("button element should compile");
+
+        assert_eq!(button.attrs.as_ref().unwrap()["aria"]["label"], "Save");
+        assert_eq!(
+            button.attrs.as_ref().unwrap()["aria"]["braillelabel"],
+            "Save action"
+        );
     }
 
     #[test]
