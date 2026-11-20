@@ -22,7 +22,7 @@ Example::
     browser.close()
 """
 
-from .client import Plasmate, AsyncPlasmate
+from .client import Plasmate, AsyncPlasmate, VisualMode
 from .types import (
     ElementAttrs,
     ElementRole,
@@ -68,6 +68,7 @@ __all__ = [
     # Client
     "Plasmate",
     "AsyncPlasmate",
+    "VisualMode",
     # Types
     "ElementAttrs",
     "ElementRole",

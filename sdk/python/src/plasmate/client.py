@@ -10,9 +10,11 @@ import asyncio
 import json
 import subprocess
 import threading
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 SDK_VERSION = "0.4.1"
+
+VisualMode = Literal["never", "auto", "always"]
 
 
 def _extract_last_json(text: str) -> Any:
@@ -441,7 +443,7 @@ class Plasmate:
         *,
         javascript: bool = False,
         selector: Optional[str] = None,
-        visual_mode: str = "auto",
+        visual_mode: VisualMode = "auto",
         width: Optional[int] = None,
         height: Optional[int] = None,
         screenshot_timeout_ms: Optional[int] = None,
@@ -807,7 +809,7 @@ class AsyncPlasmate:
         *,
         javascript: bool = False,
         selector: Optional[str] = None,
-        visual_mode: str = "auto",
+        visual_mode: VisualMode = "auto",
         width: Optional[int] = None,
         height: Optional[int] = None,
         screenshot_timeout_ms: Optional[int] = None,
