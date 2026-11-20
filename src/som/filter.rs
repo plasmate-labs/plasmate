@@ -166,6 +166,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   elements exposing the corresponding attribute without requiring a
 ///   particular value, and
 ///   `aria-label:<text>` / `aria-label=<text>` and
+///   `aria-braillelabel:<text>` / `aria-braillelabel=<text>` (also `braille`,
+///   `braillelabel`, `braille-label`, and `braille label`) match an element's
+///   braille label, case-insensitively, preserving parent context, and
 ///   `alt:<text>` / `alt=<text>` (also `alttext`, `alternative`, `alt-text`, `alt_text`,
 ///   `alt text`,
 ///   `alternative-text`, `alternative_text`, and `alternative text`) and
@@ -1209,6 +1212,10 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "aria_braille_label",
         "aria braillelabel",
         "aria braille label",
+        "braillelabel",
+        "braille-label",
+        "braille label",
+        "braille",
         "alt",
         "accessible-name",
         "accessible_name",
@@ -2705,6 +2712,12 @@ mod tests {
             "aria_braille_label=BRAILLE SAVE",
             "aria braillelabel:braille save",
             "aria braille label:braille save",
+            "braillelabel:braille save",
+            "braille-label=BRAILLE SAVE",
+            "braille label:braille save",
+            "braille:braille save",
+            "braille:'BRAILLE SAVE'",
+            "selector=braille:\"braille save\"",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
