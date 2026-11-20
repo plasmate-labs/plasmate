@@ -84,7 +84,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `alerts` / `status` / `statuses` / `tooltip` /
 ///   `tooltips`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
-///   plus the ARIA collection alias `feed` / `feeds`,
+///   plus the ARIA collection aliases `feed` / `feeds` / `aria-feed` /
+///   `aria-feeds` / `aria_feed` / `aria_feeds` / `ariafeed` / `ariafeeds`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list` / `definition_lists` / `definition-list` /
 ///   `definition-lists` / `definition list` / `definition lists`, plus ARIA
@@ -554,7 +555,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // ARIA feed is preserved as source metadata because it does not map to
     // the generic SOM list role. Match that source role directly so `feed`
     // does not accidentally select ordinary lists.
-    if matches!(selector.to_ascii_lowercase().as_str(), "feed" | "feeds") {
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "feed"
+            | "feeds"
+            | "aria-feed"
+            | "aria-feeds"
+            | "aria_feed"
+            | "aria_feeds"
+            | "ariafeed"
+            | "ariafeeds"
+    ) {
         return filter_som_elements(som, selector, |element| {
             has_source_role(element, "feed")
         });
@@ -5191,7 +5202,18 @@ mod tests {
         let mut som = make_test_som();
         som.regions[0].elements[0].attrs = Some(serde_json::json!({"source_role": "feed"}));
 
-        for selector in ["feed", "feeds", "role=feed", "role:feeds"] {
+        for selector in [
+            "feed",
+            "feeds",
+            "aria-feed",
+            "aria-feeds",
+            "aria_feed",
+            "ariafeed",
+            "ariafeeds",
+            "aria_feeds",
+            "role=feed",
+            "role:feeds",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
