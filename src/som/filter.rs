@@ -150,7 +150,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-expanded]`, `[aria-selected]`, `[aria-busy]`, `[aria-disabled]`,
 ///   `[aria-hidden]`, `[aria-modal]`, `[aria-activedescendant]`, `[aria-details]`,
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
-///   `[aria-roledescription]`, `[aria-valuemax]`, `[aria-valuemin]`,
+///   `[aria-roledescription]`, `[aria-braillelabel]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
 ///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, `[lang]`, `[dir]`, and `[title]`
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
@@ -2711,6 +2711,11 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-braille-label");
         }
+
+        let filtered = apply_selector(&som, "[aria-braillelabel]");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-braille-label");
     }
 
     #[test]
