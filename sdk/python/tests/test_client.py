@@ -183,6 +183,36 @@ def test_async_read_methods_forward_selector() -> None:
     asyncio.run(exercise())
 
 
+def test_sync_inspect_page_forwards_bounded_visual_options() -> None:
+    browser = Plasmate()
+    calls = Mock(return_value={"som": {}})
+    browser._call_tool = calls  # type: ignore[method-assign]
+
+    assert browser.inspect_page(
+        "fixture", javascript=True, selector="main", visual_mode="never",
+        width=800, height=600, screenshot_timeout_ms=1000,
+    ) == {"som": {}}
+
+    calls.assert_called_once_with(
+        "inspect_page",
+        {"url": "fixture", "javascript": True, "selector": "main",
+         "visual_mode": "never", "width": 800, "height": 600,
+         "screenshot_timeout_ms": 1000},
+    )
+
+
+def test_async_inspect_page_omits_defaults() -> None:
+    async def exercise() -> None:
+        browser = AsyncPlasmate()
+        calls = AsyncMock(return_value={"som": {}})
+        browser._call_tool = calls  # type: ignore[method-assign]
+
+        assert await browser.inspect_page("fixture") == {"som": {}}
+        calls.assert_awaited_once_with("inspect_page", {"url": "fixture"})
+
+    asyncio.run(exercise())
+
+
 def test_sync_extract_text_forwards_javascript_opt_out() -> None:
     browser = Plasmate()
     calls = Mock(return_value="text")
