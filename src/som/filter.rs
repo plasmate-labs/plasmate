@@ -86,6 +86,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   plus the ARIA collection aliases `feed` / `feeds` / `aria-feed` /
 ///   `aria-feeds` / `aria_feed` / `aria_feeds` / `ariafeed` / `ariafeeds`,
+///   plus feed-entry aliases `feed_item` / `feed_items` / `feed-item` /
+///   `feed-items` / `feed item` / `feed items` / `feeditem` / `feeditems`,
+///   `aria-feed-item` / `aria-feed-items` / `aria_feed_item` /
+///   `aria_feed_items`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list` / `definition_lists` / `definition-list` /
 ///   `definition-lists` / `definition list` / `definition lists`, plus ARIA
@@ -568,6 +572,29 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     ) {
         return filter_som_elements(som, selector, |element| {
             has_source_role(element, "feed")
+        });
+    }
+
+    // Feed entries are exposed as ARIA `article` roles inside a feed. Match
+    // that source metadata directly so callers can request entries without
+    // also selecting unrelated article landmarks.
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "feed_item"
+            | "feed_items"
+            | "feed-item"
+            | "feed-items"
+            | "feed item"
+            | "feed items"
+            | "feeditem"
+            | "feeditems"
+            | "aria-feed-item"
+            | "aria-feed-items"
+            | "aria_feed_item"
+            | "aria_feed_items"
+    ) {
+        return filter_som_elements(som, selector, |element| {
+            has_source_role(element, "article")
         });
     }
 
@@ -5234,6 +5261,33 @@ mod tests {
         let filtered = apply_selector(&som, "feed");
         assert_eq!(filtered.regions.len(), som.regions.len());
         assert_eq!(filtered.regions[0].elements.len(), som.regions[0].elements.len());
+    }
+
+    #[test]
+    fn test_selector_feed_item_aliases_match_aria_articles() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].attrs = Some(serde_json::json!({"source_role": "article"}));
+
+        for selector in [
+            "feed_item",
+            "feed-items",
+            "feed items",
+            "feeditem",
+            "aria-feed-item",
+            "aria_feed_items",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(
+                filtered.regions[0].elements[0]
+                    .attrs
+                    .as_ref()
+                    .and_then(|attrs| attrs.get("source_role"))
+                    .and_then(serde_json::Value::as_str),
+                Some("article")
+            );
+        }
     }
 
     #[test]
