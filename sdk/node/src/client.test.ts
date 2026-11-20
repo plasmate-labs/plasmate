@@ -35,6 +35,47 @@ describe('read selectors', () => {
   });
 });
 
+describe('inspectPage payload', () => {
+  it('forwards bounded visual options and omits defaults', async () => {
+    const browser = new Plasmate({ binary: 'unused' });
+    const client = browser as unknown as {
+      callTool: (name: string, args: Record<string, unknown>) => Promise<unknown>;
+    };
+    const calls: ToolCall[] = [];
+    client.callTool = async (name, args) => {
+      calls.push({ name, args });
+      return { som: {} };
+    };
+
+    assert.deepEqual(await browser.inspectPage('fixture', {
+      javascript: true,
+      selector: 'main',
+      visualMode: 'never',
+      width: 800,
+      height: 600,
+      screenshotTimeoutMs: 1000,
+    }), { som: {} });
+    await browser.inspectPage('fixture');
+
+    assert.deepEqual(calls, [
+      {
+        name: 'inspect_page',
+        args: {
+          url: 'fixture',
+          javascript: true,
+          selector: 'main',
+          visual_mode: 'never',
+          width: 800,
+          height: 600,
+          screenshot_timeout_ms: 1000,
+        },
+      },
+      { name: 'inspect_page', args: { url: 'fixture' } },
+    ]);
+    browser.close();
+  });
+});
+
 describe('transport lifecycle', () => {
   it('reports whether the MCP transport is initialized', async () => {
     const browser = new Plasmate({ binary: 'unused' });

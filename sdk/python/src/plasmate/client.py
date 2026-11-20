@@ -435,6 +435,33 @@ class Plasmate:
             args["selector"] = selector
         return self._call_tool("extract_links", args)
 
+    def inspect_page(
+        self,
+        url: str,
+        *,
+        javascript: bool = False,
+        selector: Optional[str] = None,
+        visual_mode: str = "auto",
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        screenshot_timeout_ms: Optional[int] = None,
+    ) -> dict:
+        """Inspect a page as a bounded SOM report with optional screenshot data."""
+        args: dict[str, Any] = {"url": url}
+        if javascript:
+            args["javascript"] = True
+        if selector is not None:
+            args["selector"] = selector
+        if visual_mode != "auto":
+            args["visual_mode"] = visual_mode
+        if width is not None:
+            args["width"] = width
+        if height is not None:
+            args["height"] = height
+        if screenshot_timeout_ms is not None:
+            args["screenshot_timeout_ms"] = screenshot_timeout_ms
+        return self._call_tool("inspect_page", args)
+
     # ---- Stateful Tools ----
 
     def open_page(
@@ -773,6 +800,33 @@ class AsyncPlasmate:
         if selector is not None:
             args["selector"] = selector
         return await self._call_tool("extract_links", args)
+
+    async def inspect_page(
+        self,
+        url: str,
+        *,
+        javascript: bool = False,
+        selector: Optional[str] = None,
+        visual_mode: str = "auto",
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        screenshot_timeout_ms: Optional[int] = None,
+    ) -> dict:
+        """Inspect a page as a bounded SOM report with optional screenshot data."""
+        args: dict[str, Any] = {"url": url}
+        if javascript:
+            args["javascript"] = True
+        if selector is not None:
+            args["selector"] = selector
+        if visual_mode != "auto":
+            args["visual_mode"] = visual_mode
+        if width is not None:
+            args["width"] = width
+        if height is not None:
+            args["height"] = height
+        if screenshot_timeout_ms is not None:
+            args["screenshot_timeout_ms"] = screenshot_timeout_ms
+        return await self._call_tool("inspect_page", args)
 
     async def open_page(
         self,

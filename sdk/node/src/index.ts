@@ -91,6 +91,16 @@ export interface OpenPageOptions {
   trace?: boolean;
 }
 
+/** Options for bounded structured-first inspection with optional pixels. */
+export interface InspectPageOptions {
+  javascript?: boolean;
+  selector?: string;
+  visualMode?: 'never' | 'auto' | 'always';
+  width?: number;
+  height?: number;
+  screenshotTimeoutMs?: number;
+}
+
 interface OpenPagePayload {
   session_id?: string;
   som?: Som;
@@ -535,6 +545,25 @@ export class Plasmate extends EventEmitter {
     if (options?.maxLinks != null) args.max_links = options.maxLinks;
     if (options?.selector != null) args.selector = options.selector;
     return await this.callTool('extract_links', args) as string;
+  }
+
+  /**
+   * Inspect a page as a bounded SOM report with optional screenshot data.
+   * JavaScript is disabled and visual mode defaults to `auto` unless opted in.
+   */
+  async inspectPage(url: string, options?: InspectPageOptions): Promise<Record<string, unknown>> {
+    const args: Record<string, unknown> = { url };
+    if (options?.javascript === true) args.javascript = true;
+    if (options?.selector != null) args.selector = options.selector;
+    if (options?.visualMode != null && options.visualMode !== 'auto') {
+      args.visual_mode = options.visualMode;
+    }
+    if (options?.width != null) args.width = options.width;
+    if (options?.height != null) args.height = options.height;
+    if (options?.screenshotTimeoutMs != null) {
+      args.screenshot_timeout_ms = options.screenshotTimeoutMs;
+    }
+    return await this.callTool('inspect_page', args) as Record<string, unknown>;
   }
 
   // ---- Stateful Tools ----
