@@ -85,7 +85,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `tooltips`, `section` / `sections`,
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   plus the ARIA collection aliases `feed` / `feeds` / `aria-feed` /
-///   `aria-feeds`,
+///   `aria-feeds` / `aria_feed` / `aria_feeds`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list` / `definition_lists` / `definition-list` /
 ///   `definition-lists` / `definition list` / `definition lists`, plus ARIA
@@ -557,7 +557,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // does not accidentally select ordinary lists.
     if matches!(
         selector.to_ascii_lowercase().as_str(),
-        "feed" | "feeds" | "aria-feed" | "aria-feeds"
+        "feed" | "feeds" | "aria-feed" | "aria-feeds" | "aria_feed" | "aria_feeds"
     ) {
         return filter_som_elements(som, selector, |element| {
             has_source_role(element, "feed")
@@ -5200,6 +5200,8 @@ mod tests {
             "feeds",
             "aria-feed",
             "aria-feeds",
+            "aria_feed",
+            "aria_feeds",
             "role=feed",
             "role:feeds",
         ] {
