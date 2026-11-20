@@ -89,7 +89,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   plus feed-entry aliases `feed_item` / `feed_items` / `feed-item` /
 ///   `feed-items` / `feed item` / `feed items` / `feeditem` / `feeditems`,
 ///   `aria-feed-item` / `aria-feed-items` / `aria_feed_item` /
-///   `aria_feed_items`,
+///   `aria_feed_items` / `aria feed item` / `aria feed items` /
+///   `ariafeeditem` / `ariafeeditems`,
 ///   and explicit list aliases `unordered_list`, `ordered_list`, and
 ///   `definition_list` / `definition_lists` / `definition-list` /
 ///   `definition-lists` / `definition list` / `definition lists`, plus ARIA
@@ -592,6 +593,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "aria-feed-items"
             | "aria_feed_item"
             | "aria_feed_items"
+            | "aria feed item"
+            | "aria feed items"
+            | "ariafeeditem"
+            | "ariafeeditems"
     ) {
         return filter_som_elements(som, selector, |element| {
             has_source_role(element, "article")
@@ -5275,6 +5280,8 @@ mod tests {
             "feeditem",
             "aria-feed-item",
             "aria_feed_items",
+            "aria feed item",
+            "ariafeeditems",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
