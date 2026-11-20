@@ -86,6 +86,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
 ///   plus the ARIA collection aliases `feed` / `feeds` / `aria-feed` /
 ///   `aria-feeds` / `aria_feed` / `aria_feeds` / `ariafeed` / `ariafeeds`,
+///   `aria feed` / `aria feeds`,
 ///   plus feed-entry aliases `feed_item` / `feed_items` / `feed-item` /
 ///   `feed-items` / `feed item` / `feed items` / `feeditem` / `feeditems`,
 ///   `aria-feed-item` / `aria-feed-items` / `aria_feed_item` /
@@ -571,6 +572,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "aria-feeds"
             | "aria_feed"
             | "aria_feeds"
+            | "aria feed"
+            | "aria feeds"
             | "ariafeed"
             | "ariafeeds"
     ) {
@@ -5262,6 +5265,8 @@ mod tests {
             "ariafeed",
             "ariafeeds",
             "aria_feeds",
+            "aria feed",
+            "aria feeds",
             "role=feed",
             "role:feeds",
         ] {
