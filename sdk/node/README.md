@@ -29,6 +29,13 @@ console.log(`${som.title}: ${som.regions.length} regions`);
 const text = await browser.extractText('https://example.com');
 console.log(text);
 
+// Inspect structured content with optional bounded visual fallback
+const report = await browser.inspectPage('https://example.com', {
+  selector: 'main',
+  visualMode: 'auto',
+});
+console.log(report.som);
+
 // Interactive browsing
 const session = await browser.openPage('https://example.com', { trace: true });
 console.log(session.sessionId, session.som.title);
@@ -57,6 +64,7 @@ browser.close();
 - **`fetchPage(url, options?)`** - Returns SOM JSON; options include `budget`, `javascript`, and `selector`
 - **`extractText(url, options?)`** - Returns clean text; options include `javascript`, `maxChars`, and `selector`
 - **`extractLinks(url, options?)`** - Returns deduplicated outbound URLs; options include `javascript` and `selector`
+- **`inspectPage(url, options?)`** - Returns a bounded structured report with optional screenshot data; options include `javascript`, `selector`, `visualMode` (`never`, `auto`, or `always`), `width`, `height`, and `screenshotTimeoutMs`
 
 ### Stateful (interactive sessions)
 
