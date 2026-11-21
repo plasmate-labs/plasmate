@@ -544,7 +544,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, machine-readable time values alongside human-readable time labels, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' (including hyphenated, underscored, or spaced forms such as 'h-1', 'h_1', or 'h 1') for headings. Use selector='label:<text>' / selector='text:<text>' / selector='name:<text>' / selector='accessible-name:<text>' to return text from a matching region or element by accessible name, authored text, or description.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, machine-readable time values alongside human-readable time labels, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='landmark' first to inspect the page's regions, then use selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' (including hyphenated, underscored, or spaced forms such as 'h-1', 'h_1', or 'h 1') for headings. Use selector='label:<text>' / selector='text:<text>' / selector='name:<text>' / selector='accessible-name:<text>' to return text from a matching region or element by accessible name, authored text, or description.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -18483,6 +18483,7 @@ mod tests {
     fn extract_text_description_explains_selector_for_large_pages() {
         let description = extract_text_definition().description;
 
+        assert!(description.contains("selector='landmark'"));
         assert!(description.contains("selector='main'"));
         assert!(description.contains("selector='content'"));
         assert!(description.contains("before applying max_chars"));
