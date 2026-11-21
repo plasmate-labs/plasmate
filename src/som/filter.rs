@@ -25,8 +25,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
 ///   `main-region`/`main region`/`main-regions`/`main regions`/
 ///   `maincontent`/`maincontents`/
-///   `primary`/`primary_content`/`primary-content`/`primary content`/
-///   `primary_region`/`primary-region`/`primary region`
+///   `primary`/`primary_content`/`primary_contents`/`primary-content`/
+///   `primary-contents`/`primary content`/`primary contents`/
+///   `primary_region`/`primary_regions`/`primary-region`/`primary-regions`/
+///   `primary region`/`primary regions`
 ///   `article_region`/`article_regions`/`article-region`/`article-regions`/
 ///   `article region`/`article regions`/
 ///   `region`/`regions`/`content-region`/`content region`/`content-regions`/
@@ -335,11 +337,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "maincontents"
         | "primary"
         | "primary_content"
+        | "primary_contents"
         | "primary-content"
+        | "primary-contents"
         | "primary content"
+        | "primary contents"
         | "primary_region"
+        | "primary_regions"
         | "primary-region"
-        | "primary region" => Some(RegionRole::Main),
+        | "primary-regions"
+        | "primary region"
+        | "primary regions" => Some(RegionRole::Main),
         "nav"
         | "navs"
         | "navigation"
@@ -2738,11 +2746,17 @@ mod tests {
         for selector in [
             "primary",
             "primary_content",
+            "primary_contents",
             "primary-content",
+            "primary-contents",
             "primary content",
+            "primary contents",
             "primary_region",
+            "primary_regions",
             "primary-region",
+            "primary-regions",
             "primary region",
+            "primary regions",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
