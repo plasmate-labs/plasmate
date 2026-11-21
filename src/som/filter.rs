@@ -9,7 +9,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `landmark`/`landmarks`/`landmark_region`/`landmark_regions`/`landmark_inventory`/`landmark_inventories`/`landmark-inventory`/`landmark-inventories`/`landmark inventory`/`landmark inventories`/`landmark_region_inventory`/`landmark_region_inventories`/`landmark-region-inventory`/`landmark-region-inventories`/`landmark region inventory`/`landmark region inventories` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
+/// - Region roles: `landmark`/`landmarks`/`landmark_region`/`landmark_regions`/`landmark-region`/`landmark region`/`landmark_inventory`/`landmark_inventories`/`landmark-inventory`/`landmark-inventories`/`landmark inventory`/`landmark inventories`/`landmark_region_inventory`/`landmark_region_inventories`/`landmark-region-inventory`/`landmark-region-inventories`/`landmark region inventory`/`landmark region inventories` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
 ///   `nav-region`/`nav region`/`nav_regions`/`nav-regions`/`nav regions`/
 ///   `navigation_region`/`navigation-region`/`navigation region`/
 ///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
@@ -240,12 +240,18 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "landmarks"
             | "role=landmark"
             | "role:landmark"
-            | "role=landmark_region"
             | "role:landmark_region"
+            | "role:landmark-region"
+            | "role:landmark region"
             | "role=landmark_regions"
             | "role:landmark_regions"
+            | "role=landmark-regions"
+            | "role:landmark regions"
             | "landmark_region"
             | "landmark_regions"
+            | "landmark-region"
+            | "landmark region"
+            | "landmark regions"
             | "landmark_inventory"
             | "landmark_inventories"
             | "landmark-inventory"
@@ -6605,7 +6611,12 @@ mod tests {
             " LANDMARKS ",
             "landmark_region",
             "role=landmark_region",
+            "role:landmark_region",
+            "role=landmark-region",
+            "role:landmark regions",
             "role:landmark_regions",
+            "landmark-region",
+            "role:landmark region",
             "landmark-inventory",
             "landmark inventories",
             "landmark_region_inventory",
