@@ -1387,8 +1387,12 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "autoplay"
             | "checked"
             | "controls"
+            | "default"
             | "defer"
             | "disabled"
+            | "formnovalidate"
+            | "hidden"
+            | "ismap"
             | "itemscope"
             | "loop"
             | "multiple"
@@ -1396,6 +1400,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "nomodule"
             | "novalidate"
             | "open"
+            | "playsinline"
             | "readonly"
             | "required"
             | "reversed"
@@ -1570,8 +1575,12 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "autoplay"
             | "checked"
             | "controls"
+            | "default"
             | "defer"
             | "disabled"
+            | "formnovalidate"
+            | "hidden"
+            | "ismap"
             | "itemscope"
             | "loop"
             | "multiple"
@@ -1579,6 +1588,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "nomodule"
             | "novalidate"
             | "open"
+            | "playsinline"
             | "readonly"
             | "required"
             | "reversed"
@@ -2986,6 +2996,31 @@ mod tests {
         }));
 
         for selector in ["[disabled]", "[required]", "[checked]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_additional_html_boolean_attribute_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "default": true,
+            "formnovalidate": true,
+            "hidden": true,
+            "ismap": true,
+            "playsinline": true,
+        }));
+
+        for selector in [
+            "[default]",
+            "[formnovalidate]",
+            "[hidden]",
+            "[ismap]",
+            "[playsinline]",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
