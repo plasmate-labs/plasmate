@@ -240,8 +240,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "landmarks"
             | "role=landmark"
             | "role:landmark"
+            | "role landmark"
             | "role=landmarks"
             | "role:landmarks"
+            | "role landmarks"
             | "role:landmark_region"
             | "role:landmark-region"
             | "role:landmark region"
@@ -2679,6 +2681,8 @@ mod tests {
         for selector in [
             "role=landmark_inventory",
             "role:landmark-inventories",
+            "role landmark",
+            "role landmarks",
             "role=landmark region inventory",
             "role:landmark region inventories",
         ] {
