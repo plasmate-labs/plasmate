@@ -250,6 +250,30 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "role=landmark-regions"
             | "role:landmark-regions"
             | "role:landmark regions"
+            | "role=landmark_inventory"
+            | "role:landmark_inventory"
+            | "role=landmark-inventory"
+            | "role:landmark-inventory"
+            | "role=landmark inventory"
+            | "role:landmark inventory"
+            | "role=landmark_inventories"
+            | "role:landmark_inventories"
+            | "role=landmark-inventories"
+            | "role:landmark-inventories"
+            | "role=landmark inventories"
+            | "role:landmark inventories"
+            | "role=landmark_region_inventory"
+            | "role:landmark_region_inventory"
+            | "role=landmark-region-inventory"
+            | "role:landmark-region-inventory"
+            | "role=landmark region inventory"
+            | "role:landmark region inventory"
+            | "role=landmark_region_inventories"
+            | "role:landmark_region_inventories"
+            | "role=landmark-region-inventories"
+            | "role:landmark-region-inventories"
+            | "role=landmark region inventories"
+            | "role:landmark region inventories"
             | "landmark_region"
             | "landmark_regions"
             | "landmark-region"
@@ -2646,6 +2670,22 @@ mod tests {
         let filtered = apply_selector(&som, "main");
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_landmark_inventory_role_aliases() {
+        let som = make_test_som();
+
+        for selector in [
+            "role=landmark_inventory",
+            "role:landmark-inventories",
+            "role=landmark region inventory",
+            "role:landmark region inventories",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), som.regions.len(), "selector: {selector}");
+            assert!(filtered.regions.iter().all(|region| region.elements.is_empty()));
+        }
     }
 
     #[test]
