@@ -1844,6 +1844,14 @@ fn push_attr_url(attrs: &Value, key: &str, urls: &mut Vec<String>) {
 fn collect_extract_link_urls(som: &Som) -> Vec<String> {
     let mut urls: Vec<String> = Vec::new();
     for region in &som.regions {
+        if region.role == crate::som::types::RegionRole::Form {
+            if let Some(action) = region.action.as_deref() {
+                let action = action.trim();
+                if is_extract_links_structured_href(action) {
+                    urls.push(action.to_string());
+                }
+            }
+        }
         for element in &region.elements {
             collect_element_links(element, &mut urls);
         }
@@ -12107,6 +12115,22 @@ mod tests {
             resolve_extracted_link(&extract_links_resolve_base(&som), "guide"),
             "https://example.test/dir/guide"
         );
+    }
+
+    #[test]
+    fn extract_links_includes_compiled_form_action() {
+        let som = crate::som::compiler::compile(
+            r##"<html><body>
+<form action="/search" method="get"><input name="q"><button>Search</button></form>
+<form action="javascript:void(0)" method="get"><button>Ignored</button></form>
+</body></html>"##,
+            "https://example.test/app/page",
+        )
+        .expect("fixture HTML should compile");
+
+        let urls = collect_extract_link_urls(&som);
+
+        assert_eq!(urls, vec!["https://example.test/search".to_string()]);
     }
 
     #[test]
