@@ -240,7 +240,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "landmarks"
             | "role=landmark"
             | "role:landmark"
-            | "role=landmark_region"
+            | "role:landmark_region"
             | "role:landmark_region"
             | "role=landmark_regions"
             | "role:landmark_regions"
@@ -6605,6 +6605,7 @@ mod tests {
             " LANDMARKS ",
             "landmark_region",
             "role=landmark_region",
+            "role:landmark_region",
             "role:landmark_regions",
             "landmark-inventory",
             "landmark inventories",
