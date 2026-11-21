@@ -24,6 +24,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
 ///   `main-region`/`main region`/`main-regions`/`main regions`/
+///   `main_content_region`/`main_content_regions`/`main-content-region`/
+///   `main-content-regions`/`main content region`/`main content regions`/
 ///   `maincontent`/`maincontents`/
 ///   `primary`/`primary_content`/`primary_contents`/`primary-content`/
 ///   `primary-contents`/`primary content`/`primary contents`/
@@ -336,6 +338,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "main_regions"
         | "main-regions"
         | "main regions"
+        | "main_content_region"
+        | "main_content_regions"
+        | "main-content-region"
+        | "main-content-regions"
+        | "main content region"
+        | "main content regions"
         | "maincontent"
         | "maincontents"
         | "primary"
@@ -2740,6 +2748,12 @@ mod tests {
             "main-contents",
             "main content",
             "main contents",
+            "main_content_region",
+            "main_content_regions",
+            "main-content-region",
+            "main-content-regions",
+            "main content region",
+            "main content regions",
             "maincontent",
             "maincontents",
         ] {
