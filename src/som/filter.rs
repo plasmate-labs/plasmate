@@ -247,35 +247,41 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "role:landmark_region"
             | "role:landmark-region"
             | "role:landmark region"
+            | "role landmark-region"
             | "role=landmark_regions"
             | "role:landmark_regions"
             | "role=landmark-regions"
             | "role:landmark-regions"
             | "role:landmark regions"
+            | "role landmark-regions"
             | "role=landmark_inventory"
             | "role:landmark_inventory"
             | "role=landmark-inventory"
             | "role:landmark-inventory"
             | "role=landmark inventory"
             | "role:landmark inventory"
+            | "role landmark-inventory"
             | "role=landmark_inventories"
             | "role:landmark_inventories"
             | "role=landmark-inventories"
             | "role:landmark-inventories"
             | "role=landmark inventories"
             | "role:landmark inventories"
+            | "role landmark-inventories"
             | "role=landmark_region_inventory"
             | "role:landmark_region_inventory"
             | "role=landmark-region-inventory"
             | "role:landmark-region-inventory"
             | "role=landmark region inventory"
             | "role:landmark region inventory"
+            | "role landmark-region-inventory"
             | "role=landmark_region_inventories"
             | "role:landmark_region_inventories"
             | "role=landmark-region-inventories"
             | "role:landmark-region-inventories"
             | "role=landmark region inventories"
             | "role:landmark region inventories"
+            | "role landmark-region-inventories"
             | "landmark_region"
             | "landmark_regions"
             | "landmark-region"
@@ -2683,8 +2689,14 @@ mod tests {
             "role:landmark-inventories",
             "role landmark",
             "role landmarks",
+            "role landmark-region",
+            "role landmark-regions",
+            "role landmark-inventory",
+            "role landmark-inventories",
+            "role landmark-region-inventory",
             "role=landmark region inventory",
             "role:landmark region inventories",
+            "role landmark-region-inventories",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), som.regions.len(), "selector: {selector}");
