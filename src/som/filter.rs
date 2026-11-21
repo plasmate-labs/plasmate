@@ -251,6 +251,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "landmark_regions"
             | "landmark-region"
             | "landmark region"
+            | "landmark regions"
             | "landmark_inventory"
             | "landmark_inventories"
             | "landmark-inventory"
