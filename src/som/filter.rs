@@ -25,6 +25,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
 ///   `main-region`/`main region`/`main-regions`/`main regions`/
 ///   `maincontent`/`maincontents`/
+///   `primary`/`primary_content`/`primary-content`/`primary content`/
+///   `primary_region`/`primary-region`/`primary region`
 ///   `article_region`/`article_regions`/`article-region`/`article-regions`/
 ///   `article region`/`article regions`/
 ///   `region`/`regions`/`content-region`/`content region`/`content-regions`/
@@ -330,7 +332,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "main-regions"
         | "main regions"
         | "maincontent"
-        | "maincontents" => Some(RegionRole::Main),
+        | "maincontents"
+        | "primary"
+        | "primary_content"
+        | "primary-content"
+        | "primary content"
+        | "primary_region"
+        | "primary-region"
+        | "primary region" => Some(RegionRole::Main),
         "nav"
         | "navs"
         | "navigation"
@@ -2716,6 +2725,24 @@ mod tests {
             "main contents",
             "maincontent",
             "maincontents",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Main);
+        }
+    }
+
+    #[test]
+    fn test_selector_primary_content_aliases() {
+        let som = make_test_som();
+        for selector in [
+            "primary",
+            "primary_content",
+            "primary-content",
+            "primary content",
+            "primary_region",
+            "primary-region",
+            "primary region",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
