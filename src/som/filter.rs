@@ -152,7 +152,8 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `[aria-flowto]`, `[aria-keyshortcuts]`, `[aria-owns]`,
 ///   `[aria-roledescription]`, `[aria-braillelabel]`, `[aria-valuemax]`, `[aria-valuemin]`,
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
-///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, `[lang]`, `[dir]`, and `[title]`
+///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, `[lang]`, `[dir]`, `[title]`,
+///   and common HTML boolean attributes such as `[disabled]`, `[checked]`, and `[required]`
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
 ///   selected by presence or value, including ARIA attributes introduced after
 ///   this parser. This covers application-specific test and state hooks. CSS
@@ -1380,6 +1381,30 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "lang"
             | "dir"
             | "class"
+            | "allowfullscreen"
+            | "async"
+            | "autofocus"
+            | "autoplay"
+            | "checked"
+            | "controls"
+            | "default"
+            | "defer"
+            | "disabled"
+            | "formnovalidate"
+            | "hidden"
+            | "ismap"
+            | "itemscope"
+            | "loop"
+            | "multiple"
+            | "muted"
+            | "nomodule"
+            | "novalidate"
+            | "open"
+            | "playsinline"
+            | "readonly"
+            | "required"
+            | "reversed"
+            | "selected"
             | "testid"
             | "data-testid"
             | "data-test-id"
@@ -1544,6 +1569,30 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "lang"
             | "dir"
             | "class"
+            | "allowfullscreen"
+            | "async"
+            | "autofocus"
+            | "autoplay"
+            | "checked"
+            | "controls"
+            | "default"
+            | "defer"
+            | "disabled"
+            | "formnovalidate"
+            | "hidden"
+            | "ismap"
+            | "itemscope"
+            | "loop"
+            | "multiple"
+            | "muted"
+            | "nomodule"
+            | "novalidate"
+            | "open"
+            | "playsinline"
+            | "readonly"
+            | "required"
+            | "reversed"
+            | "selected"
             | "testid"
             | "test-id"
             | "test_id"
@@ -1639,13 +1688,17 @@ fn parse_named_attribute_presence_selector(selector: &str) -> Option<String> {
             | "controls"
             | "defer"
             | "disabled"
+            | "formnovalidate"
+            | "hidden"
             | "itemscope"
+            | "ismap"
             | "loop"
             | "multiple"
             | "muted"
             | "nomodule"
             | "novalidate"
             | "open"
+            | "playsinline"
             | "readonly"
             | "required"
             | "reversed"
@@ -2938,6 +2991,48 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_matches_css_boolean_attribute_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "disabled": true,
+            "required": true,
+            "checked": true,
+        }));
+
+        for selector in ["[disabled]", "[required]", "[checked]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_additional_html_boolean_attribute_presence() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "default": true,
+            "formnovalidate": true,
+            "hidden": true,
+            "ismap": true,
+            "playsinline": true,
+        }));
+
+        for selector in [
+            "[default]",
+            "[formnovalidate]",
+            "[hidden]",
+            "[ismap]",
+            "[playsinline]",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2");
+        }
+    }
+
+    #[test]
     fn test_selector_matches_css_role_presence() {
         let mut som = make_test_som();
         for region in &mut som.regions {
@@ -3904,10 +3999,23 @@ mod tests {
         som.regions[1].elements[0].attrs = Some(serde_json::json!({
             "disabled": true,
             "required": "required",
-            "data-state": "open"
+            "data-state": "open",
+            "hidden": true,
+            "formnovalidate": true,
+            "ismap": true,
+            "itemscope": true,
+            "playsinline": true
         }));
 
-        for selector in ["disabled", "required"] {
+        for selector in [
+            "disabled",
+            "required",
+            "hidden",
+            "formnovalidate",
+            "ismap",
+            "itemscope",
+            "playsinline",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
