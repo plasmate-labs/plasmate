@@ -28,7 +28,10 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `primary`/`primary_content`/`primary_contents`/`primary-content`/
 ///   `primary-contents`/`primary content`/`primary contents`/
 ///   `primary_region`/`primary_regions`/`primary-region`/`primary-regions`/
-///   `primary region`/`primary regions`
+///   `primary region`/`primary regions`/`primary_content_region`/
+///   `primary_content_regions`/`primary-content-region`/
+///   `primary-content-regions`/`primary content region`/
+///   `primary content regions`
 ///   `article_region`/`article_regions`/`article-region`/`article-regions`/
 ///   `article region`/`article regions`/
 ///   `region`/`regions`/`content-region`/`content region`/`content-regions`/
@@ -347,7 +350,13 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "primary-region"
         | "primary-regions"
         | "primary region"
-        | "primary regions" => Some(RegionRole::Main),
+        | "primary regions"
+        | "primary_content_region"
+        | "primary_content_regions"
+        | "primary-content-region"
+        | "primary-content-regions"
+        | "primary content region"
+        | "primary content regions" => Some(RegionRole::Main),
         "nav"
         | "navs"
         | "navigation"
@@ -2757,6 +2766,12 @@ mod tests {
             "primary-regions",
             "primary region",
             "primary regions",
+            "primary_content_region",
+            "primary_content_regions",
+            "primary-content-region",
+            "primary-content-regions",
+            "primary content region",
+            "primary content regions",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
