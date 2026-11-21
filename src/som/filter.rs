@@ -24,7 +24,16 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `content`/`contents`/`article`/`articles`/`main_content`/`main_contents`/
 ///   `main-content`/`main-contents`/`main content`/`main contents`/
 ///   `main-region`/`main region`/`main-regions`/`main regions`/
+///   `main_content_region`/`main_content_regions`/`main-content-region`/
+///   `main-content-regions`/`main content region`/`main content regions`/
 ///   `maincontent`/`maincontents`/
+///   `primary`/`primary_content`/`primary_contents`/`primary-content`/
+///   `primary-contents`/`primary content`/`primary contents`/
+///   `primary_region`/`primary_regions`/`primary-region`/`primary-regions`/
+///   `primary region`/`primary regions`/`primary_content_region`/
+///   `primary_content_regions`/`primary-content-region`/
+///   `primary-content-regions`/`primary content region`/
+///   `primary content regions`
 ///   `article_region`/`article_regions`/`article-region`/`article-regions`/
 ///   `article region`/`article regions`/
 ///   `region`/`regions`/`content-region`/`content region`/`content-regions`/
@@ -329,8 +338,33 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "main_regions"
         | "main-regions"
         | "main regions"
+        | "main_content_region"
+        | "main_content_regions"
+        | "main-content-region"
+        | "main-content-regions"
+        | "main content region"
+        | "main content regions"
         | "maincontent"
-        | "maincontents" => Some(RegionRole::Main),
+        | "maincontents"
+        | "primary"
+        | "primary_content"
+        | "primary_contents"
+        | "primary-content"
+        | "primary-contents"
+        | "primary content"
+        | "primary contents"
+        | "primary_region"
+        | "primary_regions"
+        | "primary-region"
+        | "primary-regions"
+        | "primary region"
+        | "primary regions"
+        | "primary_content_region"
+        | "primary_content_regions"
+        | "primary-content-region"
+        | "primary-content-regions"
+        | "primary content region"
+        | "primary content regions" => Some(RegionRole::Main),
         "nav"
         | "navs"
         | "navigation"
@@ -2714,8 +2748,44 @@ mod tests {
             "main-contents",
             "main content",
             "main contents",
+            "main_content_region",
+            "main_content_regions",
+            "main-content-region",
+            "main-content-regions",
+            "main content region",
+            "main content regions",
             "maincontent",
             "maincontents",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Main);
+        }
+    }
+
+    #[test]
+    fn test_selector_primary_content_aliases() {
+        let som = make_test_som();
+        for selector in [
+            "primary",
+            "primary_content",
+            "primary_contents",
+            "primary-content",
+            "primary-contents",
+            "primary content",
+            "primary contents",
+            "primary_region",
+            "primary_regions",
+            "primary-region",
+            "primary-regions",
+            "primary region",
+            "primary regions",
+            "primary_content_region",
+            "primary_content_regions",
+            "primary-content-region",
+            "primary-content-regions",
+            "primary content region",
+            "primary content regions",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
