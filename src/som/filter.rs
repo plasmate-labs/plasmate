@@ -1688,13 +1688,17 @@ fn parse_named_attribute_presence_selector(selector: &str) -> Option<String> {
             | "controls"
             | "defer"
             | "disabled"
+            | "formnovalidate"
+            | "hidden"
             | "itemscope"
+            | "ismap"
             | "loop"
             | "multiple"
             | "muted"
             | "nomodule"
             | "novalidate"
             | "open"
+            | "playsinline"
             | "readonly"
             | "required"
             | "reversed"
@@ -3995,10 +3999,23 @@ mod tests {
         som.regions[1].elements[0].attrs = Some(serde_json::json!({
             "disabled": true,
             "required": "required",
-            "data-state": "open"
+            "data-state": "open",
+            "hidden": true,
+            "formnovalidate": true,
+            "ismap": true,
+            "itemscope": true,
+            "playsinline": true
         }));
 
-        for selector in ["disabled", "required"] {
+        for selector in [
+            "disabled",
+            "required",
+            "hidden",
+            "formnovalidate",
+            "ismap",
+            "itemscope",
+            "playsinline",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
