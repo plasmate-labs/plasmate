@@ -63,6 +63,7 @@ const SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION: &str =
 
 const SOM_TABLE_SELECTOR_DESCRIPTION: &str = " Table-like element selectors also include data_table/data_tables and data-table/data-tables, data-grid/data-grids, data_grid/data_grids, datagrid/datagrids, table_grid/table_grids, table-grid/table-grids, tablegrid/tablegrids, and spaced data table/data tables, data grid/data grids, or table grid/table grids forms.";
 const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements, and picture/pictures/image_item/image-item/image item/imageitems for image elements. Document metadata selectors also include `lang`/`dir` presence, exact, prefix, suffix, substring, token, and dash-prefix forms such as `[lang|=en]` and `dir=rtl`.";
+const SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION: &str = " CSS-style attribute selectors such as [data-state='open'], [aria-label~='save'], and [role='button'] are supported.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -531,7 +532,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION} CSS-style attribute selectors such as [data-state='open'], [aria-label~='save'], and [role='button'] are supported.")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}{SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -568,7 +569,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION} CSS-style attribute selectors such as [data-state='open'], [aria-label~='save'], and [role='button'] are supported.")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}{SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -1300,7 +1301,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION} CSS-style attribute selectors such as [data-state='open'], [aria-label~='save'], and [role='button'] are supported.")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}{SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION}")
                 },
                 "visual_mode": {
                     "type": "string",
@@ -7488,6 +7489,17 @@ mod tests {
                 .description
                 .contains("hyphenated, underscored, or spaced forms"));
             assert!(definition.description.contains("'h-1', 'h_1', or 'h 1'"));
+        }
+
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            inspect_page_definition(),
+        ] {
+            let description = definition.input_schema["properties"]["selector"]["description"]
+                .as_str()
+                .expect("selector schema should have a description");
+            assert!(description.contains(SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION));
         }
     }
 
