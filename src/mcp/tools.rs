@@ -12134,6 +12134,20 @@ mod tests {
     }
 
     #[test]
+    fn extract_links_includes_empty_form_action() {
+        let som = crate::som::compiler::compile(
+            r##"<html><body><form action="/subscribe" method="post"></form></body></html>"##,
+            "https://example.test/app/page",
+        )
+        .expect("fixture HTML should compile");
+
+        assert_eq!(
+            collect_extract_link_urls(&som),
+            vec!["https://example.test/subscribe".to_string()]
+        );
+    }
+
+    #[test]
     fn extract_links_description_advertises_form_action_urls() {
         let description = extract_links_definition().description;
 

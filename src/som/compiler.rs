@@ -689,7 +689,9 @@ fn collect_regions(
                 false,
                 inert_context,
             );
-            if !elements.is_empty() {
+            // Preserve a form with an action even when it has no controls so
+            // consumers such as extract_links can still discover its target.
+            if !elements.is_empty() || form_action.is_some() {
                 regions.push(Region {
                     id: rid,
                     role: RegionRole::Form,
