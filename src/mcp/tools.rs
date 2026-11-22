@@ -63,7 +63,7 @@ const SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION: &str =
 
 const SOM_TABLE_SELECTOR_DESCRIPTION: &str = " Table-like element selectors also include data_table/data_tables and data-table/data-tables, data-grid/data-grids, data_grid/data_grids, datagrid/datagrids, table_grid/table_grids, table-grid/table-grids, tablegrid/tablegrids, and spaced data table/data tables, data grid/data grids, or table grid/table grids forms.";
 const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements, and picture/pictures/image_item/image-item/image item/imageitems for image elements. Document metadata selectors also include `lang`/`dir` presence, exact, prefix, suffix, substring, token, and dash-prefix forms such as `[lang|=en]` and `dir=rtl`.";
-const SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION: &str = " CSS-style attribute selectors such as [data-state='open'], [aria-label~='save'], and [role='button'] are supported.";
+const SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION: &str = " CSS-style attribute selectors such as [data-state='open'], [aria-label~='save'], and [role='button'] are supported. Class-token hooks also accept compact forms such as class~=card and class ~ = 'card'.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
