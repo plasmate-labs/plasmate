@@ -1071,21 +1071,21 @@ fn parse_named_class_string_selector(selector: &str) -> Option<(AttributeMatcher
         .filter(|prefix| prefix.eq_ignore_ascii_case("class"))
         .and_then(|_| selector.get(5..))?;
     let trimmed = rest.trim_start();
-    let (operator, value) = ["^=", "$=", "*="]
+    let (operator, value) = ["^", "$", "*"]
         .into_iter()
         .find_map(|operator| {
-            trimmed
-                .strip_prefix(operator)
-                .map(|value| (operator, value.trim()))
+            let after_operator = trimmed.strip_prefix(operator)?.trim_start();
+            let value = after_operator.strip_prefix('=')?.trim();
+            Some((operator, value))
         })?;
     let value = strip_selector_quotes(value);
     if value.is_empty() {
         return None;
     }
     let matcher = match operator {
-        "^=" => AttributeMatcher::Prefix,
-        "$=" => AttributeMatcher::Suffix,
-        "*=" => AttributeMatcher::Substring,
+        "^" => AttributeMatcher::Prefix,
+        "$" => AttributeMatcher::Suffix,
+        "*" => AttributeMatcher::Substring,
         _ => return None,
     };
     Some((matcher, normalize_label_text(value)))
@@ -3182,7 +3182,14 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["class^=card", "class$=featured", "class*=feat"] {
+        for selector in [
+            "class^=card",
+            "class$=featured",
+            "class*=feat",
+            "class ^ = 'card'",
+            "class $ = \"featured\"",
+            "class * = feat",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
