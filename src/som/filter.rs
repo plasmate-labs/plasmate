@@ -1034,9 +1034,11 @@ fn parse_named_class_selector(selector: &str) -> Option<String> {
         .get(..5)
         .filter(|prefix| prefix.eq_ignore_ascii_case("class"))
         .and_then(|_| selector.get(5..))?;
-    let value = rest
-        .trim_start()
-        .strip_prefix(['=', ':'])
+    let trimmed = rest.trim_start();
+    let value = trimmed
+        .strip_prefix('~')
+        .and_then(|rest| rest.trim_start().strip_prefix('=').map(str::trim))
+        .or_else(|| trimmed.strip_prefix(['=', ':']))
         .map(str::trim)
         .or_else(|| {
             (!rest.trim().is_empty() && rest.chars().next().is_some_and(char::is_whitespace))
@@ -3076,7 +3078,13 @@ mod tests {
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-card");
 
-        for selector in ["class:card", "class=FEATURED", "CLASS card"] {
+        for selector in [
+            "class:card",
+            "class=FEATURED",
+            "CLASS card",
+            "class~=FEATURED",
+            "CLASS ~ = 'card'",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
