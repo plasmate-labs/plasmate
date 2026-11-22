@@ -854,6 +854,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    if let Some((matcher, value)) = parse_named_class_string_selector(selector_for_id) {
+        return filter_som_elements(som, selector, |element| {
+            element_has_attribute_value(element, "class", &value, matcher)
+        });
+    }
+
     if let Some(test_id) = parse_test_id_selector(selector) {
         return filter_som_elements(som, selector, |element| {
             element_has_test_id(element, &test_id)
@@ -1057,6 +1063,32 @@ fn parse_named_class_selector(selector: &str) -> Option<Vec<String>> {
             !class_name.is_empty() && !class_name.chars().any(char::is_whitespace)
         }))
         .then(|| class_names.into_iter().map(normalize_label_text).collect())
+}
+
+fn parse_named_class_string_selector(selector: &str) -> Option<(AttributeMatcher, String)> {
+    let rest = selector
+        .get(..5)
+        .filter(|prefix| prefix.eq_ignore_ascii_case("class"))
+        .and_then(|_| selector.get(5..))?;
+    let trimmed = rest.trim_start();
+    let (operator, value) = ["^=", "$=", "*="]
+        .into_iter()
+        .find_map(|operator| {
+            trimmed
+                .strip_prefix(operator)
+                .map(|value| (operator, value.trim()))
+        })?;
+    let value = strip_selector_quotes(value);
+    if value.is_empty() {
+        return None;
+    }
+    let matcher = match operator {
+        "^=" => AttributeMatcher::Prefix,
+        "$=" => AttributeMatcher::Suffix,
+        "*=" => AttributeMatcher::Substring,
+        _ => return None,
+    };
+    Some((matcher, normalize_label_text(value)))
 }
 
 fn strip_selector_quotes(value: &str) -> &str {
@@ -3132,6 +3164,30 @@ mod tests {
         let prefix_collision = apply_selector(&som, ".car");
         assert_eq!(prefix_collision.regions.len(), som.regions.len());
         assert_eq!(prefix_collision.regions[1].elements.len(), som.regions[1].elements.len());
+    }
+
+    #[test]
+    fn test_selector_matches_compact_class_string_operators() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-card-prefix".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"class": "card featured"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["class^=card", "class$=featured", "class*=feat"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-card-prefix");
+        }
     }
 
     #[test]
