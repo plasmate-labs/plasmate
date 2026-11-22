@@ -392,7 +392,10 @@ fn extract_regions(
     }
 
     // Filter out empty regions
-    regions.retain(|r| !r.elements.is_empty());
+    regions.retain(|r| {
+        !r.elements.is_empty()
+            || (r.role == RegionRole::Form && r.action.as_deref().is_some())
+    });
     regions
 }
 
