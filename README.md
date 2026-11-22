@@ -239,6 +239,9 @@ elements.
 Selector values may also be wrapped in matching single quotes, double quotes,
 or backticks (including `role=...`, `action:...`, and `#id` forms); surrounding
 whitespace is ignored.
+CSS class hooks support both `.class-name` and compound
+`.class-name.other-class` selectors when narrowing a SOM to elements with all
+of the requested class tokens.
 Use `selector="label:<text>"` or `selector="label=<text>"` (or the
 shorter `text:<text>`, `text=<text>`, `name:<text>`, `name=<text>`, and
 `placeholder:<text>` / `placeholder=<text>` aliases) for
