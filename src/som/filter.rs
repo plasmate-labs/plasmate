@@ -846,9 +846,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
-    if let Some(class_name) = parse_named_class_selector(selector_for_id) {
+    if let Some(class_names) = parse_named_class_selector(selector_for_id) {
         return filter_som_elements(som, selector, |element| {
-            element_has_attribute_value(element, "class", &class_name, AttributeMatcher::Token)
+            class_names.iter().all(|class_name| {
+                element_has_attribute_value(element, "class", class_name, AttributeMatcher::Token)
+            })
         });
     }
 
@@ -1029,7 +1031,7 @@ fn parse_class_selector(selector: &str) -> Option<Vec<String>> {
         })
 }
 
-fn parse_named_class_selector(selector: &str) -> Option<String> {
+fn parse_named_class_selector(selector: &str) -> Option<Vec<String>> {
     let rest = selector
         .get(..5)
         .filter(|prefix| prefix.eq_ignore_ascii_case("class"))
@@ -1045,8 +1047,16 @@ fn parse_named_class_selector(selector: &str) -> Option<String> {
                 .then_some(rest.trim())
         })
         .map(strip_selector_quotes)?;
-    (!value.is_empty() && !value.chars().any(char::is_whitespace))
-        .then(|| normalize_label_text(value))
+    let class_names = value
+        .split('.')
+        .map(str::trim)
+        .map(strip_selector_quotes)
+        .collect::<Vec<_>>();
+    (!class_names.is_empty()
+        && class_names.iter().all(|class_name| {
+            !class_name.is_empty() && !class_name.chars().any(char::is_whitespace)
+        }))
+        .then(|| class_names.into_iter().map(normalize_label_text).collect())
 }
 
 fn strip_selector_quotes(value: &str) -> &str {
@@ -3108,6 +3118,8 @@ mod tests {
             "CLASS card",
             "class~=FEATURED",
             "CLASS ~ = 'card'",
+            "class:card.featured",
+            "class~=card.featured",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
