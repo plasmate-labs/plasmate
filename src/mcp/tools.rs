@@ -509,7 +509,7 @@ async fn load_session_page_for_mcp(
 pub fn fetch_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "fetch_page".to_string(),
-        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. For large pages, set budget to cap the returned tokens and combine it with selector='main' when navigation and footer content are not needed. Use selector='landmark' first when you need to discover the page's regions without their elements. Add selector='main' to strip nav/footer, selector='h1' through selector='h6' (including hyphenated, underscored, or spaced forms such as 'h-1', 'h_1', or 'h 1') to isolate a heading level, selector='query' (or selector='query_input', selector='query_field', or selector='query_control', including hyphenated forms) to isolate a search field, selector='label:<text>' / selector='text:<text>' / selector='name:<text>' / selector='accessible-name:<text>' to find regions or elements by accessible name, authored text, or description, selector='id=<value>' or selector='#<value>' for an authored/SOM ID, or selector='testid=<value>' / selector='data-testid=<value>' for stable test hooks. Use selector='interactive' / selector='click' (or action:click) / selector='type', 'type_text', or 'type-text' (or action:type, action:type_text, or action:type-text) / selector='clear' (or action:clear) / selector='select', 'select_option', or 'select-option' (or action:select, action:select_option, or action:select-option) / selector='toggle' (or action:toggle) / selector='submit' (or action:submit) / selector='reset' (or action:reset) to return only reusable action targets. The action:<verb> form also accepts whitespace around its separator, such as action : reset or action = reset; role=<action> and role:<action> are equivalent forms.".to_string(),
+        description: "Fetch a web page and return its Semantic Object Model (SOM) - structured JSON with typed regions, interactive elements with stable IDs, and clean text content. Output size depends on the page, configuration, serialization, and selector. Prefer this over raw HTTP fetches when an agent needs semantic page structure. For large pages, set budget to cap the returned tokens and combine it with selector='main' when navigation and footer content are not needed. Use selector='landmark' first when you need to discover the page's regions without their elements. Add selector='main' to strip nav/footer, selector='h1' through selector='h6' (including hyphenated, underscored, or spaced forms such as 'h-1', 'h_1', or 'h 1') to isolate a heading level, selector='query' (or selector='query_input', selector='query_field', or selector='query_control', including hyphenated forms) to isolate a search field, selector='label:<text>' / selector='text:<text>' / selector='name:<text>' / selector='accessible-name:<text>' to find regions or elements by accessible name, authored text, or description, selector='id=<value>' or selector='#<value>' for an authored/SOM ID, or selector='testid=<value>' / selector='data-testid=<value>' for stable test hooks. Use selector='class^=card', selector='class$=featured', or selector='class*=feat' for class-string prefix, suffix, or substring matching. Use selector='interactive' / selector='click' (or action:click) / selector='type', 'type_text', or 'type-text' (or action:type, action:type_text, or action:type-text) / selector='clear' (or action:clear) / selector='select', 'select_option', or 'select-option' (or action:select, action:select_option, or action:select-option) / selector='toggle' (or action:toggle) / selector='submit' (or action:submit) / selector='reset' (or action:reset) to return only reusable action targets. The action:<verb> form also accepts whitespace around its separator, such as action : reset or action = reset; role=<action> and role:<action> are equivalent forms.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -546,7 +546,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
 pub fn extract_text_definition() -> ToolDefinition {
     ToolDefinition {
         name: "extract_text".to_string(),
-        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, machine-readable time values alongside human-readable time labels, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='landmark' first to inspect the page's regions, then use selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' (including hyphenated, underscored, or spaced forms such as 'h-1', 'h_1', or 'h 1') for headings. Use selector='label:<text>' / selector='text:<text>' / selector='name:<text>' / selector='accessible-name:<text>' to return text from a matching region or element by accessible name, authored text, or description.".to_string(),
+        description: "Fetch a web page and return only the clean, readable text - no markup, no structure, no element IDs. Includes labeled region context, compiled accessible element descriptions, fieldset legends and section labels, the compiled HTML meta description when present so sparse or JS-shell pages still return the authored summary, compiled image alt text when the image has no other readable text, machine-readable time values alongside human-readable time labels, details disclosure summaries, and definition-list terms with their descriptions, so chart, photo, and reference pages still return authored context. Use this (instead of fetch_page) when you only need written content and do not need to interact with the page or reference specific elements. For large pages, set selector='landmark' first to inspect the page's regions, then use selector='main' or another targeted selector to omit irrelevant regions before applying max_chars; use selector='content' for article text or selector='heading'/'h1' through 'h6' (including hyphenated, underscored, or spaced forms such as 'h-1', 'h_1', or 'h 1') for headings. Use selector='class^=card', selector='class$=featured', or selector='class*=feat' for class-string prefix, suffix, or substring matching. Use selector='label:<text>' / selector='text:<text>' / selector='name:<text>' / selector='accessible-name:<text>' to return text from a matching region or element by accessible name, authored text, or description.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -1283,7 +1283,7 @@ pub async fn handle_crawl_policy(arguments: &Value) -> Value {
 pub fn inspect_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "inspect_page".to_string(),
-        description: "Inspect a page through a bounded compact SOM first, then optionally attach a hardened offline-rendered screenshot. For large pages, start with selector='landmark' to inventory regions, then use selector='main' or another targeted selector before requesting pixels. Use selector='label:<text>' / selector='text:<text>' / selector='name:<text>' / selector='accessible-name:<text>' to inspect only a matching region or element by accessible name, authored text, or description. JavaScript is off by default; javascript=true executes it in a supervised worker with bounded source-HTML fallback on containment failure. visual_mode='auto' captures only for named structural insufficiency signals; 'never' only recommends; 'always' explicitly requests pixels. Plasmate does not perform vision-model interpretation, and visual failure never discards the SOM.".to_string(),
+        description: "Inspect a page through a bounded compact SOM first, then optionally attach a hardened offline-rendered screenshot. For large pages, start with selector='landmark' to inventory regions, then use selector='main' or another targeted selector before requesting pixels. Use selector='class^=card', selector='class$=featured', or selector='class*=feat' for class-string prefix, suffix, or substring matching. Use selector='label:<text>' / selector='text:<text>' / selector='name:<text>' / selector='accessible-name:<text>' to inspect only a matching region or element by accessible name, authored text, or description. JavaScript is off by default; javascript=true executes it in a supervised worker with bounded source-HTML fallback on containment failure. visual_mode='auto' captures only for named structural insufficiency signals; 'never' only recommends; 'always' explicitly requests pixels. Plasmate does not perform vision-model interpretation, and visual failure never discards the SOM.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -4195,7 +4195,7 @@ struct ClosePageParams {
 pub fn open_page_definition() -> ToolDefinition {
     ToolDefinition {
         name: "open_page".to_string(),
-        description: "Open a URL in a persistent browser session. Returns a session_id, the initial SOM, and whether validated local page-state cache restored the SOM/effective HTML. Use this (instead of fetch_page) when you need to interact with the page - click buttons, fill forms, navigate, or run JavaScript. Pair with click, type_text, navigate_to, and evaluate. Use selector='main' or another targeted selector to reduce the initial response; the full SOM stays available for session interactions.".to_string(),
+        description: "Open a URL in a persistent browser session. Returns a session_id, the initial SOM, and whether validated local page-state cache restored the SOM/effective HTML. Use this (instead of fetch_page) when you need to interact with the page - click buttons, fill forms, navigate, or run JavaScript. Pair with click, type_text, navigate_to, and evaluate. Use selector='main' or another targeted selector to reduce the initial response; class-string selectors such as selector='class^=card' can target matching elements; the full SOM stays available for session interactions.".to_string(),
         input_schema: json!({
             "type": "object",
             "properties": {
@@ -18591,6 +18591,24 @@ mod tests {
         assert!(description.contains("`accesskey`"));
         assert!(description.contains("`[accesskey]`"));
         assert!(description.contains("`accesskey:<value>`"));
+    }
+
+    #[test]
+    fn primary_tool_descriptions_advertise_compact_class_string_selectors() {
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            inspect_page_definition(),
+            open_page_definition(),
+        ] {
+            assert!(
+                definition.description.contains("class^=card")
+                    && definition.description.contains("class$=featured")
+                    && definition.description.contains("class*=feat"),
+                "{} should advertise compact class-string selectors",
+                definition.name
+            );
+        }
     }
 
     #[test]
