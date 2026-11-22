@@ -29,6 +29,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 ///   `maincontent`/`maincontents`/
 ///   `primary`/`primary_content`/`primary_contents`/`primary-content`/
 ///   `primary-contents`/`primary content`/`primary contents`/
+///   `primarycontent`/`primarycontents`/
 ///   `primary_region`/`primary_regions`/`primary-region`/`primary-regions`/
 ///   `primary region`/`primary regions`/`primary_content_region`/
 ///   `primary_content_regions`/`primary-content-region`/
@@ -353,6 +354,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         | "primary-contents"
         | "primary content"
         | "primary contents"
+        | "primarycontent"
+        | "primarycontents"
         | "primary_region"
         | "primary_regions"
         | "primary-region"
@@ -6910,6 +6913,17 @@ mod tests {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].role, RegionRole::Content);
+        }
+    }
+
+    #[test]
+    fn test_selector_compact_primary_content_aliases_match_main_region() {
+        let som = make_test_som();
+
+        for selector in ["primarycontent", "primarycontents"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].role, RegionRole::Main);
         }
     }
 
