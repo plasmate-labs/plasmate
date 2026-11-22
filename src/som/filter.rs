@@ -1354,10 +1354,9 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
     let value = value
         .strip_suffix(['i', 'I'])
         .filter(|value| {
-            value
-                .chars()
-                .last()
-                .is_some_and(|character| character.is_ascii_whitespace())
+            value.chars().last().is_some_and(|character| {
+                character.is_ascii_whitespace() || matches!(character, '\'' | '"')
+            })
         })
         .map(str::trim_end)
         .unwrap_or(value);
@@ -7269,6 +7268,29 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-described-by-status");
+    }
+
+    #[test]
+    fn test_selector_matches_css_case_flag_without_space() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-case-flag".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: Some("Save".to_string()),
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-state": "Open"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        let filtered = apply_selector(&som, r#"[data-state="open"i]"#);
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-case-flag");
     }
 
     #[test]

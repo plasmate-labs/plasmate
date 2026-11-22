@@ -63,6 +63,7 @@ const SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION: &str =
 
 const SOM_TABLE_SELECTOR_DESCRIPTION: &str = " Table-like element selectors also include data_table/data_tables and data-table/data-tables, data-grid/data-grids, data_grid/data_grids, datagrid/datagrids, table_grid/table_grids, table-grid/table-grids, tablegrid/tablegrids, and spaced data table/data tables, data grid/data grids, or table grid/table grids forms.";
 const SOM_HTML_SELECTOR_DESCRIPTION: &str = " HTML tag aliases include div for SOM group elements, and picture/pictures/image_item/image-item/image item/imageitems for image elements. Document metadata selectors also include `lang`/`dir` presence, exact, prefix, suffix, substring, token, and dash-prefix forms such as `[lang|=en]` and `dir=rtl`.";
+const SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION: &str = " CSS-style attribute selectors such as [data-state='open'], [aria-label~='save'], and [role='button'] are supported.";
 
 /// Parameters for fetch_page tool.
 #[derive(Debug, Deserialize)]
@@ -531,7 +532,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}{SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -568,7 +569,7 @@ pub fn extract_text_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}{SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -1300,7 +1301,7 @@ pub fn inspect_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}{SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION}")
                 },
                 "visual_mode": {
                     "type": "string",
@@ -1308,9 +1309,27 @@ pub fn inspect_page_definition() -> ToolDefinition {
                     "default": "auto",
                     "description": "Screenshot policy: 'auto' captures only for named structural insufficiency signals, 'never' returns SOM only, and 'always' explicitly requests pixels. Visual failure never discards the SOM."
                 },
-                "width": { "type": "integer", "minimum": 320, "maximum": 1920, "default": 1280 },
-                "height": { "type": "integer", "minimum": 200, "maximum": 1080, "default": 720 },
-                "screenshot_timeout_ms": { "type": "integer", "minimum": 100, "maximum": 10000, "default": 5000 }
+                "width": {
+                    "type": "integer",
+                    "minimum": 320,
+                    "maximum": 1920,
+                    "default": 1280,
+                    "description": "Screenshot viewport width in CSS pixels. Used only when visual_mode is 'auto' or 'always'."
+                },
+                "height": {
+                    "type": "integer",
+                    "minimum": 200,
+                    "maximum": 1080,
+                    "default": 720,
+                    "description": "Screenshot viewport height in CSS pixels. Used only when visual_mode is 'auto' or 'always'."
+                },
+                "screenshot_timeout_ms": {
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 10000,
+                    "default": 5000,
+                    "description": "Maximum screenshot capture time in milliseconds; the SOM is still returned if capture times out."
+                }
             },
             "required": ["url"],
             "additionalProperties": false
@@ -7470,6 +7489,17 @@ mod tests {
                 .description
                 .contains("hyphenated, underscored, or spaced forms"));
             assert!(definition.description.contains("'h-1', 'h_1', or 'h 1'"));
+        }
+
+        for definition in [
+            fetch_page_definition(),
+            extract_text_definition(),
+            inspect_page_definition(),
+        ] {
+            let description = definition.input_schema["properties"]["selector"]["description"]
+                .as_str()
+                .expect("selector schema should have a description");
+            assert!(description.contains(SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION));
         }
     }
 
@@ -19089,6 +19119,18 @@ mod tests {
         assert!(inspect.input_schema["properties"]["visual_mode"]["description"]
             .as_str()
             .is_some_and(|description| description.contains("structural insufficiency")));
+        assert!(inspect.input_schema["properties"]["width"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("CSS pixels")));
+        assert!(inspect.input_schema["properties"]["height"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("CSS pixels")));
+        assert!(inspect.input_schema["properties"]["screenshot_timeout_ms"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("milliseconds")));
+        assert!(inspect.input_schema["properties"]["selector"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("CSS-style attribute selectors")));
         let defaults: InspectPageParams =
             serde_json::from_value(json!({"url": "https://example.com/"})).unwrap();
         assert!(!defaults.javascript);
