@@ -194,6 +194,12 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// If a recognised selector matches nothing, the full SOM is returned (with a
 /// warning) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
+    if selector.len() > 256 {
+        eprintln!(
+            "Warning: selector exceeds the 256-byte limit - returning full SOM"
+        );
+        return som.clone();
+    }
     let selector = selector.trim();
     // Accept the same quoted selector values that the role/action forms use.
     // This is convenient when selectors are passed through a shell or JSON
@@ -3195,6 +3201,16 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-card-prefix");
         }
+    }
+
+    #[test]
+    fn test_selector_rejects_values_over_256_bytes() {
+        let som = make_test_som();
+        let selector = "a".repeat(257);
+
+        let filtered = apply_selector(&som, &selector);
+
+        assert_eq!(filtered, som);
     }
 
     #[test]
