@@ -1047,7 +1047,7 @@ fn parse_named_class_selector(selector: &str) -> Option<Vec<String>> {
                 .then_some(rest.trim())
         })
         .map(strip_selector_quotes)?;
-    let class_names = value
+    let class_names = strip_selector_quotes(value)
         .split('.')
         .map(str::trim)
         .map(strip_selector_quotes)
@@ -3120,6 +3120,8 @@ mod tests {
             "CLASS ~ = 'card'",
             "class:card.featured",
             "class~=card.featured",
+            "class='card.featured'",
+            "CLASS ~ = \"card.featured\"",
         ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
