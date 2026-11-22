@@ -1034,9 +1034,11 @@ fn parse_named_class_selector(selector: &str) -> Option<String> {
         .get(..5)
         .filter(|prefix| prefix.eq_ignore_ascii_case("class"))
         .and_then(|_| selector.get(5..))?;
-    let value = rest
-        .trim_start()
-        .strip_prefix(['=', ':'])
+    let trimmed = rest.trim_start();
+    let value = trimmed
+        .strip_prefix('~')
+        .and_then(|rest| rest.trim_start().strip_prefix('=').map(str::trim))
+        .or_else(|| trimmed.strip_prefix(['=', ':']))
         .map(str::trim)
         .or_else(|| {
             (!rest.trim().is_empty() && rest.chars().next().is_some_and(char::is_whitespace))
@@ -1348,11 +1350,12 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
     let (index, operator) = find_attribute_operator(inner)?;
     let key = inner[..index].trim();
     let value = inner[index + operator.len()..].trim();
-    // CSS permits an `i` modifier after the value for ASCII-insensitive
-    // matching, e.g. `[data-state="OPEN" i]`. SOM attribute matching is
-    // already normalized case-insensitively, so only discard the modifier.
+    // CSS permits `i`/`s` modifiers after the value for ASCII-insensitive or
+    // sensitive matching, e.g. `[data-state="OPEN" i]`. SOM attribute
+    // matching is normalized consistently, so discard either modifier rather
+    // than treating it as part of the requested value.
     let value = value
-        .strip_suffix(['i', 'I'])
+        .strip_suffix(['i', 'I', 's', 'S'])
         .filter(|value| {
             value.chars().last().is_some_and(|character| {
                 character.is_ascii_whitespace() || matches!(character, '\'' | '"')
@@ -3049,6 +3052,29 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_accepts_css_attribute_sensitivity_flags() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-css-flag".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"data-state": "open"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["[data-state='OPEN' i]", "[data-state='OPEN' s]"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-css-flag");
+        }
+    }
+
+    #[test]
     fn test_selector_matches_css_class_tokens() {
         let mut som = make_test_som();
         som.regions[1].elements.push(Element {
@@ -3076,7 +3102,13 @@ mod tests {
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-card");
 
-        for selector in ["class:card", "class=FEATURED", "CLASS card"] {
+        for selector in [
+            "class:card",
+            "class=FEATURED",
+            "CLASS card",
+            "class~=FEATURED",
+            "CLASS ~ = 'card'",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
