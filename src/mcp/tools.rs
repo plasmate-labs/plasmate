@@ -1308,9 +1308,27 @@ pub fn inspect_page_definition() -> ToolDefinition {
                     "default": "auto",
                     "description": "Screenshot policy: 'auto' captures only for named structural insufficiency signals, 'never' returns SOM only, and 'always' explicitly requests pixels. Visual failure never discards the SOM."
                 },
-                "width": { "type": "integer", "minimum": 320, "maximum": 1920, "default": 1280 },
-                "height": { "type": "integer", "minimum": 200, "maximum": 1080, "default": 720 },
-                "screenshot_timeout_ms": { "type": "integer", "minimum": 100, "maximum": 10000, "default": 5000 }
+                "width": {
+                    "type": "integer",
+                    "minimum": 320,
+                    "maximum": 1920,
+                    "default": 1280,
+                    "description": "Screenshot viewport width in CSS pixels. Used only when visual_mode is 'auto' or 'always'."
+                },
+                "height": {
+                    "type": "integer",
+                    "minimum": 200,
+                    "maximum": 1080,
+                    "default": 720,
+                    "description": "Screenshot viewport height in CSS pixels. Used only when visual_mode is 'auto' or 'always'."
+                },
+                "screenshot_timeout_ms": {
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 10000,
+                    "default": 5000,
+                    "description": "Maximum screenshot capture time in milliseconds; the SOM is still returned if capture times out."
+                }
             },
             "required": ["url"],
             "additionalProperties": false
@@ -19089,6 +19107,15 @@ mod tests {
         assert!(inspect.input_schema["properties"]["visual_mode"]["description"]
             .as_str()
             .is_some_and(|description| description.contains("structural insufficiency")));
+        assert!(inspect.input_schema["properties"]["width"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("CSS pixels")));
+        assert!(inspect.input_schema["properties"]["height"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("CSS pixels")));
+        assert!(inspect.input_schema["properties"]["screenshot_timeout_ms"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("milliseconds")));
         let defaults: InspectPageParams =
             serde_json::from_value(json!({"url": "https://example.com/"})).unwrap();
         assert!(!defaults.javascript);
