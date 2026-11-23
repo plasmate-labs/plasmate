@@ -2291,6 +2291,10 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "text_fields"
         | "text-field"
         | "text-fields"
+        | "text input"
+        | "text inputs"
+        | "text field"
+        | "text fields"
         | "textinput"
         | "textinputs"
         | "textfields"
@@ -5437,6 +5441,8 @@ mod tests {
             ("text_fields", ElementRole::TextInput),
             ("text-field", ElementRole::TextInput),
             ("text field", ElementRole::TextInput),
+            ("text inputs", ElementRole::TextInput),
+            ("text fields", ElementRole::TextInput),
             ("textareas", ElementRole::Textarea),
             ("text_areas", ElementRole::Textarea),
             ("text-area", ElementRole::Textarea),
