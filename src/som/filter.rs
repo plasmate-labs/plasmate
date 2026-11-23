@@ -2279,12 +2279,18 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // vocabulary without knowing the normalized role.
         "text_input"
         | "text_inputs"
+        | "text-input"
+        | "text-inputs"
         | "textbox"
         | "textboxes"
         | "text_box"
         | "text_boxes"
+        | "text-box"
+        | "text-boxes"
         | "text_field"
         | "text_fields"
+        | "text-field"
+        | "text-fields"
         | "textinput"
         | "textinputs"
         | "textfields"
@@ -6130,6 +6136,10 @@ mod tests {
         for selector in [
             "textboxes",
             "textfields",
+            "text-input",
+            "text-inputs",
+            "text-field",
+            "text-fields",
             "textinput",
             "textinputs",
             "searchboxes",
