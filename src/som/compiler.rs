@@ -172,7 +172,7 @@ fn count_elements_vec(elements: &[Element], total: &Cell<usize>, interactive: &C
 fn extract_title(node: &Handle) -> String {
     if let NodeData::Element { name, .. } = &node.data {
         if name.local.as_ref() == "title" {
-            return get_text_content(node).trim().to_string();
+            return heuristics::normalize_text(&get_text_content(node));
         }
     }
     for child in node.children.borrow().iter() {
@@ -3753,6 +3753,18 @@ mod tests {
 
         let som = compile(html, "https://example.com/dashboard").unwrap();
         assert_eq!(som.title, "Dashboard");
+    }
+
+    #[test]
+    fn test_document_title_collapses_whitespace() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>  Dashboard
+        —  Reports  </title></head>
+<body><main><p>Hello</p></main></body>
+</html>"#;
+
+        let som = compile(html, "https://example.com/dashboard").unwrap();
+        assert_eq!(som.title, "Dashboard — Reports");
     }
 
     #[test]
