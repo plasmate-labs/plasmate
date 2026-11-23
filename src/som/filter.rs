@@ -197,12 +197,6 @@ pub const MAX_SELECTOR_BYTES: usize = 256;
 /// If a recognised selector matches nothing, the full SOM is returned (with a
 /// warning) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
-    if selector.len() > MAX_SELECTOR_BYTES {
-        eprintln!(
-            "Warning: selector exceeds the {MAX_SELECTOR_BYTES}-byte limit - returning full SOM"
-        );
-        return som.clone();
-    }
     let selector = selector.trim();
     // Accept the same quoted selector values that the role/action forms use.
     // This is convenient when selectors are passed through a shell or JSON
@@ -229,6 +223,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         })
         .filter(|value| !value.is_empty())
         .unwrap_or(selector);
+    if selector.len() > MAX_SELECTOR_BYTES {
+        eprintln!(
+            "Warning: selector exceeds the {MAX_SELECTOR_BYTES}-byte limit - returning full SOM"
+        );
+        return som.clone();
+    }
     // Keep the caller's spelling for id selectors. Roles and actions are
     // case-insensitive, but HTML/SOM ids are case-sensitive.
     let selector_for_id = selector;
@@ -1548,7 +1548,14 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
     supported
         .then(|| unescape_selector_value(strip_selector_quotes(value.trim())))
         .filter(|value| !value.is_empty())
-        .map(|value| (key, normalize_label_text(&value), matcher))
+        .map(|value| {
+            let value = if key == "id" {
+                value
+            } else {
+                normalize_label_text(&value)
+            };
+            (key, value, matcher)
+        })
 }
 
 fn find_attribute_operator(inner: &str) -> Option<(usize, &str)> {
@@ -1946,7 +1953,17 @@ fn element_has_attribute_value(
             .html_id
             .as_deref()
             .is_some_and(|value| {
-                let value = normalize_label_text(value);
+                let case_sensitive = matcher == AttributeMatcher::Exact;
+                let value = if case_sensitive {
+                    value.to_string()
+                } else {
+                    normalize_label_text(value)
+                };
+                let expected = if case_sensitive {
+                    expected.to_string()
+                } else {
+                    normalize_label_text(expected)
+                };
                 match matcher {
                     AttributeMatcher::Token => value.split_whitespace().any(|token| token == expected),
                     AttributeMatcher::DashPrefix => {
@@ -6845,6 +6862,34 @@ mod tests {
     fn test_selector_trims_whitespace() {
         let som = make_test_som();
         let filtered = apply_selector(&som, " main ");
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_limit_applies_after_normalization() {
+        let som = make_test_som();
+        let padded = format!(
+            "{}main{}",
+            " ".repeat(MAX_SELECTOR_BYTES),
+            " ".repeat(MAX_SELECTOR_BYTES)
+        );
+        let filtered = apply_selector(&som, &padded);
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
+    fn test_selector_limit_applies_after_wrapper_normalization() {
+        let som = make_test_som();
+        let padded = format!(
+            "selector = {}main{}",
+            " ".repeat(MAX_SELECTOR_BYTES),
+            " ".repeat(MAX_SELECTOR_BYTES)
+        );
+        let filtered = apply_selector(&som, &padded);
+
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].role, RegionRole::Main);
     }
