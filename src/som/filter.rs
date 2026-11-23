@@ -68,7 +68,8 @@ pub const MAX_SELECTOR_BYTES: usize = 256;
 ///   `time control` / `time controls` / `time_picker` / `time_pickers` /
 ///   `timepicker` / `timepickers` / `time-picker` / `time-pickers` / `time picker` /
 ///   `time pickers`, `week`, `hidden`, `color`, `range`, and `file`, `textarea` /
-///   `textareas` / `text_area` / `text_areas`,
+///   `textareas` / `text_area` / `text_areas` / `text-area` / `text-areas` /
+///   `text area` / `text areas` / `multiline` / `multi-line` / `multi line` / `multilines` / `multi-lines` / `multi lines`,
 ///   `select` / `selects` / `combobox` / `comboboxes` / `combo box` /
 ///   `combo boxes` / `combo-boxes` /
 ///   `listbox` / `listboxes` / `list_box` / `list_boxes` / `list box` / `list boxes`,
@@ -2367,7 +2368,15 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "text_area"
         | "text_areas"
         | "text-area"
-        | "text-areas" => Some(ElementRole::Textarea),
+        | "text-areas"
+        | "text area"
+        | "text areas"
+        | "multiline"
+        | "multi-line"
+        | "multi line"
+        | "multilines"
+        | "multi-lines"
+        | "multi lines" => Some(ElementRole::Textarea),
         "select"
         | "selects"
         | "combobox"
@@ -6186,7 +6195,19 @@ mod tests {
             shadow: None,
         });
 
-        for selector in ["text_area", "text-area", "text areas", "text-areas"] {
+        for selector in [
+            "text_area",
+            "text-area",
+            "text areas",
+            "text-areas",
+            "text area",
+            "multiline",
+            "multi-line",
+            "multi line",
+            "multilines",
+            "multi-lines",
+            "multi lines",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions[0].elements[0].id, "e-message");
         }
