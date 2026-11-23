@@ -6881,6 +6881,20 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_limit_applies_after_wrapper_normalization() {
+        let som = make_test_som();
+        let padded = format!(
+            "selector = {}main{}",
+            " ".repeat(MAX_SELECTOR_BYTES),
+            " ".repeat(MAX_SELECTOR_BYTES)
+        );
+        let filtered = apply_selector(&som, &padded);
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].role, RegionRole::Main);
+    }
+
+    #[test]
     fn test_selector_accepts_named_selector_wrappers() {
         let som = make_test_som();
         for selector in [
