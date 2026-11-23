@@ -1386,7 +1386,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
     Some(normalize_label_text(value))
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 enum AttributeMatcher {
     Exact,
     Token,
@@ -1508,6 +1508,8 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
             | "title"
             | "placeholder"
             | "alt"
+            | "name"
+            | "value"
             | "accesskey"
             | "lang"
             | "dir"
@@ -1700,6 +1702,8 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
             | "title"
             | "placeholder"
             | "alt"
+            | "name"
+            | "value"
             | "accesskey"
             | "lang"
             | "dir"
@@ -1969,9 +1973,9 @@ fn element_has_attribute_value(
                     AttributeMatcher::DashPrefix => {
                         value == expected || value.starts_with(&format!("{expected}-"))
                     }
-                    AttributeMatcher::Prefix => value.starts_with(expected),
-                    AttributeMatcher::Suffix => value.ends_with(expected),
-                    AttributeMatcher::Substring => value.contains(expected),
+                    AttributeMatcher::Prefix => value.starts_with(&expected),
+                    AttributeMatcher::Suffix => value.ends_with(&expected),
+                    AttributeMatcher::Substring => value.contains(&expected),
                     AttributeMatcher::Exact => value == expected,
                 }
             });
@@ -4269,6 +4273,22 @@ mod tests {
         }));
 
         for selector in ["aria-label", "data-testid", "title", "inert"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e2");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_form_name_and_value_attributes() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({
+            "name": "query",
+            "value": "search"
+        }));
+
+        for selector in ["[name]", "[name=query]", "[value]", "[value*=ear]"] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
