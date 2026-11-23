@@ -27,6 +27,9 @@ use crate::js::worker::{self, EvaluationRequest, EvaluationResponse, JsWorkerErr
 use crate::network::fetch;
 use crate::som::types::Som;
 
+const SOM_TEXTAREA_ALIAS_DESCRIPTION: &str =
+    " Textarea selectors also accept multiline, multi-line, and multi line aliases, including plural forms.";
+
 /// Default timeout for fetching pages (30 seconds).
 const DEFAULT_TIMEOUT_MS: u64 = 30000;
 const MAX_TRACE_HANDLE_BYTES: usize = 64;
@@ -533,7 +536,7 @@ pub fn fetch_page_definition() -> ToolDefinition {
                 "selector": {
                     "type": "string",
                     "maxLength": MAX_MCP_SELECTOR_BYTES,
-                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_CLASS_STRING_OPERATOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}{SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION}")
+                    "description": format!("{SOM_SELECTOR_DESCRIPTION}{SOM_TEXTAREA_ALIAS_DESCRIPTION}{SOM_CLASS_STRING_OPERATOR_DESCRIPTION}{SOM_SELECTOR_QUOTING_DESCRIPTION}{SOM_ARIA_WIDGET_SELECTOR_DESCRIPTION}{SOM_LANDMARK_SELECTOR_DESCRIPTION}{SOM_LIVE_REGION_SELECTOR_DESCRIPTION}{SOM_INLINE_TEXT_TAG_ALIAS_DESCRIPTION}{SOM_TABLE_SELECTOR_DESCRIPTION}{SOM_COMPOUND_SELECTOR_DESCRIPTION}{SOM_BRAILLE_SELECTOR_DESCRIPTION}{SOM_PROGRESS_SELECTOR_DESCRIPTION}{SOM_CLEAR_ACTION_SELECTOR_DESCRIPTION}{SOM_STATE_PRESENCE_SELECTOR_DESCRIPTION}{SOM_HTML_SELECTOR_DESCRIPTION}{SOM_CSS_ATTRIBUTE_SELECTOR_DESCRIPTION}")
                 }
             },
             "required": ["url"],
@@ -18604,7 +18607,15 @@ mod tests {
             .as_str()
             .expect("selector schema should have a description");
 
-        for alias in ["textarea", "text_area", "text-area", "text area"] {
+        for alias in [
+            "textarea",
+            "text_area",
+            "text-area",
+            "text area",
+            "multiline",
+            "multi-line",
+            "multi line",
+        ] {
             assert!(description.contains(alias), "missing textarea alias: {alias}");
         }
     }
