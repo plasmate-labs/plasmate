@@ -1953,6 +1953,17 @@ fn element_has_attribute_value(
             .html_id
             .as_deref()
             .is_some_and(|value| {
+                let case_sensitive = matcher == AttributeMatcher::Exact;
+                let value = if case_sensitive {
+                    value.to_string()
+                } else {
+                    normalize_label_text(value)
+                };
+                let expected = if case_sensitive {
+                    expected.to_string()
+                } else {
+                    normalize_label_text(expected)
+                };
                 match matcher {
                     AttributeMatcher::Token => value.split_whitespace().any(|token| token == expected),
                     AttributeMatcher::DashPrefix => {
