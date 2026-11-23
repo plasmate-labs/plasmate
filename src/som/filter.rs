@@ -2358,7 +2358,12 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "range"
         | "hidden"
         | "file" => Some(ElementRole::TextInput),
-        "textarea" | "textareas" | "text_area" | "text_areas" => Some(ElementRole::Textarea),
+        "textarea"
+        | "textareas"
+        | "text_area"
+        | "text_areas"
+        | "text-area"
+        | "text-areas" => Some(ElementRole::Textarea),
         "select"
         | "selects"
         | "combobox"
@@ -6156,6 +6161,28 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-search");
+        }
+    }
+
+    #[test]
+    fn test_selector_accepts_hyphenated_textarea_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-message".to_string(),
+            role: ElementRole::Textarea,
+            html_id: None,
+            text: None,
+            label: Some("Message".to_string()),
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["text_area", "text-area", "text areas", "text-areas"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions[0].elements[0].id, "e-message");
         }
     }
 

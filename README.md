@@ -307,6 +307,8 @@ spaced or hyphenated forms), `search_input`/`search-input`, `search_control`/`se
 `datetime`/`datetime-local` (also `date_time`/`date-time`/`date time` and `date_time_local`/`date-time-local`/`date time local`), `month`, `time`/`times`, `week`, `color`, `range`,
 `hidden`, and `file`; each targets the corresponding compiled text-input
 element.
+Textarea selectors also accept `textarea`/`textareas`/`text_area`/`text_areas`
+and their hyphenated or spaced forms.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, effective-HTML entries, and avoided HTML work.
 Use `session_status` before long interactive runs to inspect active browser
