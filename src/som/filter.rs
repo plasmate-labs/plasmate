@@ -2279,12 +2279,22 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // vocabulary without knowing the normalized role.
         "text_input"
         | "text_inputs"
+        | "text-input"
+        | "text-inputs"
         | "textbox"
         | "textboxes"
         | "text_box"
         | "text_boxes"
+        | "text-box"
+        | "text-boxes"
         | "text_field"
         | "text_fields"
+        | "text-field"
+        | "text-fields"
+        | "text input"
+        | "text inputs"
+        | "text field"
+        | "text fields"
         | "textinput"
         | "textinputs"
         | "textfields"
@@ -2352,7 +2362,12 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "range"
         | "hidden"
         | "file" => Some(ElementRole::TextInput),
-        "textarea" | "textareas" | "text_area" | "text_areas" => Some(ElementRole::Textarea),
+        "textarea"
+        | "textareas"
+        | "text_area"
+        | "text_areas"
+        | "text-area"
+        | "text-areas" => Some(ElementRole::Textarea),
         "select"
         | "selects"
         | "combobox"
@@ -5426,6 +5441,8 @@ mod tests {
             ("text_fields", ElementRole::TextInput),
             ("text-field", ElementRole::TextInput),
             ("text field", ElementRole::TextInput),
+            ("text inputs", ElementRole::TextInput),
+            ("text fields", ElementRole::TextInput),
             ("textareas", ElementRole::Textarea),
             ("text_areas", ElementRole::Textarea),
             ("text-area", ElementRole::Textarea),
@@ -6130,6 +6147,10 @@ mod tests {
         for selector in [
             "textboxes",
             "textfields",
+            "text-input",
+            "text-inputs",
+            "text-field",
+            "text-fields",
             "textinput",
             "textinputs",
             "searchboxes",
@@ -6146,6 +6167,28 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-search");
+        }
+    }
+
+    #[test]
+    fn test_selector_accepts_hyphenated_textarea_aliases() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-message".to_string(),
+            role: ElementRole::Textarea,
+            html_id: None,
+            text: None,
+            label: Some("Message".to_string()),
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in ["text_area", "text-area", "text areas", "text-areas"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions[0].elements[0].id, "e-message");
         }
     }
 

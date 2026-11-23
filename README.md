@@ -297,7 +297,7 @@ only the corresponding native media elements. Use
 `canvas` when you want every canvas element, or `canvas_item` when filtering a
 mixed media page down to canvas elements only.
 HTML text-input type names are also accepted as selectors, including
-`text`, `input`/`inputs`, `text_input`/`text_inputs`, `textinput`/`textinputs`, `textbox`/`textboxes`/`text_box`/`text-box`/`text box` (and plural
+`text`, `input`/`inputs`, `text_input`/`text_inputs`/`text-input`/`text-inputs`/`text input`/`text inputs`, `textinput`/`textinputs`, `textbox`/`textboxes`/`text_box`/`text-box`/`text boxes`, `text_field`/`text-field`/`text field`/`text fields` (and plural
 spaced or hyphenated forms), `search_input`/`search-input`, `search_control`/`search-control`,
 `search_field`/`search-field`, `search_box`/`search-box`, `query`,
 `query_input`/`query-input`, `query_field`/`query-field`,
@@ -307,6 +307,8 @@ spaced or hyphenated forms), `search_input`/`search-input`, `search_control`/`se
 `datetime`/`datetime-local` (also `date_time`/`date-time`/`date time` and `date_time_local`/`date-time-local`/`date time local`), `month`, `time`/`times`, `week`, `color`, `range`,
 `hidden`, and `file`; each targets the corresponding compiled text-input
 element.
+Textarea selectors also accept `textarea`/`textareas`/`text_area`/`text_areas`
+and their hyphenated or spaced forms.
 Use `cache_status` after repeated fetches to inspect local MCP SOM cache hits,
 misses, selector entries, effective-HTML entries, and avoided HTML work.
 Use `session_status` before long interactive runs to inspect active browser
