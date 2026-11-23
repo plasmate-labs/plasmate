@@ -1548,7 +1548,14 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
     supported
         .then(|| unescape_selector_value(strip_selector_quotes(value.trim())))
         .filter(|value| !value.is_empty())
-        .map(|value| (key, normalize_label_text(&value), matcher))
+        .map(|value| {
+            let value = if key == "id" {
+                value
+            } else {
+                normalize_label_text(&value)
+            };
+            (key, value, matcher)
+        })
 }
 
 fn find_attribute_operator(inner: &str) -> Option<(usize, &str)> {
@@ -1946,7 +1953,6 @@ fn element_has_attribute_value(
             .html_id
             .as_deref()
             .is_some_and(|value| {
-                let value = normalize_label_text(value);
                 match matcher {
                     AttributeMatcher::Token => value.split_whitespace().any(|token| token == expected),
                     AttributeMatcher::DashPrefix => {
