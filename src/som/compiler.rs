@@ -90,7 +90,7 @@ pub fn compile(html: &str, page_url: &str) -> Result<Som, CompileError> {
     };
 
     // Extract page title and lang
-    let title = extract_title(&dom.document);
+    let title = extract_document_title(&dom.document);
     let lang = extract_lang(&dom.document);
 
     // Find the body node
@@ -179,6 +179,21 @@ fn extract_title(node: &Handle) -> String {
         let t = extract_title(child);
         if !t.is_empty() {
             return t;
+        }
+    }
+    String::new()
+}
+
+fn extract_document_title(node: &Handle) -> String {
+    if let NodeData::Element { name, .. } = &node.data {
+        if name.local.as_ref() == "head" {
+            return extract_title(node);
+        }
+    }
+    for child in node.children.borrow().iter() {
+        let title = extract_document_title(child);
+        if !title.is_empty() {
+            return title;
         }
     }
     String::new()
@@ -3770,6 +3785,18 @@ mod tests {
         let som = compile(html, "https://example.com/dashboard").unwrap();
         assert_eq!(som.title, "Dashboard — Reports");
 
+    }
+
+    #[test]
+    fn test_body_svg_title_is_not_document_title() {
+        let html = r#"<!DOCTYPE html>
+<html><head></head><body><main>
+<svg aria-hidden="true"><title>Icon label</title></svg>
+<p>Hello</p>
+</main></body></html>"#;
+
+        let som = compile(html, "https://example.com/icon").unwrap();
+        assert_eq!(som.title, "");
     }
 
     #[test]

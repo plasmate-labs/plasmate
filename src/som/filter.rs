@@ -1386,7 +1386,7 @@ fn parse_label_selector(selector: &str) -> Option<String> {
     Some(normalize_label_text(value))
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 enum AttributeMatcher {
     Exact,
     Token,
@@ -1969,9 +1969,9 @@ fn element_has_attribute_value(
                     AttributeMatcher::DashPrefix => {
                         value == expected || value.starts_with(&format!("{expected}-"))
                     }
-                    AttributeMatcher::Prefix => value.starts_with(expected),
-                    AttributeMatcher::Suffix => value.ends_with(expected),
-                    AttributeMatcher::Substring => value.contains(expected),
+                    AttributeMatcher::Prefix => value.starts_with(&expected),
+                    AttributeMatcher::Suffix => value.ends_with(&expected),
+                    AttributeMatcher::Substring => value.contains(&expected),
                     AttributeMatcher::Exact => value == expected,
                 }
             });
