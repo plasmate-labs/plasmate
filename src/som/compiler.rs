@@ -172,7 +172,7 @@ fn count_elements_vec(elements: &[Element], total: &Cell<usize>, interactive: &C
 fn extract_title(node: &Handle) -> String {
     if let NodeData::Element { name, .. } = &node.data {
         if name.local.as_ref() == "title" {
-            return get_text_content(node);
+            return get_text_content(node).trim().to_string();
         }
     }
     for child in node.children.borrow().iter() {
@@ -3742,6 +3742,17 @@ mod tests {
         assert!(som.meta.som_bytes > 0);
         assert!(som.meta.element_count > 0);
         assert!(som.meta.interactive_count > 0);
+    }
+
+    #[test]
+    fn test_document_title_is_trimmed() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>  Dashboard  </title></head>
+<body><main><p>Hello</p></main></body>
+</html>"#;
+
+        let som = compile(html, "https://example.com/dashboard").unwrap();
+        assert_eq!(som.title, "Dashboard");
     }
 
     #[test]
