@@ -1782,8 +1782,8 @@ fn parse_named_accesskey_selector(selector: &str) -> Option<String> {
 }
 
 fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, String)> {
-    let (key, value) = if let Some((key, value)) = selector.split_once("|=") {
-        (key, value)
+    let (key, value) = if let Some((key, rest)) = selector.split_once('|') {
+        (key, rest.trim_start().strip_prefix('=')?)
     } else {
         selector
             .split_once(':')
@@ -3565,6 +3565,7 @@ mod tests {
             "[lang|='en']",
             "lang:en",
             "lang|=en",
+            "lang | = en",
             "lang:en-US",
             "lang=en-US",
             "lang en-US",
