@@ -129,6 +129,8 @@ enum Commands {
         /// When a role is given, only regions of that role are included.
         /// When an element/action selector or id is given, only matching
         /// elements are kept, with parent containers preserved.
+        /// Selectors are limited to 256 UTF-8 bytes; longer values return the
+        /// full SOM unchanged.
         /// Unrecognised selectors fall through gracefully (full SOM returned).
         ///
         /// Examples:

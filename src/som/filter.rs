@@ -6,6 +6,9 @@
 
 use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 
+/// Maximum selector size accepted by the shared SOM filter, in UTF-8 bytes.
+pub const MAX_SELECTOR_BYTES: usize = 256;
+
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
@@ -194,6 +197,12 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// If a recognised selector matches nothing, the full SOM is returned (with a
 /// warning) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
+    if selector.len() > MAX_SELECTOR_BYTES {
+        eprintln!(
+            "Warning: selector exceeds the {MAX_SELECTOR_BYTES}-byte limit - returning full SOM"
+        );
+        return som.clone();
+    }
     let selector = selector.trim();
     // Accept the same quoted selector values that the role/action forms use.
     // This is convenient when selectors are passed through a shell or JSON
@@ -1773,8 +1782,8 @@ fn parse_named_accesskey_selector(selector: &str) -> Option<String> {
 }
 
 fn parse_named_document_attribute_selector(selector: &str) -> Option<(String, String)> {
-    let (key, value) = if let Some((key, value)) = selector.split_once("|=") {
-        (key, value)
+    let (key, value) = if let Some((key, rest)) = selector.split_once('|') {
+        (key, rest.trim_start().strip_prefix('=')?)
     } else {
         selector
             .split_once(':')
@@ -3198,6 +3207,19 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_rejects_values_over_max_bytes() {
+        let som = make_test_som();
+        let selector = "a".repeat(MAX_SELECTOR_BYTES + 1);
+
+        let filtered = apply_selector(&som, &selector);
+
+        assert_eq!(
+            serde_json::to_value(filtered).unwrap(),
+            serde_json::to_value(som).unwrap()
+        );
+    }
+
+    #[test]
     fn test_selector_matches_css_attribute_presence_aliases() {
         let mut som = make_test_som();
         som.regions[1].elements.push(Element {
@@ -3543,6 +3565,7 @@ mod tests {
             "[lang|='en']",
             "lang:en",
             "lang|=en",
+            "lang | = en",
             "lang:en-US",
             "lang=en-US",
             "lang en-US",

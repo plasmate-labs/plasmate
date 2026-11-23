@@ -31,7 +31,7 @@ use crate::som::types::Som;
 const DEFAULT_TIMEOUT_MS: u64 = 30000;
 const MAX_TRACE_HANDLE_BYTES: usize = 64;
 const MAX_MCP_URL_BYTES: usize = 4096;
-const MAX_MCP_SELECTOR_BYTES: usize = 256;
+const MAX_MCP_SELECTOR_BYTES: usize = crate::som::filter::MAX_SELECTOR_BYTES;
 const MCP_ABSOLUTE_PAGE_URL_DESCRIPTION: &str =
     "Absolute HTTP(S) URL without embedded credentials.";
 

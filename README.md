@@ -239,6 +239,8 @@ elements.
 Selector values may also be wrapped in matching single quotes, double quotes,
 or backticks (including `role=...`, `action:...`, and `#id` forms); surrounding
 whitespace is ignored.
+Selectors are limited to 256 UTF-8 bytes; longer values are rejected by MCP
+tools and make the CLI return the unfiltered SOM.
 CSS class hooks support both `.class-name` and compound
 `.class-name.other-class` selectors when narrowing a SOM to elements with all
 of the requested class tokens.
