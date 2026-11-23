@@ -190,9 +190,13 @@ fn extract_lang(node: &Handle) -> String {
             let attrs = attrs.borrow();
             for attr in attrs.iter() {
                 if attr.name.local.as_ref() == "lang" {
-                    return attr.value.to_string();
+                    let lang = attr.value.trim();
+                    if !lang.is_empty() {
+                        return lang.to_string();
+                    }
                 }
             }
+            return "en".to_string();
         }
     }
     for child in node.children.borrow().iter() {
@@ -3742,6 +3746,28 @@ mod tests {
         assert!(som.meta.som_bytes > 0);
         assert!(som.meta.element_count > 0);
         assert!(som.meta.interactive_count > 0);
+    }
+
+    #[test]
+    fn test_document_language_is_trimmed() {
+        let html = r#"<!DOCTYPE html>
+<html lang="  en-US  "><head><title>Localized</title></head>
+<body><main><p>Hello</p></main></body>
+</html>"#;
+
+        let som = compile(html, "https://example.com/localized").unwrap();
+        assert_eq!(som.lang, "en-US");
+    }
+
+    #[test]
+    fn test_document_language_does_not_inherit_nested_lang() {
+        let html = r#"<!DOCTYPE html>
+<html><head><title>Localized</title></head>
+<body><main><p lang="fr">Bonjour</p></main></body>
+</html>"#;
+
+        let som = compile(html, "https://example.com/localized").unwrap();
+        assert_eq!(som.lang, "en");
     }
 
     #[test]
