@@ -171,6 +171,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
 ///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, `[lang]`, `[dir]`, `[title]`,
 ///   and common HTML boolean attributes such as `[disabled]`, `[checked]`, and `[required]`
+///   (use `disabled` or `enabled` to discover controls by their effective disabled state)
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
 ///   selected by presence or value, including ARIA attributes introduced after
 ///   this parser. This covers application-specific test and state hooks. CSS
@@ -858,6 +859,33 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         });
     }
 
+    // Bare disabled/enabled selectors describe effective control state, not
+    // merely the presence of a `disabled` attribute. Handle them before the
+    // generic bare-attribute presence aliases below.
+    let selector_lower = selector.to_ascii_lowercase();
+    if matches!(selector_lower.as_str(), "disabled" | "enabled") {
+        let want_disabled = selector_lower == "disabled";
+        return filter_som_elements(som, selector, |element| {
+            let is_true = |value: &serde_json::Value| {
+                value.as_bool().unwrap_or_else(|| {
+                    value.as_i64().is_some_and(|value| value == 1)
+                        || value.as_str().is_some_and(|value| {
+                            value.eq_ignore_ascii_case("true") || value == "1"
+                        })
+                })
+            };
+            let is_disabled = element.attrs.as_ref().is_some_and(|attrs| {
+                ["disabled", "aria-disabled", "aria_disabled"]
+                    .into_iter()
+                    .filter_map(|key| attrs.get(key))
+                    .any(is_true)
+            }) || element.hints.as_ref().is_some_and(|hints| {
+                hints.iter().any(|hint| hint.eq_ignore_ascii_case("disabled"))
+            });
+            is_disabled == want_disabled
+        });
+    }
+
     // Bare document, ARIA, and data attribute names mirror CSS presence
     // selectors without requiring brackets.
     if let Some(attribute) = parse_named_attribute_presence_selector(selector) {
@@ -913,7 +941,6 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     }
 
     // Match elements that expose a specific action in their compact action list.
-    let selector_lower = selector.to_ascii_lowercase();
     let action = selector_lower
         .strip_prefix("action")
         .and_then(|rest| {
@@ -1455,6 +1482,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
     let key = key.trim().to_ascii_lowercase();
     let supported = key.starts_with("data-")
         || key.starts_with("data_")
+        || key == "class"
         // Keep CSS attribute selectors forward-compatible with new ARIA
         // attributes instead of requiring a parser change for every addition.
         || key.starts_with("aria-")
@@ -3388,6 +3416,73 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e2");
         }
+    }
+
+    #[test]
+    fn test_selector_matches_effective_disabled_state() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria-disabled": "true"}));
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"disabled": false}));
+
+        let disabled = apply_selector(&som, "disabled");
+        assert_eq!(disabled.regions[0].elements.len(), 1);
+        assert_eq!(disabled.regions[0].elements[0].id, "e2");
+
+        let enabled = apply_selector(&som, "enabled");
+        assert_eq!(enabled.regions[0].elements.len(), 1);
+        assert_eq!(enabled.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_treats_any_disabled_signal_as_disabled() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].attrs =
+            Some(serde_json::json!({"disabled": false, "aria-disabled": "true"}));
+
+        let disabled = apply_selector(&som, "disabled");
+        assert_eq!(disabled.regions[0].elements.len(), 1);
+        assert_eq!(disabled.regions[0].elements[0].id, "e2");
+    }
+
+    #[test]
+    fn test_selector_matches_numeric_disabled_signals() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].attrs = Some(serde_json::json!({"aria-disabled": "1"}));
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"disabled": 0}));
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"disabled": 1}));
+
+        let disabled = apply_selector(&som, "disabled");
+        let disabled_ids: Vec<_> = disabled
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter().map(|element| element.id.as_str()))
+            .collect();
+        assert_eq!(disabled_ids, vec!["e1", "e3"]);
+
+        let enabled = apply_selector(&som, "enabled");
+        let enabled_ids: Vec<_> = enabled
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter().map(|element| element.id.as_str()))
+            .collect();
+        assert_eq!(enabled_ids, vec!["e2"]);
+    }
+
+    #[test]
+    fn test_selector_matches_disabled_hint_from_css_class() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].hints = Some(vec!["disabled".to_string()]);
+
+        let disabled = apply_selector(&som, "disabled");
+        assert_eq!(disabled.regions[0].elements.len(), 1);
+        assert_eq!(disabled.regions[0].elements[0].id, "e2");
+
+        let enabled = apply_selector(&som, "enabled");
+        assert_eq!(enabled.regions[0].elements.len(), 1);
+        assert_eq!(enabled.regions[0].elements[0].id, "e3");
     }
 
     #[test]
@@ -7629,6 +7724,43 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-case-flag");
+    }
+
+    #[test]
+    fn test_selector_matches_css_class_attribute_tokens() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-class-match".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: Some("Save".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"class": "primary compact"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-class-near-match".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: Some("Cancel".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"class": "primary-button"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        let filtered = apply_selector(&som, "[class~=primary]");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-class-match");
     }
 
     #[test]
