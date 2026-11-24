@@ -866,6 +866,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     if matches!(selector_lower.as_str(), "disabled" | "enabled") {
         let want_disabled = selector_lower == "disabled";
         return filter_som_elements(som, selector, |element| {
+            // Disabled state is meaningful for controls, not for ordinary
+            // document nodes that happen to carry a similarly named hint.
+            if !element.role.is_interactive() {
+                return false;
+            }
             let is_true = |value: &serde_json::Value| {
                 value.as_bool().unwrap_or_else(|| {
                     value.as_i64().is_some_and(|value| value == 1)
@@ -3446,6 +3451,19 @@ mod tests {
         let disabled = apply_selector(&som, "disabled");
         assert_eq!(disabled.regions[0].elements.len(), 1);
         assert_eq!(disabled.regions[0].elements[0].id, "e2");
+    }
+
+    #[test]
+    fn test_selector_ignores_disabled_signals_on_noninteractive_elements() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].role = ElementRole::Paragraph;
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria-disabled": "true"}));
+        som.regions[1].elements[0].hints = Some(vec!["disabled".into()]);
+
+        let disabled = apply_selector(&som, "disabled");
+        assert!(disabled.regions[0].elements.is_empty());
+        assert!(disabled.regions[1].elements.is_empty());
     }
 
     #[test]
