@@ -3421,6 +3421,7 @@ mod tests {
     #[test]
     fn test_selector_matches_effective_disabled_state() {
         let mut som = make_test_som();
+        som.regions[0].elements.clear();
         som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria-disabled": "true"}));
         som.regions[1].elements[1].attrs = Some(serde_json::json!({"disabled": false}));
 
@@ -3436,6 +3437,7 @@ mod tests {
     #[test]
     fn test_selector_treats_any_disabled_signal_as_disabled() {
         let mut som = make_test_som();
+        som.regions[0].elements.clear();
         som.regions[1].elements[0].attrs =
             Some(serde_json::json!({"disabled": false, "aria-disabled": "true"}));
 
@@ -3471,6 +3473,7 @@ mod tests {
     #[test]
     fn test_selector_matches_disabled_hint_from_css_class() {
         let mut som = make_test_som();
+        som.regions[0].elements.clear();
         som.regions[1].elements[0].hints = Some(vec!["disabled".to_string()]);
 
         let disabled = apply_selector(&som, "disabled");
