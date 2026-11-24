@@ -1478,6 +1478,7 @@ fn parse_attribute_selector(selector: &str) -> Option<(String, String, Attribute
     let key = key.trim().to_ascii_lowercase();
     let supported = key.starts_with("data-")
         || key.starts_with("data_")
+        || key == "class"
         // Keep CSS attribute selectors forward-compatible with new ARIA
         // attributes instead of requiring a parser change for every addition.
         || key.starts_with("aria-")
@@ -7692,6 +7693,43 @@ mod tests {
         assert_eq!(filtered.regions.len(), 1);
         assert_eq!(filtered.regions[0].elements.len(), 1);
         assert_eq!(filtered.regions[0].elements[0].id, "e-case-flag");
+    }
+
+    #[test]
+    fn test_selector_matches_css_class_attribute_tokens() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-class-match".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: Some("Save".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"class": "primary compact"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-class-near-match".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: Some("Cancel".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"class": "primary-button"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        let filtered = apply_selector(&som, "[class~=primary]");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].id, "e-class-match");
     }
 
     #[test]
