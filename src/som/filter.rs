@@ -206,6 +206,15 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // This is convenient when selectors are passed through a shell or JSON
     // configuration layer that quotes every value uniformly.
     let selector = collapse_selector_whitespace(strip_selector_quotes(selector));
+    let forwarded_selector_is_empty = selector
+        .get(..8)
+        .filter(|prefix| prefix.eq_ignore_ascii_case("selector"))
+        .and_then(|_| selector.get(8..))
+        .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        .is_some_and(|value| value.trim().is_empty());
+    if forwarded_selector_is_empty {
+        return som.clone();
+    }
     let selector = selector.as_str();
     // Accept an explicitly named selector value when callers forward a
     // key/value option instead of passing only the selector itself.
@@ -227,6 +236,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         })
         .filter(|value| !value.is_empty())
         .unwrap_or(selector);
+    // Treat an explicitly empty forwarded value as an omitted selector. This
+    // keeps optional JSON/config fields quiet instead of emitting an
+    // unknown-selector warning while preserving the full SOM contract.
+    if selector.is_empty() {
+        return som.clone();
+    }
     if selector.len() > MAX_SELECTOR_BYTES {
         eprintln!(
             "Warning: selector exceeds the {MAX_SELECTOR_BYTES}-byte limit - returning full SOM"
@@ -7760,6 +7775,20 @@ mod tests {
         let som = make_test_som();
         let filtered = apply_selector(&som, "foobar");
         assert_eq!(filtered.regions.len(), 2);
+    }
+
+    #[test]
+    fn test_empty_forwarded_selector_returns_full() {
+        let som = make_test_som();
+
+        for selector in ["", "   ", "selector=", "selector:   "] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(
+                serde_json::to_value(&filtered).unwrap(),
+                serde_json::to_value(&som).unwrap(),
+                "selector: {selector:?}"
+            );
+        }
     }
 
     #[test]
