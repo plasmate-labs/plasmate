@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 pub const MAX_SELECTOR_BYTES: usize = 256;
 
 const UNKNOWN_SELECTOR_GUIDANCE: &str =
-    "try a region role (main, nav, or content), an element role (button or link), #id, or [aria-label]";
+    "try selector='landmark' to discover regions, then a region role (main, nav, or content), an element role (button or link), #id, .class, testid=<value>, or [aria-label]";
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
