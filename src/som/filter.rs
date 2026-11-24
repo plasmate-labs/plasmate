@@ -930,6 +930,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     .into_iter()
                     .filter_map(|key| attrs.get(key))
                     .any(is_true)
+            }) || element.hints.as_ref().is_some_and(|hints| {
+                hints.iter().any(|hint| hint.eq_ignore_ascii_case("disabled"))
             });
             is_disabled == want_disabled
         });
@@ -3435,6 +3437,20 @@ mod tests {
         let disabled = apply_selector(&som, "disabled");
         assert_eq!(disabled.regions[0].elements.len(), 1);
         assert_eq!(disabled.regions[0].elements[0].id, "e1");
+    }
+
+    #[test]
+    fn test_selector_matches_disabled_hint_from_css_class() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].hints = Some(vec!["disabled".to_string()]);
+
+        let disabled = apply_selector(&som, "disabled");
+        assert_eq!(disabled.regions[0].elements.len(), 1);
+        assert_eq!(disabled.regions[0].elements[0].id, "e1");
+
+        let enabled = apply_selector(&som, "enabled");
+        assert_eq!(enabled.regions[0].elements.len(), 1);
+        assert_eq!(enabled.regions[0].elements[0].id, "e2");
     }
 
     #[test]
