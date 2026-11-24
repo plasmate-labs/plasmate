@@ -880,7 +880,13 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 })
             };
             let is_disabled = element.attrs.as_ref().is_some_and(|attrs| {
-                ["disabled", "aria-disabled", "aria_disabled"]
+                [
+                    "disabled",
+                    "aria-disabled",
+                    "aria_disabled",
+                    "data-disabled",
+                    "data_disabled",
+                ]
                     .into_iter()
                     .filter_map(|key| attrs.get(key))
                     .any(is_true)
@@ -3488,6 +3494,26 @@ mod tests {
             .flat_map(|region| region.elements.iter().map(|element| element.id.as_str()))
             .collect();
         assert_eq!(enabled_ids, vec!["e2"]);
+    }
+
+    #[test]
+    fn test_selector_matches_data_disabled_signals() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].attrs = Some(serde_json::json!({"data-disabled": "true"}));
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"data_disabled": 1}));
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"data-disabled": "false"}));
+
+        let disabled = apply_selector(&som, "disabled");
+        let disabled_ids: Vec<_> = disabled
+            .regions
+            .iter()
+            .flat_map(|region| region.elements.iter().map(|element| element.id.as_str()))
+            .collect();
+        assert_eq!(disabled_ids, vec!["e1", "e2"]);
+
+        let enabled = apply_selector(&som, "enabled");
+        assert_eq!(enabled.regions[0].elements.len(), 0);
+        assert_eq!(enabled.regions[1].elements[0].id, "e3");
     }
 
     #[test]
