@@ -9,6 +9,9 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 /// Maximum selector size accepted by the shared SOM filter, in UTF-8 bytes.
 pub const MAX_SELECTOR_BYTES: usize = 256;
 
+const UNKNOWN_SELECTOR_GUIDANCE: &str =
+    "try selector='landmark' to discover regions, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, #id, .class, testid=<value>, or [aria-label]";
+
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
@@ -1002,8 +1005,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     }
 
     eprintln!(
-        "Warning: unrecognised selector '{}' - returning full SOM",
-        selector
+        "Warning: unrecognised selector '{}' - {}; returning full SOM",
+        selector, UNKNOWN_SELECTOR_GUIDANCE
     );
     som.clone()
 }
@@ -3248,6 +3251,30 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-card-prefix");
+        }
+    }
+
+    #[test]
+    fn test_selector_class_examples_match_documented_cli_forms() {
+        let mut som = make_test_som();
+        som.regions[1].elements.push(Element {
+            id: "e-card".to_string(),
+            role: ElementRole::Button,
+            html_id: None,
+            text: None,
+            label: None,
+            actions: None,
+            attrs: Some(serde_json::json!({"class": "card featured"})),
+            children: None,
+            hints: None,
+            shadow: None,
+        });
+
+        for selector in [".card.featured", "class^=card"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-card");
         }
     }
 
