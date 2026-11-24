@@ -149,7 +149,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive` / `interactives` / `interactive element` /
 ///   `interactive-element` / `interactive elements` / `interactive_elements` /
-///   `interactive-elements`, bare action names (`click`, `type`,
+///   `interactive-elements` / `control` / `controls`, bare action names (`click`, `type`,
 ///   `type_text`/`type-text`/`type text`, `clear`/`clear_text`/`clear-text`/
 ///   `clear text`, `select`, `select_option`/`select-option`/`select option`,
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
@@ -564,6 +564,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "interactive elements"
             | "interactive_elements"
             | "interactive-elements"
+            | "control"
+            | "controls"
     ) {
         return filter_som_elements(som, selector, |element| element.role.is_interactive());
     }
@@ -6681,13 +6683,15 @@ mod tests {
     #[test]
     fn test_selector_interactive_elements() {
         let som = make_test_som();
-        let filtered = apply_selector(&som, "interactive");
-        assert_eq!(filtered.regions.len(), 2);
-        assert!(filtered
-            .regions
-            .iter()
-            .flat_map(|region| region.elements.iter())
-            .all(|element| element.role.is_interactive()));
+        for selector in ["interactive", "control", "controls"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
+            assert!(filtered
+                .regions
+                .iter()
+                .flat_map(|region| region.elements.iter())
+                .all(|element| element.role.is_interactive()), "selector: {selector}");
+        }
     }
 
     #[test]
