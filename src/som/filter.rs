@@ -171,6 +171,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
 ///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, `[lang]`, `[dir]`, `[title]`,
 ///   and common HTML boolean attributes such as `[disabled]`, `[checked]`, and `[required]`
+///   (use `disabled` or `enabled` to discover controls by their effective disabled state)
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
 ///   selected by presence or value, including ARIA attributes introduced after
 ///   this parser. This covers application-specific test and state hooks. CSS
@@ -914,6 +915,25 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
 
     // Match elements that expose a specific action in their compact action list.
     let selector_lower = selector.to_ascii_lowercase();
+    if matches!(selector_lower.as_str(), "disabled" | "enabled") {
+        let want_disabled = selector_lower == "disabled";
+        return filter_som_elements(som, selector, |element| {
+            let state = element.attrs.as_ref().and_then(|attrs| {
+                ["disabled", "aria-disabled", "aria_disabled"]
+                    .into_iter()
+                    .find_map(|key| attrs.get(key))
+            });
+            match state {
+                Some(value) => value.as_bool().unwrap_or_else(|| {
+                    value
+                        .as_str()
+                        .is_some_and(|value| value.eq_ignore_ascii_case("true"))
+                }) == want_disabled,
+                None => !want_disabled,
+            }
+        });
+    }
+
     let action = selector_lower
         .strip_prefix("action")
         .and_then(|rest| {
@@ -3388,6 +3408,21 @@ mod tests {
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e2");
         }
+    }
+
+    #[test]
+    fn test_selector_matches_effective_disabled_state() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria-disabled": "true"}));
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"disabled": false}));
+
+        let disabled = apply_selector(&som, "disabled");
+        assert_eq!(disabled.regions[0].elements.len(), 1);
+        assert_eq!(disabled.regions[0].elements[0].id, "e1");
+
+        let enabled = apply_selector(&som, "enabled");
+        assert_eq!(enabled.regions[0].elements.len(), 1);
+        assert_eq!(enabled.regions[0].elements[0].id, "e2");
     }
 
     #[test]
