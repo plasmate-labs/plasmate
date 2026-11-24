@@ -1774,7 +1774,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
 
 fn parse_named_data_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
     let (key, value, token_match) = if let Some((key, value)) = selector.split_once('~') {
-        (key, value.strip_prefix('=')?, true)
+        (key, value.trim_start().strip_prefix('=')?, true)
     } else if let Some((key, value)) = selector.split_once(':') {
         (key, value, false)
     } else {
@@ -3828,9 +3828,11 @@ mod tests {
             shadow: None,
         });
 
-        let filtered = apply_selector(&som, "data-tags~=PRIMARY");
-        assert_eq!(filtered.regions.len(), 1);
-        assert_eq!(filtered.regions[0].elements[0].id, "e-compact-data-tags");
+        for selector in ["data-tags~=PRIMARY", "data-tags ~ = PRIMARY"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-compact-data-tags");
+        }
     }
 
     #[test]
