@@ -228,6 +228,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 .strip_prefix(['=', ':'])
                 .map(str::trim)
                 .map(strip_selector_quotes)
+                .map(str::trim)
                 .or_else(|| {
                     (!rest.is_empty()
                         && rest.chars().next().is_some_and(char::is_whitespace))
@@ -7781,7 +7782,14 @@ mod tests {
     fn test_empty_forwarded_selector_returns_full() {
         let som = make_test_som();
 
-        for selector in ["", "   ", "selector=", "selector:   "] {
+        for selector in [
+            "",
+            "   ",
+            "selector=",
+            "selector:   ",
+            "selector='   '",
+            "selector: \"   \"",
+        ] {
             let filtered = apply_selector(&som, selector);
             assert_eq!(
                 serde_json::to_value(&filtered).unwrap(),
