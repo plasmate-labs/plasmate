@@ -149,7 +149,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   Missing or out-of-range levels are not invented.
 /// - Action surfaces: `interactive` / `interactives` / `interactive element` /
 ///   `interactive-element` / `interactive elements` / `interactive_elements` /
-///   `interactive-elements`, bare action names (`click`, `type`,
+///   `interactive-elements` / `control` / `controls`, bare action names (`click`, `type`,
 ///   `type_text`/`type-text`/`type text`, `clear`/`clear_text`/`clear-text`/
 ///   `clear text`, `select`, `select_option`/`select-option`/`select option`,
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
@@ -206,6 +206,15 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // This is convenient when selectors are passed through a shell or JSON
     // configuration layer that quotes every value uniformly.
     let selector = collapse_selector_whitespace(strip_selector_quotes(selector));
+    let forwarded_selector_is_empty = selector
+        .get(..8)
+        .filter(|prefix| prefix.eq_ignore_ascii_case("selector"))
+        .and_then(|_| selector.get(8..))
+        .and_then(|rest| rest.trim_start().strip_prefix(['=', ':']))
+        .is_some_and(|value| value.trim().is_empty());
+    if forwarded_selector_is_empty {
+        return som.clone();
+    }
     let selector = selector.as_str();
     // Accept an explicitly named selector value when callers forward a
     // key/value option instead of passing only the selector itself.
@@ -219,6 +228,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 .strip_prefix(['=', ':'])
                 .map(str::trim)
                 .map(strip_selector_quotes)
+                .map(str::trim)
                 .or_else(|| {
                     (!rest.is_empty()
                         && rest.chars().next().is_some_and(char::is_whitespace))
@@ -227,6 +237,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         })
         .filter(|value| !value.is_empty())
         .unwrap_or(selector);
+    // Treat an explicitly empty forwarded value as an omitted selector. This
+    // keeps optional JSON/config fields quiet instead of emitting an
+    // unknown-selector warning while preserving the full SOM contract.
+    if selector.is_empty() {
+        return som.clone();
+    }
     if selector.len() > MAX_SELECTOR_BYTES {
         eprintln!(
             "Warning: selector exceeds the {MAX_SELECTOR_BYTES}-byte limit - returning full SOM"
@@ -548,6 +564,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "interactive elements"
             | "interactive_elements"
             | "interactive-elements"
+            | "control"
+            | "controls"
     ) {
         return filter_som_elements(som, selector, |element| element.role.is_interactive());
     }
@@ -1756,7 +1774,7 @@ fn parse_attribute_presence_selector(selector: &str) -> Option<String> {
 
 fn parse_named_data_attribute_selector(selector: &str) -> Option<(String, String, bool)> {
     let (key, value, token_match) = if let Some((key, value)) = selector.split_once('~') {
-        (key, value.strip_prefix('=')?, true)
+        (key, value.trim_start().strip_prefix('=')?, true)
     } else if let Some((key, value)) = selector.split_once(':') {
         (key, value, false)
     } else {
@@ -3810,9 +3828,11 @@ mod tests {
             shadow: None,
         });
 
-        let filtered = apply_selector(&som, "data-tags~=PRIMARY");
-        assert_eq!(filtered.regions.len(), 1);
-        assert_eq!(filtered.regions[0].elements[0].id, "e-compact-data-tags");
+        for selector in ["data-tags~=PRIMARY", "data-tags ~ = PRIMARY"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-compact-data-tags");
+        }
     }
 
     #[test]
@@ -6665,13 +6685,15 @@ mod tests {
     #[test]
     fn test_selector_interactive_elements() {
         let som = make_test_som();
-        let filtered = apply_selector(&som, "interactive");
-        assert_eq!(filtered.regions.len(), 2);
-        assert!(filtered
-            .regions
-            .iter()
-            .flat_map(|region| region.elements.iter())
-            .all(|element| element.role.is_interactive()));
+        for selector in ["interactive", "control", "controls"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 2, "selector: {selector}");
+            assert!(filtered
+                .regions
+                .iter()
+                .flat_map(|region| region.elements.iter())
+                .all(|element| element.role.is_interactive()), "selector: {selector}");
+        }
     }
 
     #[test]
@@ -7760,6 +7782,27 @@ mod tests {
         let som = make_test_som();
         let filtered = apply_selector(&som, "foobar");
         assert_eq!(filtered.regions.len(), 2);
+    }
+
+    #[test]
+    fn test_empty_forwarded_selector_returns_full() {
+        let som = make_test_som();
+
+        for selector in [
+            "",
+            "   ",
+            "selector=",
+            "selector:   ",
+            "selector='   '",
+            "selector: \"   \"",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(
+                serde_json::to_value(&filtered).unwrap(),
+                serde_json::to_value(&som).unwrap(),
+                "selector: {selector:?}"
+            );
+        }
     }
 
     #[test]
