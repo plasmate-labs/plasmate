@@ -918,19 +918,20 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     if matches!(selector_lower.as_str(), "disabled" | "enabled") {
         let want_disabled = selector_lower == "disabled";
         return filter_som_elements(som, selector, |element| {
-            let state = element.attrs.as_ref().and_then(|attrs| {
-                ["disabled", "aria-disabled", "aria_disabled"]
-                    .into_iter()
-                    .find_map(|key| attrs.get(key))
-            });
-            match state {
-                Some(value) => value.as_bool().unwrap_or_else(|| {
+            let is_true = |value: &serde_json::Value| {
+                value.as_bool().unwrap_or_else(|| {
                     value
                         .as_str()
                         .is_some_and(|value| value.eq_ignore_ascii_case("true"))
-                }) == want_disabled,
-                None => !want_disabled,
-            }
+                })
+            };
+            let is_disabled = element.attrs.as_ref().is_some_and(|attrs| {
+                ["disabled", "aria-disabled", "aria_disabled"]
+                    .into_iter()
+                    .filter_map(|key| attrs.get(key))
+                    .any(is_true)
+            });
+            is_disabled == want_disabled
         });
     }
 
@@ -3423,6 +3424,17 @@ mod tests {
         let enabled = apply_selector(&som, "enabled");
         assert_eq!(enabled.regions[0].elements.len(), 1);
         assert_eq!(enabled.regions[0].elements[0].id, "e2");
+    }
+
+    #[test]
+    fn test_selector_treats_any_disabled_signal_as_disabled() {
+        let mut som = make_test_som();
+        som.regions[1].elements[0].attrs =
+            Some(serde_json::json!({"disabled": false, "aria-disabled": "true"}));
+
+        let disabled = apply_selector(&som, "disabled");
+        assert_eq!(disabled.regions[0].elements.len(), 1);
+        assert_eq!(disabled.regions[0].elements[0].id, "e1");
     }
 
     #[test]
