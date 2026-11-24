@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 pub const MAX_SELECTOR_BYTES: usize = 256;
 
 const UNKNOWN_SELECTOR_GUIDANCE: &str =
-    "try selector='landmark' to discover regions, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, #id, .class, testid=<value>, or [aria-label]";
+    "try selector='landmark' to discover regions, selector='main' for token-saving page content, interactive for controls, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, aria-label:<text>, #id, .class, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
@@ -199,7 +199,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///
 /// Unrecognised selectors return the full SOM unchanged (with a warning to stderr).
 /// If a recognised selector matches nothing, the full SOM is returned (with a
-/// warning) so callers always get usable output.
+/// warning and selector recovery guidance) so callers always get usable output.
 pub fn apply_selector(som: &Som, selector: &str) -> Som {
     let selector = selector.trim();
     // Accept the same quoted selector values that the role/action forms use.
@@ -325,8 +325,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     ) {
         if som.regions.is_empty() {
             eprintln!(
-                "Warning: selector '{}' matched no landmarks - returning full SOM",
-                selector
+                "Warning: selector '{}' matched no landmarks - {}; returning full SOM",
+                selector, UNKNOWN_SELECTOR_GUIDANCE
             );
             return som.clone();
         }
@@ -486,8 +486,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             // matcher when no region matched.
             if parse_element_role(selector).is_none() {
                 eprintln!(
-                    "Warning: selector '{}' matched no regions - returning full SOM",
-                    selector
+                    "Warning: selector '{}' matched no regions - {}; returning full SOM",
+                    selector, UNKNOWN_SELECTOR_GUIDANCE
                 );
                 return som.clone();
             }
@@ -996,7 +996,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             })
             .collect();
         if filtered_regions.is_empty() {
-            eprintln!("Warning: selector '#{id}' matched no elements - returning full SOM");
+            eprintln!(
+                "Warning: selector '#{id}' matched no elements - {}; returning full SOM",
+                UNKNOWN_SELECTOR_GUIDANCE
+            );
             return som.clone();
         }
         let mut result = som.clone();
@@ -2221,8 +2224,8 @@ fn filter_som_by_label(som: &Som, selector: &str, label: &str) -> Som {
 
     if filtered_regions.is_empty() {
         eprintln!(
-            "Warning: selector '{}' matched no labels - returning full SOM",
-            selector
+            "Warning: selector '{}' matched no labels - {}; returning full SOM",
+            selector, UNKNOWN_SELECTOR_GUIDANCE
         );
         return som.clone();
     }
@@ -2571,8 +2574,8 @@ where
 
     if filtered_regions.is_empty() {
         eprintln!(
-            "Warning: selector '{}' matched no elements - returning full SOM",
-            selector
+            "Warning: selector '{}' matched no elements - {}; returning full SOM",
+            selector, UNKNOWN_SELECTOR_GUIDANCE
         );
         return som.clone();
     }
@@ -2726,6 +2729,31 @@ fn filter_elements_by_id(elements: &[Element], id: &str) -> Vec<Element> {
 mod tests {
     use super::*;
     use crate::som::types::*;
+
+    #[test]
+    fn unknown_selector_guidance_covers_common_agent_hooks() {
+        for hint in [
+            "selector='landmark'",
+            "selector='main'",
+            "interactive",
+            "role=<region>",
+            "role=<element>",
+            "action:<verb>",
+            "label:<text>",
+            "aria-label:<text>",
+            "#id",
+            ".class",
+            "testid=<value>",
+            "data-testid=<value>",
+            "[aria-label]",
+            "[data-*]",
+        ] {
+            assert!(
+                UNKNOWN_SELECTOR_GUIDANCE.contains(hint),
+                "missing selector guidance: {hint}"
+            );
+        }
+    }
 
     fn make_test_som() -> Som {
         Som {
