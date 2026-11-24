@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 pub const MAX_SELECTOR_BYTES: usize = 256;
 
 const UNKNOWN_SELECTOR_GUIDANCE: &str =
-    "try selector='landmark' to discover regions, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, #id, .class, testid=<value>, or [aria-label]";
+    "try selector='landmark' to discover regions, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, #id, .class, testid=<value>, or [aria-label] / [data-*]";
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
@@ -2726,6 +2726,27 @@ fn filter_elements_by_id(elements: &[Element], id: &str) -> Vec<Element> {
 mod tests {
     use super::*;
     use crate::som::types::*;
+
+    #[test]
+    fn unknown_selector_guidance_covers_common_agent_hooks() {
+        for hint in [
+            "selector='landmark'",
+            "role=<region>",
+            "role=<element>",
+            "action:<verb>",
+            "label:<text>",
+            "#id",
+            ".class",
+            "testid=<value>",
+            "[aria-label]",
+            "[data-*]",
+        ] {
+            assert!(
+                UNKNOWN_SELECTOR_GUIDANCE.contains(hint),
+                "missing selector guidance: {hint}"
+            );
+        }
+    }
 
     fn make_test_som() -> Som {
         Som {
