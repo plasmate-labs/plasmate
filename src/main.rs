@@ -141,6 +141,9 @@ enum Commands {
         ///   --selector interactive     (only actionable elements)
         ///   --selector click           (only click targets; action:click also works)
         ///   --selector type            (only typing targets; action:type also works)
+        ///   --selector textarea --format text
+        ///                              (all multiline form fields as plain text;
+        ///                               "text areas" and "multiline" also work)
         ///   --selector type_text      (MCP alias for typing targets; type-text and type text also work)
         ///   --selector clear           (only clearable inputs; action:clear also works)
         ///   --selector clear_text     (MCP alias for clearable inputs; clear-text and clear text also work)
