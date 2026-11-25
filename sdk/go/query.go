@@ -31,6 +31,12 @@ func normalizeRegionRoleAlias(role string) string {
 	aliases := map[string]string{
 		"article":            "content",
 		"articles":           "content",
+		"article_region":     "content",
+		"article_regions":    "content",
+		"article-region":     "content",
+		"article-regions":    "content",
+		"article region":     "content",
+		"article regions":    "content",
 		"asides":             "aside",
 		"banner":             "header",
 		"complementary":      "aside",
