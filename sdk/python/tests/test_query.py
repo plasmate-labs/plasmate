@@ -1270,6 +1270,21 @@ class TestFindInteractive:
 
 
 class TestGetActionPlan:
+    def test_preserves_aria_braillelabel_metadata(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="braille-action",
+                role=ElementRole.button,
+                actions=["click"],
+                attrs=ElementAttrs(aria={"braillelabel": "Shortcut key"}),
+            )
+        )
+
+        target = get_action_plan(sample_som)[-1]
+
+        assert target["aria_braillelabel"] == "Shortcut key"
+        assert target["label"] == "Shortcut key"
+
     def test_action_target_by_label_normalizes_whitespace(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(
