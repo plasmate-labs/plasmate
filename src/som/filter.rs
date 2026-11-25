@@ -903,7 +903,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     .filter_map(|key| attrs.get(key))
                     .any(is_true)
             }) || element.hints.as_ref().is_some_and(|hints| {
-                hints.iter().any(|hint| hint.eq_ignore_ascii_case("readonly"))
+                hints.iter().any(|hint| {
+                    collapse_selector_whitespace(hint).eq_ignore_ascii_case("readonly")
+                })
             });
             let is_locked = if matches!(
                 selector_lower.as_str(),
@@ -3507,6 +3509,17 @@ mod tests {
         let editable = apply_selector(&som, "editable");
         assert_eq!(editable.regions[0].elements.len(), 1);
         assert_eq!(editable.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_normalized_readonly_hints() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].hints = Some(vec!["read-only".to_string()]);
+
+        let readonly = apply_selector(&som, "readonly");
+        assert_eq!(readonly.regions[0].elements.len(), 1);
+        assert_eq!(readonly.regions[0].elements[0].id, "e2");
     }
 
     #[test]
