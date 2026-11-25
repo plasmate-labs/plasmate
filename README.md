@@ -225,7 +225,9 @@ Use `selector="readonly"` (also `read-only`, `read_only`, `read only`, or
 `readonly controls` / `read-only-controls`) or `selector="locked"` (also
 `locked control`, `locked controls`, `locked_control`, and `locked-control`) to
 match readonly controls; use
-`selector="editable"` to isolate controls by their effective readonly state.
+`selector="editable"` (or `selector="writable"`, including their
+`controls`/hyphenated/underscore aliases) to isolate controls by their
+effective readonly state.
 through `selector="h6"`
 (or `heading1` through `heading6`) to isolate a heading level, or an action selector such as `selector="click"`
 (the equivalent `selector="action:click"` also works), `selector="type"`,

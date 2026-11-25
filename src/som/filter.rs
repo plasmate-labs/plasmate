@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 pub const MAX_SELECTOR_BYTES: usize = 256;
 
 const UNKNOWN_SELECTOR_GUIDANCE: &str =
-    "try selector='landmark' to discover regions, selector='main' for token-saving page content, interactive for controls, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, aria-label:<text>, #id, .class, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
+    "try selector='landmark' to discover regions, selector='main' for token-saving page content, interactive for controls, disabled/enabled or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, aria-label:<text>, #id, .class, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
@@ -173,7 +173,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   and common HTML boolean attributes such as `[disabled]`, `[checked]`, and `[required]`
 ///   (use `disabled`/`enabled`, `readonly`/`read-only`/`read_only`, `locked`, or
 ///   `readonly controls`/`read-only-controls`/`locked_control` to discover controls by their
-///   effective locked state; `editable`/`editable controls` selects the inverse)
+///   effective locked state; `editable`/`writable` (and their `controls` forms) selects the inverse)
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
 ///   selected by presence or value, including ARIA attributes introduced after
 ///   this parser. This covers application-specific test and state hooks. CSS
@@ -873,12 +873,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "disabled-control"
             | "disabled_control"
             | "disabled-controls"
+            | "disabled control"
             | "enabled"
             | "enabled controls"
             | "enabled_controls"
             | "enabled-control"
             | "enabled_control"
             | "enabled-controls"
+            | "enabled control"
             | "readonly"
             | "read-only"
             | "read_only"
@@ -909,6 +911,13 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "editable_control"
             | "editable-control"
             | "editable"
+            | "writable controls"
+            | "writable_controls"
+            | "writable-control"
+            | "writable_control"
+            | "writable-controls"
+            | "writable control"
+            | "writable"
     ) {
         let want_disabled = matches!(
             selector_lower.as_str(),
@@ -918,6 +927,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 | "disabled-control"
                 | "disabled_control"
                 | "disabled-controls"
+                | "disabled control"
                 | "readonly"
                 | "read-only"
                 | "read_only"
@@ -996,6 +1006,13 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     | "editable_control"
                     | "editable-control"
                     | "editable"
+                    | "writable controls"
+                    | "writable_controls"
+                    | "writable-control"
+                    | "writable_control"
+                    | "writable-controls"
+                    | "writable control"
+                    | "writable"
             ) {
                 if matches!(
                     selector_lower.as_str(),
@@ -3579,6 +3596,7 @@ mod tests {
             "disabled-control",
             "disabled_control",
             "disabled-controls",
+            "disabled control",
         ] {
             let disabled = apply_selector(&som, selector);
             assert_eq!(disabled.regions[0].elements[0].id, "e2", "selector: {selector}");
@@ -3590,6 +3608,7 @@ mod tests {
             "enabled-control",
             "enabled_control",
             "enabled-controls",
+            "enabled control",
         ] {
             let enabled = apply_selector(&som, selector);
             assert_eq!(enabled.regions[0].elements[0].id, "e3", "selector: {selector}");
@@ -3673,6 +3692,13 @@ mod tests {
             "editable control",
             "editable_control",
             "editable-control",
+            "writable",
+            "writable controls",
+            "writable_controls",
+            "writable-control",
+            "writable_control",
+            "writable-controls",
+            "writable control",
         ] {
             let editable = apply_selector(&som, selector);
             assert_eq!(editable.regions[0].elements.len(), 1, "selector: {selector}");
