@@ -172,7 +172,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, `[lang]`, `[dir]`, `[title]`,
 ///   and common HTML boolean attributes such as `[disabled]`, `[checked]`, and `[required]`
 ///   (use `disabled`/`enabled`, `readonly`/`read-only`/`read_only`, `locked`, or
-///   `readonly controls`/`read-only-controls` to discover controls by their
+///   `readonly controls`/`read-only-controls`/`locked_control` to discover controls by their
 ///   effective locked state; `editable` selects the inverse)
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
 ///   selected by presence or value, including ARIA attributes introduced after
@@ -886,6 +886,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "locked controls"
             | "locked_controls"
             | "locked-controls"
+            | "locked_control"
             | "locked control"
             | "locked-control"
             | "editable"
@@ -955,6 +956,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     | "locked controls"
                     | "locked_controls"
                     | "locked-controls"
+                    | "locked_control"
                     | "locked control"
                     | "locked-control"
                     | "editable"
@@ -965,6 +967,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                         | "locked controls"
                         | "locked_controls"
                         | "locked-controls"
+                        | "locked_control"
                         | "locked control"
                         | "locked-control"
                 ) {
@@ -3550,7 +3553,7 @@ mod tests {
         som.regions[1].elements[0].attrs = Some(serde_json::json!({"disabled": true}));
         som.regions[1].elements[1].attrs = Some(serde_json::json!({"readonly": true}));
 
-        for selector in ["locked", "locked-control", "locked controls"] {
+        for selector in ["locked", "locked-control", "locked_control", "locked controls"] {
             let locked = apply_selector(&som, selector);
             let ids: Vec<_> = locked.regions[0]
                 .elements
