@@ -222,7 +222,8 @@ to return only actionable elements. Use `selector="disabled"` or
 `selector="enabled"` to isolate controls by effective disabled state,
 including `aria-disabled` and semantic disabled hints. `selector="h1"`
 Use `selector="readonly"` (also `read-only`, `read_only`, `read only`, or
-`readonly controls` / `read-only-controls`) or
+`readonly controls` / `read-only-controls`) or `selector="locked"` to match
+readonly controls; use
 `selector="editable"` to isolate controls by their effective readonly state.
 through `selector="h6"`
 (or `heading1` through `heading6`) to isolate a heading level, or an action selector such as `selector="click"`
