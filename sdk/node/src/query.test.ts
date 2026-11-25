@@ -565,6 +565,7 @@ describe('findByLabel', () => {
           role: 'main',
           elements: [
             { id: 'aria', role: 'button', attrs: { aria: { label: 'Open menu' } } },
+            { id: 'aria-braille', role: 'button', attrs: { aria: { braillelabel: 'Shortcut key' } } },
             {
               id: 'aria-description',
               role: 'text_input',
@@ -579,6 +580,7 @@ describe('findByLabel', () => {
     };
 
     assert.deepEqual(findByLabel(som, 'menu').map((el) => el.id), ['aria']);
+    assert.deepEqual(findByLabel(som, 'shortcut').map((el) => el.id), ['aria-braille']);
     assert.deepEqual(findByLabel(som, 'password requirements').map((el) => el.id), [
       'aria-description',
     ]);
@@ -1514,6 +1516,24 @@ describe('findByText', () => {
 });
 
 describe('getActionPlan', () => {
+  it('preserves aria-braillelabel metadata for action targets', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [{
+        ...fixture.regions[1],
+        elements: [{
+          id: 'braille-action',
+          role: 'button',
+          actions: ['click'],
+          attrs: { aria: { braillelabel: 'Shortcut key' } },
+        }],
+      }],
+    };
+
+    assert.equal(getActionPlan(som)[0].aria_braillelabel, 'Shortcut key');
+    assert.equal(getActionPlan(som)[0].label, 'Shortcut key');
+  });
+
   it('treats spec-compliant aria-disabled controls as unavailable', () => {
     const som: Som = {
       ...fixture,

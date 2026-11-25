@@ -383,6 +383,42 @@ class TestFindByLabel:
             "e11"
         ]
 
+    def test_finds_aria_braillelabel_fallback(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e11",
+                role=ElementRole.button,
+                attrs=ElementAttrs(aria={"braillelabel": "Shortcut key"}),
+            )
+        )
+
+        assert [el.id for el in find_by_label(sample_som, "shortcut")] == ["e11"]
+
+    def test_finds_additional_compiled_label_fallbacks(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.extend(
+            [
+                SomElement(
+                    id="e_value",
+                    role=ElementRole.text_input,
+                    attrs=ElementAttrs(aria={"valuetext": "75 percent"}),
+                ),
+                SomElement(
+                    id="e_role",
+                    role=ElementRole.button,
+                    attrs=ElementAttrs(aria={"roledescription": "dismiss control"}),
+                ),
+                SomElement(
+                    id="e_section",
+                    role=ElementRole.paragraph,
+                    attrs=ElementAttrs(section_label="Account settings"),
+                ),
+            ]
+        )
+
+        assert [el.id for el in find_by_label(sample_som, "percent")] == ["e_value"]
+        assert [el.id for el in find_by_label(sample_som, "dismiss")] == ["e_role"]
+        assert [el.id for el in find_by_label(sample_som, "account")] == ["e_section"]
+
     def test_normalizes_label_whitespace(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(id="e11", role=ElementRole.button, label="Billing\n details")
@@ -1259,6 +1295,21 @@ class TestFindInteractive:
 
 
 class TestGetActionPlan:
+    def test_preserves_aria_braillelabel_metadata(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="braille-action",
+                role=ElementRole.button,
+                actions=["click"],
+                attrs=ElementAttrs(aria={"braillelabel": "Shortcut key"}),
+            )
+        )
+
+        target = get_action_plan(sample_som)[-1]
+
+        assert target["aria_braillelabel"] == "Shortcut key"
+        assert target["label"] == "Shortcut key"
+
     def test_action_target_by_label_normalizes_whitespace(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(

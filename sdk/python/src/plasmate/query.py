@@ -722,6 +722,7 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                     "valuenow",
                     "valuetext",
                     "label",
+                    "braillelabel",
                     "labelledby",
                     "describedby",
                 ):
@@ -733,6 +734,8 @@ def get_action_plan(som: Som) -> List[Dict[str, object]]:
                             if aria_key == "placeholder"
                             else "aria_label"
                             if aria_key == "label"
+                            else "aria_braillelabel"
+                            if aria_key == "braillelabel"
                             else aria_key
                         )
                         item[item_key] = attrs.aria[aria_key]
@@ -1406,7 +1409,11 @@ def _label_candidates(element: SomElement) -> List[str]:
             value
             for value in (
                 aria_label,
+                (element.attrs.aria or {}).get("braillelabel"),
                 (element.attrs.aria or {}).get("description"),
+                (element.attrs.aria or {}).get("valuetext"),
+                (element.attrs.aria or {}).get("roledescription"),
+                element.attrs.section_label,
                 element.attrs.title,
                 element.attrs.placeholder,
                 element.attrs.alt,
