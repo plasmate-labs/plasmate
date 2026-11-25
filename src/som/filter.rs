@@ -873,12 +873,14 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "disabled-control"
             | "disabled_control"
             | "disabled-controls"
+            | "disabled control"
             | "enabled"
             | "enabled controls"
             | "enabled_controls"
             | "enabled-control"
             | "enabled_control"
             | "enabled-controls"
+            | "enabled control"
             | "readonly"
             | "read-only"
             | "read_only"
@@ -925,6 +927,7 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 | "disabled-control"
                 | "disabled_control"
                 | "disabled-controls"
+                | "disabled control"
                 | "readonly"
                 | "read-only"
                 | "read_only"
@@ -3593,6 +3596,7 @@ mod tests {
             "disabled-control",
             "disabled_control",
             "disabled-controls",
+            "disabled control",
         ] {
             let disabled = apply_selector(&som, selector);
             assert_eq!(disabled.regions[0].elements[0].id, "e2", "selector: {selector}");
@@ -3604,6 +3608,7 @@ mod tests {
             "enabled-control",
             "enabled_control",
             "enabled-controls",
+            "enabled control",
         ] {
             let enabled = apply_selector(&som, selector);
             assert_eq!(enabled.regions[0].elements[0].id, "e3", "selector: {selector}");
