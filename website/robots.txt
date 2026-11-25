@@ -1,3 +1,11 @@
+# IMPORTANT: The published plasmate.app robots.txt must not start with a
+# Cloudflare managed block that sets Disallow: / for GPTBot, ClaudeBot,
+# Google-Extended, or similar crawlers. That managed prefix conflicts with
+# the allow rules below and with the Content-Signal on this file.
+# In the Cloudflare dashboard for plasmate.app, turn off managed robots.txt
+# / AI Crawl Control rules that prepend a blanket Disallow: / for those bots.
+# This file is the source of truth: AI crawlers are welcome.
+
 # Plasmate - Maximum AI Visibility
 # We build tools for AI agents, so we welcome AI crawlers.
 
