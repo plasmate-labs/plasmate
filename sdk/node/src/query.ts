@@ -228,6 +228,7 @@ export interface ActionPlanItem {
   aria_placeholder?: string;
   aria_autocomplete?: string;
   aria_label?: string;
+  aria_braillelabel?: string;
   labelledby?: string;
   describedby?: string;
   active_descendant?: string;
@@ -767,6 +768,7 @@ export function getActionPlan(som: Som): ActionPlanItem[] {
     if (el.attrs?.aria?.placeholder !== undefined) item.aria_placeholder = el.attrs.aria.placeholder;
     if (el.attrs?.aria?.autocomplete !== undefined) item.aria_autocomplete = el.attrs.aria.autocomplete;
     if (el.attrs?.aria?.label !== undefined) item.aria_label = el.attrs.aria.label;
+    if (el.attrs?.aria?.braillelabel !== undefined) item.aria_braillelabel = el.attrs.aria.braillelabel;
     if (el.attrs?.aria?.labelledby !== undefined) item.labelledby = el.attrs.aria.labelledby;
     if (el.attrs?.aria?.describedby !== undefined) item.describedby = el.attrs.aria.describedby;
     if (el.attrs?.aria?.active_descendant !== undefined) item.active_descendant = el.attrs.aria.active_descendant;
