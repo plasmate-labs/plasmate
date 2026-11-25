@@ -875,8 +875,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "read only"
             | "readonly controls"
             | "readonly_controls"
+            | "readonly_control"
             | "readonly-controls"
             | "read-only controls"
+            | "read_only_controls"
+            | "read_only_control"
             | "read_only controls"
             | "readonly control"
             | "readonly-control"
@@ -906,8 +909,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 | "read only"
                 | "readonly controls"
                 | "readonly_controls"
+                | "readonly_control"
                 | "readonly-controls"
                 | "read-only controls"
+                | "read_only_controls"
+                | "read_only_control"
                 | "read_only controls"
                 | "readonly control"
                 | "readonly-control"
@@ -951,8 +957,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     | "read only"
                     | "readonly controls"
                     | "readonly_controls"
+                    | "readonly_control"
                     | "readonly-controls"
                     | "read-only controls"
+                    | "read_only_controls"
+                    | "read_only_control"
                     | "read_only controls"
                     | "readonly control"
                     | "readonly-control"
@@ -3588,8 +3597,11 @@ mod tests {
             "read only",
             "readonly controls",
             "readonly_controls",
+            "readonly_control",
             "readonly-controls",
             "read-only controls",
+            "read_only_controls",
+            "read_only_control",
             "read_only controls",
             "readonly control",
             "readonly-control",
