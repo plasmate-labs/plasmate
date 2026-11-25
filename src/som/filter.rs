@@ -171,8 +171,9 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
 ///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, `[lang]`, `[dir]`, `[title]`,
 ///   and common HTML boolean attributes such as `[disabled]`, `[checked]`, and `[required]`
-///   (use `disabled`/`enabled` or `readonly`/`read-only`/`read_only` and
-///   `editable` to discover controls by their effective locked state)
+///   (use `disabled`/`enabled`, `readonly`/`read-only`/`read_only`, `locked`, or
+///   `readonly controls`/`read-only-controls`/`locked_control` to discover controls by their
+///   effective locked state; `editable` selects the inverse)
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
 ///   selected by presence or value, including ARIA attributes introduced after
 ///   this parser. This covers application-specific test and state hooks. CSS
@@ -872,11 +873,40 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "read-only"
             | "read_only"
             | "read only"
+            | "readonly controls"
+            | "readonly_controls"
+            | "readonly-controls"
+            | "read-only controls"
+            | "read_only controls"
+            | "readonly control"
+            | "readonly-control"
+            | "read-only control"
+            | "read-only-control"
+            | "locked"
+            | "locked controls"
+            | "locked_controls"
+            | "locked-controls"
+            | "locked_control"
+            | "locked control"
+            | "locked-control"
             | "editable"
     ) {
         let want_disabled = matches!(
             selector_lower.as_str(),
-            "disabled" | "readonly" | "read-only" | "read_only" | "read only"
+            "disabled"
+                | "readonly"
+                | "read-only"
+                | "read_only"
+                | "read only"
+                | "readonly controls"
+                | "readonly_controls"
+                | "readonly-controls"
+                | "read-only controls"
+                | "read_only controls"
+                | "readonly control"
+                | "readonly-control"
+                | "read-only control"
+                | "read-only-control"
         );
         return filter_som_elements(som, selector, |element| {
             let is_true = |value: &serde_json::Value| {
@@ -909,9 +939,42 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             });
             let is_locked = if matches!(
                 selector_lower.as_str(),
-                "readonly" | "read-only" | "read_only" | "read only" | "editable"
+                "readonly"
+                    | "read-only"
+                    | "read_only"
+                    | "read only"
+                    | "readonly controls"
+                    | "readonly_controls"
+                    | "readonly-controls"
+                    | "read-only controls"
+                    | "read_only controls"
+                    | "readonly control"
+                    | "readonly-control"
+                    | "read-only control"
+                    | "read-only-control"
+                    | "locked"
+                    | "locked controls"
+                    | "locked_controls"
+                    | "locked-controls"
+                    | "locked_control"
+                    | "locked control"
+                    | "locked-control"
+                    | "editable"
             ) {
-                is_readonly
+                if matches!(
+                    selector_lower.as_str(),
+                    "locked"
+                        | "locked controls"
+                        | "locked_controls"
+                        | "locked-controls"
+                        | "locked_control"
+                        | "locked control"
+                        | "locked-control"
+                ) {
+                    is_readonly || is_disabled
+                } else {
+                    is_readonly
+                }
             } else {
                 is_disabled
             };
@@ -3484,12 +3547,43 @@ mod tests {
     }
 
     #[test]
+    fn test_selector_locked_matches_disabled_or_readonly_controls() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"disabled": true}));
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"readonly": true}));
+
+        for selector in ["locked", "locked-control", "locked_control", "locked controls"] {
+            let locked = apply_selector(&som, selector);
+            let ids: Vec<_> = locked.regions[0]
+                .elements
+                .iter()
+                .map(|element| element.id.as_str())
+                .collect();
+            assert_eq!(ids, ["e2", "e3"], "selector: {selector}");
+        }
+    }
+
+    #[test]
     fn test_selector_matches_readonly_spelling_aliases() {
         let mut som = make_test_som();
         som.regions[0].elements.clear();
         som.regions[1].elements[0].attrs = Some(serde_json::json!({"readonly": true}));
 
-        for selector in ["read-only", "read_only", "read only"] {
+        for selector in [
+            "read-only",
+            "read_only",
+            "read only",
+            "readonly controls",
+            "readonly_controls",
+            "readonly-controls",
+            "read-only controls",
+            "read_only controls",
+            "readonly control",
+            "readonly-control",
+            "read-only control",
+            "read-only-control",
+        ] {
             let readonly = apply_selector(&som, selector);
             assert_eq!(readonly.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(readonly.regions[0].elements[0].id, "e2", "selector: {selector}");
