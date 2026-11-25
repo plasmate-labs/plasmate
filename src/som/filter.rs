@@ -173,7 +173,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   and common HTML boolean attributes such as `[disabled]`, `[checked]`, and `[required]`
 ///   (use `disabled`/`enabled`, `readonly`/`read-only`/`read_only`, `locked`, or
 ///   `readonly controls`/`read-only-controls`/`locked_control` to discover controls by their
-///   effective locked state; `editable` selects the inverse)
+///   effective locked state; `editable`/`editable controls` selects the inverse)
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
 ///   selected by presence or value, including ARIA attributes introduced after
 ///   this parser. This covers application-specific test and state hooks. CSS
@@ -889,6 +889,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "locked_control"
             | "locked control"
             | "locked-control"
+            | "editable controls"
+            | "editable_controls"
+            | "editable-controls"
+            | "editable control"
+            | "editable_control"
+            | "editable-control"
             | "editable"
     ) {
         let want_disabled = matches!(
@@ -959,6 +965,12 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     | "locked_control"
                     | "locked control"
                     | "locked-control"
+                    | "editable controls"
+                    | "editable_controls"
+                    | "editable-controls"
+                    | "editable control"
+                    | "editable_control"
+                    | "editable-control"
                     | "editable"
             ) {
                 if matches!(
@@ -3587,6 +3599,27 @@ mod tests {
             let readonly = apply_selector(&som, selector);
             assert_eq!(readonly.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(readonly.regions[0].elements[0].id, "e2", "selector: {selector}");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_editable_control_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"readonly": true}));
+
+        for selector in [
+            "editable",
+            "editable controls",
+            "editable_controls",
+            "editable-controls",
+            "editable control",
+            "editable_control",
+            "editable-control",
+        ] {
+            let editable = apply_selector(&som, selector);
+            assert_eq!(editable.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(editable.regions[0].elements[0].id, "e3", "selector: {selector}");
         }
     }
 
