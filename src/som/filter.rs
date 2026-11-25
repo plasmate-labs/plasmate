@@ -173,7 +173,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   and common HTML boolean attributes such as `[disabled]`, `[checked]`, and `[required]`
 ///   (use `disabled`/`enabled`, `readonly`/`read-only`/`read_only`, `locked`, or
 ///   `readonly controls`/`read-only-controls`/`locked_control` to discover controls by their
-///   effective locked state; `editable`/`editable controls` selects the inverse)
+///   effective locked state; `editable`/`writable` (and their `controls` forms) selects the inverse)
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
 ///   selected by presence or value, including ARIA attributes introduced after
 ///   this parser. This covers application-specific test and state hooks. CSS
@@ -909,6 +909,13 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "editable_control"
             | "editable-control"
             | "editable"
+            | "writable controls"
+            | "writable_controls"
+            | "writable-control"
+            | "writable_control"
+            | "writable-controls"
+            | "writable control"
+            | "writable"
     ) {
         let want_disabled = matches!(
             selector_lower.as_str(),
@@ -996,6 +1003,13 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     | "editable_control"
                     | "editable-control"
                     | "editable"
+                    | "writable controls"
+                    | "writable_controls"
+                    | "writable-control"
+                    | "writable_control"
+                    | "writable-controls"
+                    | "writable control"
+                    | "writable"
             ) {
                 if matches!(
                     selector_lower.as_str(),
@@ -3673,6 +3687,13 @@ mod tests {
             "editable control",
             "editable_control",
             "editable-control",
+            "writable",
+            "writable controls",
+            "writable_controls",
+            "writable-control",
+            "writable_control",
+            "writable-controls",
+            "writable control",
         ] {
             let editable = apply_selector(&som, selector);
             assert_eq!(editable.regions[0].elements.len(), 1, "selector: {selector}");
