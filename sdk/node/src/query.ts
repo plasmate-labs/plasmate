@@ -629,6 +629,7 @@ function labelCandidates(el: SomElement): string[] {
     el.label,
     el.text,
     el.attrs?.aria?.label,
+    el.attrs?.aria?.braillelabel,
     el.attrs?.aria?.description,
     el.attrs?.aria?.valuetext,
     el.attrs?.aria?.roledescription,

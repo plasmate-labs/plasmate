@@ -383,6 +383,17 @@ class TestFindByLabel:
             "e11"
         ]
 
+    def test_finds_aria_braillelabel_fallback(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e11",
+                role=ElementRole.button,
+                attrs=ElementAttrs(aria={"braillelabel": "Shortcut key"}),
+            )
+        )
+
+        assert [el.id for el in find_by_label(sample_som, "shortcut")] == ["e11"]
+
     def test_normalizes_label_whitespace(self, sample_som: Som) -> None:
         sample_som.regions[1].elements.append(
             SomElement(id="e11", role=ElementRole.button, label="Billing\n details")
