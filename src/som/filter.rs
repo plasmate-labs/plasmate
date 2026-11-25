@@ -868,7 +868,17 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     if matches!(
         selector_lower.as_str(),
         "disabled"
+            | "disabled controls"
+            | "disabled_controls"
+            | "disabled-control"
+            | "disabled_control"
+            | "disabled-controls"
             | "enabled"
+            | "enabled controls"
+            | "enabled_controls"
+            | "enabled-control"
+            | "enabled_control"
+            | "enabled-controls"
             | "readonly"
             | "read-only"
             | "read_only"
@@ -903,6 +913,11 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         let want_disabled = matches!(
             selector_lower.as_str(),
             "disabled"
+                | "disabled controls"
+                | "disabled_controls"
+                | "disabled-control"
+                | "disabled_control"
+                | "disabled-controls"
                 | "readonly"
                 | "read-only"
                 | "read_only"
@@ -3549,6 +3564,36 @@ mod tests {
         let enabled = apply_selector(&som, "enabled");
         assert_eq!(enabled.regions[0].elements.len(), 1);
         assert_eq!(enabled.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_disabled_and_enabled_control_aliases() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"disabled": true}));
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"disabled": false}));
+
+        for selector in [
+            "disabled controls",
+            "disabled_controls",
+            "disabled-control",
+            "disabled_control",
+            "disabled-controls",
+        ] {
+            let disabled = apply_selector(&som, selector);
+            assert_eq!(disabled.regions[0].elements[0].id, "e2", "selector: {selector}");
+        }
+
+        for selector in [
+            "enabled controls",
+            "enabled_controls",
+            "enabled-control",
+            "enabled_control",
+            "enabled-controls",
+        ] {
+            let enabled = apply_selector(&som, selector);
+            assert_eq!(enabled.regions[0].elements[0].id, "e3", "selector: {selector}");
+        }
     }
 
     #[test]
