@@ -870,7 +870,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 value.as_bool().unwrap_or_else(|| {
                     value.as_i64().is_some_and(|value| value == 1)
                         || value.as_str().is_some_and(|value| {
-                            value.eq_ignore_ascii_case("true") || value == "1"
+                            value.eq_ignore_ascii_case("true")
+                                || value.eq_ignore_ascii_case("disabled")
+                                || value == "1"
                         })
                 })
             };
@@ -3468,6 +3470,23 @@ mod tests {
             .flat_map(|region| region.elements.iter().map(|element| element.id.as_str()))
             .collect();
         assert_eq!(enabled_ids, vec!["e2"]);
+    }
+
+    #[test]
+    fn test_selector_matches_string_disabled_boolean_signal() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].attrs =
+            Some(serde_json::json!({"disabled": "disabled"}));
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"disabled": ""}));
+
+        let disabled = apply_selector(&som, "disabled");
+        assert_eq!(disabled.regions[0].elements.len(), 1);
+        assert_eq!(disabled.regions[0].elements[0].id, "e2");
+
+        let enabled = apply_selector(&som, "enabled");
+        assert_eq!(enabled.regions[0].elements.len(), 1);
+        assert_eq!(enabled.regions[0].elements[0].id, "e3");
     }
 
     #[test]
