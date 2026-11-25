@@ -890,6 +890,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                     .into_iter()
                     .filter_map(|key| attrs.get(key))
                     .any(is_true)
+            }) || element.hints.as_ref().is_some_and(|hints| {
+                hints.iter().any(|hint| hint.eq_ignore_ascii_case("readonly"))
             });
             let is_locked = if matches!(selector_lower.as_str(), "readonly" | "editable") {
                 is_readonly
@@ -3454,6 +3456,21 @@ mod tests {
         som.regions[0].elements.clear();
         som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria-readonly": "true"}));
         som.regions[1].elements[1].attrs = Some(serde_json::json!({"readonly": false}));
+
+        let readonly = apply_selector(&som, "readonly");
+        assert_eq!(readonly.regions[0].elements.len(), 1);
+        assert_eq!(readonly.regions[0].elements[0].id, "e2");
+
+        let editable = apply_selector(&som, "editable");
+        assert_eq!(editable.regions[0].elements.len(), 1);
+        assert_eq!(editable.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_readonly_hint() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].hints = Some(vec!["readonly".to_string()]);
 
         let readonly = apply_selector(&som, "readonly");
         assert_eq!(readonly.regions[0].elements.len(), 1);
