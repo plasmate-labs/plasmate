@@ -171,7 +171,8 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   `[aria-valuenow]`, `[aria-valuetext]`, `[aria-sort]`, `[aria-relevant]`, `[role]`, `[inert]`,
 ///   `[aria-atomic]`, `[aria-errormessage]`, `[aria-placeholder]`, `[lang]`, `[dir]`, `[title]`,
 ///   and common HTML boolean attributes such as `[disabled]`, `[checked]`, and `[required]`
-///   (use `disabled` or `enabled` to discover controls by their effective disabled state)
+///   (use `disabled`/`enabled` or `readonly`/`editable` to discover controls by
+///   their effective locked state)
 ///   match. Any `data-*`, `data_*`, `aria-*`, or `aria_*` attribute can also be
 ///   selected by presence or value, including ARIA attributes introduced after
 ///   this parser. This covers application-specific test and state hooks. CSS
@@ -863,8 +864,8 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     // merely the presence of a `disabled` attribute. Handle them before the
     // generic bare-attribute presence aliases below.
     let selector_lower = selector.to_ascii_lowercase();
-    if matches!(selector_lower.as_str(), "disabled" | "enabled") {
-        let want_disabled = selector_lower == "disabled";
+    if matches!(selector_lower.as_str(), "disabled" | "enabled" | "readonly" | "editable") {
+        let want_disabled = matches!(selector_lower.as_str(), "disabled" | "readonly");
         return filter_som_elements(som, selector, |element| {
             let is_true = |value: &serde_json::Value| {
                 value.as_bool().unwrap_or_else(|| {
@@ -884,7 +885,18 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             }) || element.hints.as_ref().is_some_and(|hints| {
                 hints.iter().any(|hint| hint.eq_ignore_ascii_case("disabled"))
             });
-            is_disabled == want_disabled
+            let is_readonly = element.attrs.as_ref().is_some_and(|attrs| {
+                ["readonly", "aria-readonly", "aria_readonly"]
+                    .into_iter()
+                    .filter_map(|key| attrs.get(key))
+                    .any(is_true)
+            });
+            let is_locked = if matches!(selector_lower.as_str(), "readonly" | "editable") {
+                is_readonly
+            } else {
+                is_disabled
+            };
+            is_locked == want_disabled
         });
     }
 
@@ -3434,6 +3446,22 @@ mod tests {
         let enabled = apply_selector(&som, "enabled");
         assert_eq!(enabled.regions[0].elements.len(), 1);
         assert_eq!(enabled.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_effective_readonly_state() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria-readonly": "true"}));
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"readonly": false}));
+
+        let readonly = apply_selector(&som, "readonly");
+        assert_eq!(readonly.regions[0].elements.len(), 1);
+        assert_eq!(readonly.regions[0].elements[0].id, "e2");
+
+        let editable = apply_selector(&som, "editable");
+        assert_eq!(editable.regions[0].elements.len(), 1);
+        assert_eq!(editable.regions[0].elements[0].id, "e3");
     }
 
     #[test]
