@@ -217,7 +217,7 @@ cookie operations, and validation-only replay. Query `tools/list` instead of
 depending on a hard-coded count; the authoritative registration is
 [`src/mcp/server.rs`](./src/mcp/server.rs).
 
-**Tip:** use `selector="main"` (also `maincontent`/`maincontents` and the `main_content`/`main-content`/`main content` forms, plus the corresponding `primary` region aliases) to strip nav/footer, `selector="article"` (or `article_region`/`article-region`/`article region`) to isolate content, `selector="sidebar"` (or `aside`/`asides`/`sidebars`) to isolate complementary content, or `selector="interactive"`
+**Tip:** use `selector="landmark"` to get a compact inventory of page regions before choosing a narrower selector. Use `selector="main"` (also `maincontent`/`maincontents` and the `main_content`/`main-content`/`main content` forms, plus the corresponding `primary` region aliases) to strip nav/footer, `selector="article"` (or `article_region`/`article-region`/`article region`) to isolate content, `selector="sidebar"` (or `aside`/`asides`/`sidebars`) to isolate complementary content, or `selector="interactive"`
 to return only actionable elements. Use `selector="disabled"` or
 `selector="enabled"` to isolate controls by effective disabled state,
 including `aria-disabled` and semantic disabled hints. `selector="h1"`
