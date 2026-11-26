@@ -242,7 +242,8 @@ action menu before the LLM sees the content. The MCP tool-name aliases
 `action:type_text`/`action:type-text`, `action:clear_text`/`action:clear-text`,
 and `action:select_option`/`action:select-option` forms) are also accepted
 for typing, clearing, and selection targets.
-Use `selector="landmark"` (or `selector="landmarks"`) first when you need a
+Use `selector="landmark"` (also `all_regions`, `all-regions`, or `all regions`,
+plus `selector="landmarks"`) first when you need a
 compact inventory of the page's compiled regions before choosing a narrower
 region selector; the inventory keeps region metadata and removes their
 elements.
