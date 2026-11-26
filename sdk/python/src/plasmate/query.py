@@ -165,6 +165,27 @@ def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomEleme
     return results
 
 
+def find_by_placeholder(
+    som: Som, placeholder: str, *, exact: bool = False
+) -> List[SomElement]:
+    """Find elements by placeholder text, with optional exact matching."""
+    normalized_placeholder = _normalize_label_text(placeholder)
+    if not normalized_placeholder:
+        return []
+    folded_placeholder = normalized_placeholder.casefold()
+    results: List[SomElement] = []
+    for element in flat_elements(som):
+        value = element.attrs.placeholder if element.attrs else None
+        if not isinstance(value, str):
+            continue
+        normalized_value = _normalize_label_text(value)
+        if (exact and normalized_placeholder == normalized_value) or (
+            not exact and folded_placeholder in normalized_value.casefold()
+        ):
+            results.append(element)
+    return results
+
+
 def find_by_tag(som: Som, tag: str) -> List[SomElement]:
     """Find all elements matching an element role or common HTML tag alias."""
     role_aliases = {
