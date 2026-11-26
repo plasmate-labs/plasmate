@@ -473,6 +473,10 @@ func TestFindByRoleAcceptsCommonRegionAliases(t *testing.T) {
 		{alias: "article_region", role: "content", id: "r_content"},
 		{alias: "article-regions", role: "content", id: "r_content"},
 		{alias: "article regions", role: "content", id: "r_content"},
+		{alias: "main-content", role: "main", id: "r_main"},
+		{alias: "main contents", role: "main", id: "r_main"},
+		{alias: "primary-content", role: "main", id: "r_main"},
+		{alias: "primary regions", role: "main", id: "r_main"},
 		{alias: "alertdialog", role: "dialog", id: "r_dialog"},
 		{alias: "alert-dialogs", role: "dialog", id: "r_dialog"},
 	} {
