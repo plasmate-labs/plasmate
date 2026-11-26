@@ -479,6 +479,17 @@ class TestFindByPlaceholder:
         )] == ["e9"]
         assert find_by_placeholder(sample_som, "YOU@EXAMPLE.COM", exact=True) == []
 
+    def test_finds_aria_placeholder_fallback(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e11",
+                role=ElementRole.text_input,
+                attrs=ElementAttrs(aria={"placeholder": "Search docs"}),
+            )
+        )
+
+        assert [el.id for el in find_by_placeholder(sample_som, "search")] == ["e11"]
+
 
 class TestFindByTag:
     def test_interactive_aliases_match_find_interactive(self, sample_som: Som) -> None:

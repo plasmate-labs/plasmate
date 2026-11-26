@@ -175,12 +175,20 @@ def find_by_placeholder(
     folded_placeholder = normalized_placeholder.casefold()
     results: List[SomElement] = []
     for element in flat_elements(som):
-        value = element.attrs.placeholder if element.attrs else None
-        if not isinstance(value, str):
-            continue
-        normalized_value = _normalize_label_text(value)
-        if (exact and normalized_placeholder == normalized_value) or (
-            not exact and folded_placeholder in normalized_value.casefold()
+        values = []
+        if element.attrs:
+            if isinstance(element.attrs.placeholder, str):
+                values.append(element.attrs.placeholder)
+            aria_placeholder = (element.attrs.aria or {}).get("placeholder")
+            if isinstance(aria_placeholder, str):
+                values.append(aria_placeholder)
+        if any(
+            (exact and normalized_placeholder == _normalize_label_text(value))
+            or (
+                not exact
+                and folded_placeholder in _normalize_label_text(value).casefold()
+            )
+            for value in values
         ):
             results.append(element)
     return results
