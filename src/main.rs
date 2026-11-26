@@ -405,7 +405,7 @@ enum Commands {
         /// --format`.
         #[arg(long, default_value = "json")]
         format: String,
-        /// Filter output to a specific SOM region, landmark inventory, heading level, role, action
+        /// Filter output to a specific SOM region or landmark inventory (try `landmark` or `all-regions` first), heading level, role, action
         /// surface, or element — same syntax as `plasmate fetch --selector` (e.g. `landmark`, `main`, `h1`,
         /// `button`, `interactive`, `action:click`, `action:type`,
         /// `action:clear`, `action:select`, `action:toggle`, `action:submit`,
