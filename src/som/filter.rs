@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 pub const MAX_SELECTOR_BYTES: usize = 256;
 
 const UNKNOWN_SELECTOR_GUIDANCE: &str =
-    "try selector='landmark' (or 'all-regions') to discover regions, selector='main' for token-saving page content, selector='h1' through selector='h6' for headings, interactive for controls, disabled/enabled or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, aria-label:<text>, #id, .class, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
+    "try selector='landmark' (or 'all-regions') to discover regions, selector='main' for token-saving page content, selector='h1' through selector='h6' for headings, interactive for controls, current for the aria-current item, disabled/enabled or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, aria-label:<text>, #id, .class, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
@@ -1068,6 +1068,30 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 is_disabled
             };
             is_locked == want_disabled
+        });
+    }
+
+    // A bare current selector is a semantic shorthand for elements carrying
+    // a meaningful aria-current value. Keep aria-current="false" excluded so
+    // callers can target the active/current item without matching opt-outs.
+    if matches!(
+        selector_lower.as_str(),
+        "current" | "current item" | "current-item" | "current_item"
+    ) {
+        return filter_som_elements(som, selector, |element| {
+            element.attrs.as_ref().is_some_and(|attrs| {
+                ["aria-current", "aria_current"]
+                    .into_iter()
+                    .filter_map(|key| attrs.get(key))
+                    .any(|value| match value {
+                        serde_json::Value::Bool(current) => *current,
+                        serde_json::Value::String(current) => {
+                            let current = current.trim();
+                            !current.is_empty() && !current.eq_ignore_ascii_case("false")
+                        }
+                        _ => false,
+                    })
+            })
         });
     }
 
@@ -8177,6 +8201,43 @@ mod tests {
                 .map(|element| element.id.as_str())
                 .collect();
             assert_eq!(ids, vec!["save", "e-content"], "selector: {selector}");
+    }
+
+    #[test]
+    fn test_selector_matches_current_aria_item_shorthand() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-current".to_string(),
+                role: ElementRole::Link,
+                html_id: None,
+                text: Some("Current".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-current": "page"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-not-current".to_string(),
+                role: ElementRole::Link,
+                html_id: None,
+                text: Some("Other".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-current": "false"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        for selector in ["current", "current item", "current-item", "current_item"] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, "e-current");
         }
     }
 
