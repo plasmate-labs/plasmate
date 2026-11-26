@@ -223,6 +223,8 @@ to return only actionable elements. Use `selector="disabled"` or
 including `aria-disabled` and semantic disabled hints. `selector="h1"`
 Use `selector="current"` (or `current item`) to isolate elements with a
 meaningful `aria-current` value such as `page` or `step`.
+Use `selector="required"` or `selector="optional"` to isolate form controls
+by effective required state, including `aria-required="true"`.
 Use `selector="readonly"` (also `read-only`, `read_only`, `read only`, or
 `readonly controls` / `read-only-controls`) or `selector="locked"` (also
 `locked control`, `locked controls`, `locked_control`, and `locked-control`) to
