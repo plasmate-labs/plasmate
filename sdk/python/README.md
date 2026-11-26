@@ -160,7 +160,10 @@ results = find_by_text(som, "sign up")
 # Use exact=True for a case-sensitive, whitespace-normalized match.
 exact_results = find_by_text(som, "Sign up", exact=True)
 labeled = find_by_label(som, "email")
-placeholders = find_by_placeholder(som, "you@example.com")
+# Placeholder searches are case-insensitive substring matches by default;
+# use exact=True for a case-sensitive, whitespace-normalized match.
+placeholders = find_by_placeholder(som, "example.com")
+exact_placeholders = find_by_placeholder(som, "you@example.com", exact=True)
 
 # Flatten all elements for iteration
 all_elements = flat_elements(som)
