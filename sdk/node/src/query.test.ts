@@ -457,6 +457,10 @@ describe('findByRole', () => {
     assert.deepEqual(findByRole(som, 'role = `navigation`').map((region) => region.id), ['r_nav']);
     assert.deepEqual(findByRole(som, 'navigation').map((region) => region.id), ['r_nav']);
     assert.deepEqual(findByRole(som, 'article').map((region) => region.id), ['r_content']);
+    for (const alias of ['article-region', 'article regions', 'primary', 'primary-content', 'primary regions']) {
+      const expected = alias.startsWith('article') ? ['r_content'] : ['r_main'];
+      assert.deepEqual(findByRole(som, alias).map((region) => region.id), expected, alias);
+    }
     for (const alias of ['content-info', 'content_info', 'content-infos', 'content_infos']) {
       assert.deepEqual(findByRole(som, alias).map((region) => region.id), ['r_footer'], alias);
     }
