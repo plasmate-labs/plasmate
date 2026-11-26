@@ -271,6 +271,31 @@ class TestFindByRole:
         for alias in ("article", "article_region", "article-region", "article region"):
             assert [region.id for region in find_by_role(content_som, alias)] == ["r_content"]
 
+    def test_finds_meaningful_aria_current_values(self, sample_som: Som) -> None:
+        current = SomElement(
+            id="e_current",
+            role=ElementRole.link,
+            text="Current",
+            attrs=ElementAttrs(aria={"current": "page"}),
+        )
+        opted_out = SomElement(
+            id="e_not_current",
+            role=ElementRole.link,
+            text="Not current",
+            attrs=ElementAttrs(aria={"current": "false"}),
+        )
+        som = sample_som.model_copy(
+            update={
+                "regions": [
+                    *sample_som.regions,
+                    SomRegion(id="r_current", role=RegionRole.navigation, elements=[current, opted_out]),
+                ]
+            }
+        )
+
+        for alias in ("current", "current-item"):
+            assert [element.id for element in find_by_tag(som, alias)] == ["e_current"]
+
     def test_finds_multiple_regions(self) -> None:
         som = Som(
             som_version="1.0",

@@ -381,6 +381,8 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "tree_grid": "table",
     }
     tag = _normalize_role_alias(tag)
+    if tag in {"current", "current_item"}:
+        return [element for element in flat_elements(som) if _is_current_element(element)]
     heading_level = _parse_heading_level_selector(tag)
     if tag in _TIME_INPUT_ALIASES:
         return [
@@ -456,6 +458,14 @@ def _is_time_element(element: SomElement) -> bool:
     return _element_role_matches(element, ElementRole.text_input) and _source_role_value_matches(
         attrs.input_type, "time"
     )
+
+
+def _is_current_element(element: SomElement) -> bool:
+    """Return whether an element carries a meaningful aria-current value."""
+    current = (element.attrs.aria or {}).get("current") if element.attrs else None
+    if isinstance(current, bool):
+        return current
+    return isinstance(current, str) and bool(current.strip()) and current.casefold() != "false"
 
 
 def _source_role_value_matches(value: object, expected: str) -> bool:
