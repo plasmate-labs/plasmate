@@ -260,6 +260,16 @@ class TestFindByRole:
             assert [region.id for region in find_by_role(sample_som, alias)] == [
                 "r_footer"
             ]
+        content_som = sample_som.model_copy(
+            update={
+                "regions": [
+                    *sample_som.regions,
+                    SomRegion(id="r_content", role=RegionRole.content, elements=[]),
+                ]
+            }
+        )
+        for alias in ("article", "article_region", "article-region", "article region"):
+            assert [region.id for region in find_by_role(content_som, alias)] == ["r_content"]
 
     def test_finds_multiple_regions(self) -> None:
         som = Som(

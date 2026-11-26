@@ -110,6 +110,8 @@ def find_by_role(som: Som, role: str) -> List[SomRegion]:
         "contents": "content",
         "article": "content",
         "articles": "content",
+        "article_region": "content",
+        "article_regions": "content",
         "region": "content",
         "regions": "content",
         "content_region": "content",
