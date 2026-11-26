@@ -588,7 +588,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             let is_meaningful = |value: &serde_json::Value| match value {
                 serde_json::Value::Bool(value) => *value,
                 serde_json::Value::String(value) => {
-                    !value.eq_ignore_ascii_case("false") && !value.eq_ignore_ascii_case("none")
+                    let value = value.trim();
+                    !value.is_empty()
+                        && !value.eq_ignore_ascii_case("false")
+                        && !value.eq_ignore_ascii_case("none")
                 }
                 _ => false,
             };
@@ -8162,8 +8165,8 @@ mod tests {
     fn test_current_selector_matches_meaningful_aria_current_values() {
         let mut som = make_test_som();
         som.regions[0].elements[0].attrs = Some(serde_json::json!({"aria-current": "page"}));
-        som.regions[0].elements[1].attrs = Some(serde_json::json!({"aria-current": "false"}));
-        som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria": {"current": "step"}}));
+        som.regions[0].elements[1].attrs = Some(serde_json::json!({"aria-current": " NONE "}));
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria": {"current": " step "}}));
 
         for selector in ["current", "current item", "current-item", "current_item"] {
             let filtered = apply_selector(&som, selector);
