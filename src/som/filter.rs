@@ -15,7 +15,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `landmark`/`landmarks`/`landmark_region`/`landmark_regions`/`landmark-region`/`landmark region`/`landmark_inventory`/`landmark_inventories`/`landmark-inventory`/`landmark-inventories`/`landmark inventory`/`landmark inventories`/`landmark_region_inventory`/`landmark_region_inventories`/`landmark-region-inventory`/`landmark-region-inventories`/`landmark region inventory`/`landmark region inventories` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
+/// - Region roles: `landmark`/`landmarks`/`all_regions`/`all-regions`/`all regions`/`landmark_region`/`landmark_regions`/`landmark-region`/`landmark region`/`landmark_inventory`/`landmark_inventories`/`landmark-inventory`/`landmark-inventories`/`landmark inventory`/`landmark inventories`/`landmark_region_inventory`/`landmark_region_inventories`/`landmark-region-inventory`/`landmark-region-inventories`/`landmark region inventory`/`landmark region inventories` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
 ///   `nav-region`/`nav region`/`nav_regions`/`nav-regions`/`nav regions`/
 ///   `navigation_region`/`navigation-region`/`navigation region`/
 ///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
@@ -341,6 +341,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "landmark-region-inventories"
             | "landmark region inventory"
             | "landmark region inventories"
+            | "all_regions"
+            | "all-regions"
+            | "all regions"
     ) {
         if som.regions.is_empty() {
             eprintln!(
@@ -7503,6 +7506,9 @@ mod tests {
             "landmark region inventory",
             "landmark region inventories",
             "role:landmark inventory",
+            "all_regions",
+            "all-regions",
+            "all regions",
         ] {
             let filtered = apply_selector(&som, selector);
 
