@@ -908,6 +908,8 @@ class TestFindByTag:
             "search field",
             "query",
             "query-box",
+            "querybox",
+            "queryboxes",
             "query input",
         ):
             assert [el.id for el in find_by_tag(sample_som, alias)] == ["e9"]
