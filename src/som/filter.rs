@@ -8201,6 +8201,7 @@ mod tests {
                 .map(|element| element.id.as_str())
                 .collect();
             assert_eq!(ids, vec!["save", "e-content"], "selector: {selector}");
+        }
     }
 
     #[test]
