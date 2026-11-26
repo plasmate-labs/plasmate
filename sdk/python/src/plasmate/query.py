@@ -244,6 +244,8 @@ def find_by_tag(som: Som, tag: str) -> List[SomElement]:
         "queries": "text_input",
         "query_box": "text_input",
         "query_boxes": "text_input",
+        "querybox": "text_input",
+        "queryboxes": "text_input",
         "query_control": "text_input",
         "query_controls": "text_input",
         "query_field": "text_input",
