@@ -32,6 +32,7 @@ from plasmate.query import (
     find_by_id,
     find_by_html_id,
     find_by_label,
+    find_by_placeholder,
     find_by_role,
     find_by_tag,
     find_by_text,
@@ -465,6 +466,29 @@ class TestFindByLabel:
     def test_empty_labels_do_not_match_every_labeled_element(self, sample_som: Som) -> None:
         assert find_by_label(sample_som, "") == []
         assert find_by_label(sample_som, " \n\t ") == []
+
+
+class TestFindByPlaceholder:
+    def test_finds_placeholder_text(self, sample_som: Som) -> None:
+        results = find_by_placeholder(sample_som, "example.com")
+        assert [el.id for el in results] == ["e9"]
+
+    def test_exact_placeholder_match_is_case_sensitive(self, sample_som: Som) -> None:
+        assert [el.id for el in find_by_placeholder(
+            sample_som, "you@example.com", exact=True
+        )] == ["e9"]
+        assert find_by_placeholder(sample_som, "YOU@EXAMPLE.COM", exact=True) == []
+
+    def test_finds_aria_placeholder_fallback(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements.append(
+            SomElement(
+                id="e11",
+                role=ElementRole.text_input,
+                attrs=ElementAttrs(aria={"placeholder": "Search docs"}),
+            )
+        )
+
+        assert [el.id for el in find_by_placeholder(sample_som, "search")] == ["e11"]
 
 
 class TestFindByTag:

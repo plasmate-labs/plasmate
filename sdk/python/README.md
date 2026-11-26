@@ -118,7 +118,7 @@ Search and traverse SOM documents:
 
 ```python
 from plasmate import Som, find_by_role, find_by_id, find_by_tag
-from plasmate import find_interactive, find_by_label, find_by_text, flat_elements
+from plasmate import find_interactive, find_by_label, find_by_placeholder, find_by_text, flat_elements
 from plasmate import find_action_target, find_action_targets_by_action, find_action_targets_by_label
 from plasmate import (
     find_action_targets_by_role,
@@ -160,6 +160,10 @@ results = find_by_text(som, "sign up")
 # Use exact=True for a case-sensitive, whitespace-normalized match.
 exact_results = find_by_text(som, "Sign up", exact=True)
 labeled = find_by_label(som, "email")
+# Placeholder searches are case-insensitive substring matches by default;
+# use exact=True for a case-sensitive, whitespace-normalized match.
+placeholders = find_by_placeholder(som, "example.com")
+exact_placeholders = find_by_placeholder(som, "you@example.com", exact=True)
 
 # Flatten all elements for iteration
 all_elements = flat_elements(som)
