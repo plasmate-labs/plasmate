@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 pub const MAX_SELECTOR_BYTES: usize = 256;
 
 const UNKNOWN_SELECTOR_GUIDANCE: &str =
-    "try selector='landmark' to discover regions, selector='main' for token-saving page content, interactive for controls, disabled/enabled or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, aria-label:<text>, #id, .class, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
+    "try selector='landmark' (or 'all-regions') to discover regions, selector='main' for token-saving page content, interactive for controls, disabled/enabled or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, aria-label:<text>, #id, .class, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
@@ -2932,6 +2932,7 @@ mod tests {
     fn unknown_selector_guidance_covers_common_agent_hooks() {
         for hint in [
             "selector='landmark'",
+            "'all-regions'",
             "selector='main'",
             "interactive",
             "role=<region>",
