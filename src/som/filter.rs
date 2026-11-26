@@ -1077,6 +1077,9 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
     if matches!(selector_lower.as_str(), "required" | "optional") {
         let want_required = selector_lower == "required";
         return filter_som_elements(som, selector, |element| {
+            if !element.role.is_interactive() {
+                return false;
+            }
             let is_true = |value: &serde_json::Value| {
                 value.as_bool().unwrap_or_else(|| {
                     value.as_i64().is_some_and(|value| value == 1)
@@ -3675,6 +3678,18 @@ mod tests {
         som.regions[0].elements.clear();
         som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria-required": "true"}));
         som.regions[1].elements[1].attrs = Some(serde_json::json!({"required": false}));
+        som.regions[1].elements.push(Element {
+            id: "non-control".to_string(),
+            role: ElementRole::Paragraph,
+            html_id: None,
+            text: Some("not a form control".to_string()),
+            label: None,
+            actions: None,
+            attrs: None,
+            children: None,
+            hints: None,
+            shadow: None,
+        });
 
         let required = apply_selector(&som, "required");
         assert_eq!(required.regions[0].elements.len(), 1);
