@@ -155,6 +155,8 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   `toggle`, `submit`, `reset`), or `action:<verb>` forms (including
 ///   `action : <verb>` and `action = <verb>`). The text and
 ///   select aliases mirror the corresponding MCP interaction tool names.
+/// - State surfaces: `current` / `current item` match elements with a meaningful
+///   `aria-current` value (anything other than `false` or `none`).
 /// - Label/text search: `label:<text>` / `label=<text>` (also `text:<text>` /
 ///   `text=<text>`, `name:<text>` /
 ///   `name=<text>` and
@@ -574,6 +576,34 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "controls"
     ) {
         return filter_som_elements(som, selector, |element| element.role.is_interactive());
+    }
+
+    // Match the active item in navigation, pagination, breadcrumbs, and other
+    // widgets without requiring callers to know the exact aria-current token.
+    if matches!(
+        selector.to_ascii_lowercase().as_str(),
+        "current" | "current item" | "current-item" | "current_item"
+    ) {
+        return filter_som_elements(som, selector, |element| {
+            let is_meaningful = |value: &serde_json::Value| match value {
+                serde_json::Value::Bool(value) => *value,
+                serde_json::Value::String(value) => {
+                    !value.eq_ignore_ascii_case("false") && !value.eq_ignore_ascii_case("none")
+                }
+                _ => false,
+            };
+            element.attrs.as_ref().is_some_and(|attrs| {
+                attrs
+                    .get("aria-current")
+                    .or_else(|| attrs.get("aria_current"))
+                    .is_some_and(is_meaningful)
+                    || attrs
+                        .get("aria")
+                        .and_then(serde_json::Value::as_object)
+                        .and_then(|aria| aria.get("current"))
+                        .is_some_and(is_meaningful)
+            })
+        });
     }
 
     // `time` is both an HTML input type and a native text element. The SOM
@@ -8125,6 +8155,25 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-current-page");
+        }
+    }
+
+    #[test]
+    fn test_current_selector_matches_meaningful_aria_current_values() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].attrs = Some(serde_json::json!({"aria-current": "page"}));
+        som.regions[0].elements[1].attrs = Some(serde_json::json!({"aria-current": "false"}));
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria": {"current": "step"}}));
+
+        for selector in ["current", "current item", "current-item", "current_item"] {
+            let filtered = apply_selector(&som, selector);
+            let ids: Vec<_> = filtered
+                .regions
+                .iter()
+                .flat_map(|region| region.elements.iter())
+                .map(|element| element.id.as_str())
+                .collect();
+            assert_eq!(ids, vec!["save", "e-content"], "selector: {selector}");
         }
     }
 

@@ -221,6 +221,8 @@ depending on a hard-coded count; the authoritative registration is
 to return only actionable elements. Use `selector="disabled"` or
 `selector="enabled"` to isolate controls by effective disabled state,
 including `aria-disabled` and semantic disabled hints. `selector="h1"`
+Use `selector="current"` (or `current item`) to isolate elements with a
+meaningful `aria-current` value such as `page` or `step`.
 Use `selector="readonly"` (also `read-only`, `read_only`, `read only`, or
 `readonly controls` / `read-only-controls`) or `selector="locked"` (also
 `locked control`, `locked controls`, `locked_control`, and `locked-control`) to
