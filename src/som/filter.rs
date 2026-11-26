@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 pub const MAX_SELECTOR_BYTES: usize = 256;
 
 const UNKNOWN_SELECTOR_GUIDANCE: &str =
-    "try selector='landmark' (or 'all-regions') to discover regions, selector='main' for token-saving page content, selector='h1' through selector='h6' for headings, interactive for controls, current for the aria-current item, disabled/enabled or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, aria-label:<text>, #id, .class, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
+    "try selector='landmark' (or 'all-regions') to discover regions, selector='main' for token-saving page content, selector='h1' through selector='h6' for headings, interactive for controls, current for the aria-current item, disabled/enabled, required/optional, or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, aria-label:<text>, #id, .class, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
@@ -1068,6 +1068,30 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
                 is_disabled
             };
             is_locked == want_disabled
+        });
+    }
+
+    // Bare required/optional selectors describe effective form state rather
+    // than merely the presence of the HTML attribute. Treat aria-required as
+    // equivalent so agents can target controls consistently across markup.
+    if matches!(selector_lower.as_str(), "required" | "optional") {
+        let want_required = selector_lower == "required";
+        return filter_som_elements(som, selector, |element| {
+            let is_true = |value: &serde_json::Value| {
+                value.as_bool().unwrap_or_else(|| {
+                    value.as_i64().is_some_and(|value| value == 1)
+                        || value.as_str().is_some_and(|value| {
+                            value.eq_ignore_ascii_case("true") || value == "1"
+                        })
+                })
+            };
+            let is_required = element.attrs.as_ref().is_some_and(|attrs| {
+                ["required", "aria-required", "aria_required"]
+                    .into_iter()
+                    .filter_map(|key| attrs.get(key))
+                    .any(is_true)
+            });
+            is_required == want_required
         });
     }
 
@@ -3643,6 +3667,22 @@ mod tests {
         let enabled = apply_selector(&som, "enabled");
         assert_eq!(enabled.regions[0].elements.len(), 1);
         assert_eq!(enabled.regions[0].elements[0].id, "e3");
+    }
+
+    #[test]
+    fn test_selector_matches_effective_required_state() {
+        let mut som = make_test_som();
+        som.regions[0].elements.clear();
+        som.regions[1].elements[0].attrs = Some(serde_json::json!({"aria-required": "true"}));
+        som.regions[1].elements[1].attrs = Some(serde_json::json!({"required": false}));
+
+        let required = apply_selector(&som, "required");
+        assert_eq!(required.regions[0].elements.len(), 1);
+        assert_eq!(required.regions[0].elements[0].id, "e2");
+
+        let optional = apply_selector(&som, "optional");
+        assert_eq!(optional.regions[0].elements.len(), 1);
+        assert_eq!(optional.regions[0].elements[0].id, "e3");
     }
 
     #[test]
