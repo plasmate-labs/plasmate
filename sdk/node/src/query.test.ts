@@ -16,6 +16,7 @@ import {
   findByRole,
   findById,
   findByHtmlId,
+  findByTestId,
   findByLabel,
   findByPlaceholder,
   findByTag,
@@ -64,7 +65,7 @@ const fixture: Som = {
           role: 'button',
           text: 'Submit',
           actions: ['click'],
-          attrs: { button_type: 'submit' },
+          attrs: { button_type: 'submit', test_id: 'submit-button' },
           hints: ['primary'],
         },
         {
@@ -516,6 +517,16 @@ describe('findByHtmlId', () => {
 
   it('returns undefined for missing HTML id', () => {
     assert.equal(findByHtmlId(fixture, 'missing-html-id'), undefined);
+  });
+});
+
+describe('findByTestId', () => {
+  it('finds an element by its stable test locator', () => {
+    assert.equal(findByTestId(fixture, 'submit-button')?.id, 'e4');
+  });
+
+  it('returns undefined for a missing test locator', () => {
+    assert.equal(findByTestId(fixture, 'missing-test-id'), undefined);
   });
 });
 

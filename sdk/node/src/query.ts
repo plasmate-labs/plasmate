@@ -93,6 +93,11 @@ export function findByHtmlId(som: Som, htmlId: string): SomElement | undefined {
   return flatElements(som).find((el) => el.html_id === htmlId);
 }
 
+/** Find the first element carrying the compiler's stable test locator. */
+export function findByTestId(som: Som, testId: string): SomElement | undefined {
+  return flatElements(som).find((el) => el.attrs?.test_id === testId);
+}
+
 function findElementById(elements: SomElement[], id: string): SomElement | undefined {
   for (const el of elements) {
     if (el.id === id) return el;

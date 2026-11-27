@@ -64,6 +64,7 @@ export {
   findActionTargetsByRole,
   findById,
   findByHtmlId,
+  findByTestId,
   findByLabel,
   findByPlaceholder,
   findByTag,
