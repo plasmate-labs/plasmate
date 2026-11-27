@@ -1115,7 +1115,7 @@ function searchableTextParts(el: SomElement): string[] {
   for (const value of [
     el.attrs?.description,
     el.attrs?.alt,
-    el.attrs?.placeholder,
+    ...placeholderCandidates(el),
     el.attrs?.title,
     el.attrs?.value,
     el.attrs?.summary,
@@ -1157,6 +1157,12 @@ function searchableTextParts(el: SomElement): string[] {
     }
   }
   return parts;
+}
+
+function placeholderCandidates(el: SomElement): string[] {
+  return [el.attrs?.placeholder, el.attrs?.aria?.placeholder].filter(
+    (value): value is string => typeof value === 'string',
+  );
 }
 
 /** Find all elements containing the given text (case-insensitive substring match by default). */
@@ -1209,9 +1215,7 @@ export function findByPlaceholder(
   if (!normalizedPlaceholder) return [];
   const lower = normalizedPlaceholder.toLowerCase();
   return flatElements(som).filter((el) => {
-    const values = [el.attrs?.placeholder, el.attrs?.aria?.placeholder]
-      .filter((value): value is string => typeof value === 'string');
-    return values.some((value) => {
+    return placeholderCandidates(el).some((value) => {
       const normalizedValue = normalizeLabelText(value);
       return options?.exact
         ? normalizedValue === normalizedPlaceholder
