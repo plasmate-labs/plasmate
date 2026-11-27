@@ -103,10 +103,11 @@ The SDK includes query helpers for searching and traversing SOM documents:
 ```typescript
 import {
   findActionTarget,
+  findActionTargetByTestId,
   findActionTargetsByAction,
   findActionTargetsByLabel,
   findActionTargetsByRole,
-  findByRole, findById, findByTag, findInteractive,
+  findByRole, findById, findByTestId, findByTag, findInteractive,
   findByLabel, findByPlaceholder, findByText, flatElements, getActionPlan, getTokenEstimate,
 } from 'plasmate';
 
@@ -118,6 +119,12 @@ const [main] = findByRole(som, 'main');
 
 // Look up an element by its stable ID
 const el = findById(som, 'e5');
+
+// Look up an element by its stable test locator
+const submit = findByTestId(som, 'submit-button');
+
+// Resolve a test locator directly to an actionable target
+const submitTarget = findActionTargetByTestId(som, 'submit-button');
 
 // Find all links
 const links = findByTag(som, 'link');
