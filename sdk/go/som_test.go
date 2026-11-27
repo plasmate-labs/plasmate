@@ -1057,6 +1057,70 @@ func TestFindByLabel(t *testing.T) {
 	}
 }
 
+func TestFindByPlaceholder(t *testing.T) {
+	som := mustParse(t)
+	if results := FindByPlaceholder(som, "  search  "); len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByPlaceholder(normalized) = %#v, want e5", results)
+	}
+	if results := FindByPlaceholder(som, "SEARCH", true); len(results) != 0 {
+		t.Fatalf("FindByPlaceholder(exact) = %#v, want no substring match", results)
+	}
+	if results := FindByPlaceholder(som, "Search...", true); len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByPlaceholder(exact) = %#v, want e5", results)
+	}
+	if results := FindByPlaceholder(nil, "search"); results != nil {
+		t.Fatalf("FindByPlaceholder(nil) = %#v, want nil", results)
+	}
+}
+
+func TestFindByTitle(t *testing.T) {
+	title := "  Account settings  "
+	shadowTitle := "Help center"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "e_title", Attrs: &ElementAttrs{Title: &title}},
+		{ID: "e_shadow_host", Shadow: &SomShadowRoot{Elements: []Element{{
+			ID: "e_shadow_title", Attrs: &ElementAttrs{Title: &shadowTitle},
+		}}}},
+	}}}}
+
+	if results := FindByTitle(som, " account "); len(results) != 1 || results[0].ID != "e_title" {
+		t.Fatalf("FindByTitle(substring) = %#v, want e_title", results)
+	}
+	if results := FindByTitle(som, "HELP CENTER", true); len(results) != 1 || results[0].ID != "e_shadow_title" {
+		t.Fatalf("FindByTitle(exact) = %#v, want e_shadow_title", results)
+	}
+	if results := FindByTitle(nil, "title"); results != nil {
+		t.Fatalf("FindByTitle(nil) = %#v, want nil", results)
+	}
+}
+
+func TestFindByHref(t *testing.T) {
+	som := mustParse(t)
+	if results := FindByHref(som, "about"); len(results) != 1 || results[0].ID != "e2" {
+		t.Fatalf("FindByHref(substring) = %#v, want e2", results)
+	}
+	if results := FindByHref(som, "/", true); len(results) != 1 || results[0].ID != "e1" {
+		t.Fatalf("FindByHref(exact) = %#v, want e1", results)
+	}
+	if results := FindByHref(som, "about", true); len(results) != 0 {
+		t.Fatalf("FindByHref(exact) = %#v, want no partial match", results)
+	}
+	if results := FindByHref(nil, "/"); results != nil {
+		t.Fatalf("FindByHref(nil) = %#v, want nil", results)
+	}
+}
+
+func TestFindByRoleAcceptsWhitespacePrefix(t *testing.T) {
+	som := mustParse(t)
+
+	if results := FindByTag(som, "role button"); len(results) != 2 || results[0].ID != "e6" || results[1].ID != "e10" {
+		t.Fatalf("FindByTag(role button) = %#v, want e6 and e10", results)
+	}
+	if results := FindByRole(som, "role main"); len(results) != 1 || results[0].ID != "r_main" {
+		t.Fatalf("FindByRole(role main) = %#v, want r_main", results)
+	}
+}
+
 func TestFindByLabelCompiledFallbacks(t *testing.T) {
 	som := mustParse(t)
 

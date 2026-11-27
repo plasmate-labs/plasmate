@@ -179,6 +179,39 @@ func FindByTestID(som *Som, testID string) []Element {
 	return result
 }
 
+// FindByHref returns all elements whose href matches href. Matching trims
+// surrounding whitespace and uses substring matching unless exact is true.
+func FindByHref(som *Som, href string, exact ...bool) []Element {
+	if som == nil {
+		return nil
+	}
+	needle := strings.TrimSpace(href)
+	if needle == "" {
+		return nil
+	}
+	exactMatch := len(exact) > 0 && exact[0]
+	var result []Element
+	for _, region := range som.Regions {
+		collectByHref(region.Elements, needle, exactMatch, &result)
+	}
+	return result
+}
+
+func collectByHref(elements []Element, needle string, exact bool, result *[]Element) {
+	for _, element := range elements {
+		if element.Attrs != nil && element.Attrs.Href != nil {
+			candidate := strings.TrimSpace(*element.Attrs.Href)
+			if (exact && candidate == needle) || (!exact && strings.Contains(candidate, needle)) {
+				*result = append(*result, element)
+			}
+		}
+		collectByHref(element.Children, needle, exact, result)
+		if element.Shadow != nil {
+			collectByHref(element.Shadow.Elements, needle, exact, result)
+		}
+	}
+}
+
 func collectByTestID(elements []Element, testID string, result *[]Element) {
 	for _, element := range elements {
 		if element.Attrs != nil && element.Attrs.TestID != nil && *element.Attrs.TestID == testID {
@@ -575,6 +608,10 @@ func normalizeRoleQuery(value string) string {
 				(value[0] == '`' && value[len(value)-1] == '`')) {
 				value = strings.TrimSpace(value[1 : len(value)-1])
 			}
+		} else if rest != "" {
+			// Accept the human-friendly "role button" form alongside the
+			// selector-compatible role= and role: prefixes.
+			value = rest
 		}
 	}
 	return strings.Join(strings.Fields(strings.ReplaceAll(value, "-", " ")), "_")
@@ -653,6 +690,80 @@ func FindByLabel(som *Som, label string, exact ...bool) []Element {
 		collectByLabel(r.Elements, needle, exactMatch, &result)
 	}
 	return result
+}
+
+// FindByPlaceholder returns all elements whose placeholder text matches
+// placeholder. Matching is case-insensitive and uses substring matching
+// unless exact is true. ARIA placeholder text is included as a fallback.
+func FindByPlaceholder(som *Som, placeholder string, exact ...bool) []Element {
+	if som == nil {
+		return nil
+	}
+	needle := normalizeQueryText(placeholder)
+	if needle == "" {
+		return nil
+	}
+	exactMatch := len(exact) > 0 && exact[0]
+	var result []Element
+	for _, r := range som.Regions {
+		collectByPlaceholder(r.Elements, needle, exactMatch, &result)
+	}
+	return result
+}
+
+// FindByTitle returns all elements whose title text matches title. Matching
+// is case-insensitive and uses substring matching unless exact is true.
+func FindByTitle(som *Som, title string, exact ...bool) []Element {
+	if som == nil {
+		return nil
+	}
+	needle := normalizeQueryText(title)
+	if needle == "" {
+		return nil
+	}
+	exactMatch := len(exact) > 0 && exact[0]
+	var result []Element
+	for _, r := range som.Regions {
+		collectByTitle(r.Elements, needle, exactMatch, &result)
+	}
+	return result
+}
+
+func collectByTitle(elements []Element, needle string, exact bool, result *[]Element) {
+	for _, el := range elements {
+		if el.Attrs != nil && el.Attrs.Title != nil {
+			candidate := normalizeQueryText(*el.Attrs.Title)
+			if (exact && candidate == needle) || (!exact && strings.Contains(candidate, needle)) {
+				*result = append(*result, el)
+			}
+		}
+		collectByTitle(el.Children, needle, exact, result)
+		if el.Shadow != nil {
+			collectByTitle(el.Shadow.Elements, needle, exact, result)
+		}
+	}
+}
+
+func collectByPlaceholder(elements []Element, needle string, exact bool, result *[]Element) {
+	for _, el := range elements {
+		if el.Attrs != nil {
+			matches := func(value *string) bool {
+				if value == nil {
+					return false
+				}
+				candidate := normalizeQueryText(*value)
+				return (exact && candidate == needle) || (!exact && strings.Contains(candidate, needle))
+			}
+			if matches(el.Attrs.Placeholder) ||
+				(el.Attrs.Aria != nil && matches(el.Attrs.Aria.Placeholder)) {
+				*result = append(*result, el)
+			}
+		}
+		collectByPlaceholder(el.Children, needle, exact, result)
+		if el.Shadow != nil {
+			collectByPlaceholder(el.Shadow.Elements, needle, exact, result)
+		}
+	}
 }
 
 func collectByLabel(elements []Element, lowerLabel string, exact bool, result *[]Element) {

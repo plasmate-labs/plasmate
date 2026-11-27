@@ -250,8 +250,11 @@ all := plasmate.FlatElements(som)
 | `FindByID(som, id)` | Find element by ID |
 | `FindByTag(som, tag)` | Find elements by role/tag |
 | `FindByTestID(som, testID)` | Find elements by compiled test-id attribute, including nested and shadow-root elements |
+| `FindByHref(som, href, exact...)` | Find elements by href (trimmed substring by default; optional exact match) |
 | `FindInteractive(som)` | Find elements with actions |
 | `FindByLabel(som, label, exact...)` | Find elements by accessible label (substring by default; optional exact match) |
+| `FindByPlaceholder(som, placeholder, exact...)` | Find elements by placeholder text (substring by default; optional exact match) |
+| `FindByTitle(som, title, exact...)` | Find elements by title text (substring by default; optional exact match) |
 | `FindByText(som, text)` | Case-insensitive text search |
 | `FindByAction(som, action)` | Find elements exposing an action |
 | `FindByHint(som, hint)` | Find elements tagged with a semantic hint |
