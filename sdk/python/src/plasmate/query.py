@@ -146,6 +146,14 @@ def find_by_html_id(som: Som, html_id: str) -> Optional[SomElement]:
     return None
 
 
+def find_by_test_id(som: Som, test_id: str) -> Optional[SomElement]:
+    """Find a single element by its stable test locator attribute."""
+    for element in flat_elements(som):
+        if element.attrs is not None and element.attrs.test_id == test_id:
+            return element
+    return None
+
+
 def find_by_label(som: Som, label: str, *, exact: bool = False) -> List[SomElement]:
     """Find elements by accessible label or its compiled attribute fallbacks."""
     results: List[SomElement] = []

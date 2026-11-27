@@ -35,6 +35,7 @@ from plasmate.query import (
     find_by_placeholder,
     find_by_role,
     find_by_tag,
+    find_by_test_id,
     find_by_text,
     find_interactive,
     flat_elements,
@@ -366,6 +367,17 @@ class TestFindByHtmlId:
 
     def test_returns_none_for_missing_html_id(self, sample_som: Som) -> None:
         assert find_by_html_id(sample_som, "missing-html-id") is None
+
+
+class TestFindByTestId:
+    def test_finds_element(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements[2].attrs = ElementAttrs(test_id="save-button")
+        element = find_by_test_id(sample_som, "save-button")
+        assert element is not None
+        assert element.id == "e5"
+
+    def test_returns_none_for_missing_test_id(self, sample_som: Som) -> None:
+        assert find_by_test_id(sample_som, "missing-test-id") is None
 
 
 class TestFindByLabel:

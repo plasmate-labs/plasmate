@@ -136,6 +136,9 @@ el = find_by_id(som, "e5")
 if el:
     print(el.role, el.text)
 
+# Find an element by its stable test locator
+save_button = find_by_test_id(som, "save-button")
+
 # Find all links
 links = find_by_tag(som, "link")
 
