@@ -711,6 +711,39 @@ func FindByPlaceholder(som *Som, placeholder string, exact ...bool) []Element {
 	return result
 }
 
+// FindByTitle returns all elements whose title text matches title. Matching
+// is case-insensitive and uses substring matching unless exact is true.
+func FindByTitle(som *Som, title string, exact ...bool) []Element {
+	if som == nil {
+		return nil
+	}
+	needle := normalizeQueryText(title)
+	if needle == "" {
+		return nil
+	}
+	exactMatch := len(exact) > 0 && exact[0]
+	var result []Element
+	for _, r := range som.Regions {
+		collectByTitle(r.Elements, needle, exactMatch, &result)
+	}
+	return result
+}
+
+func collectByTitle(elements []Element, needle string, exact bool, result *[]Element) {
+	for _, el := range elements {
+		if el.Attrs != nil && el.Attrs.Title != nil {
+			candidate := normalizeQueryText(*el.Attrs.Title)
+			if (exact && candidate == needle) || (!exact && strings.Contains(candidate, needle)) {
+				*result = append(*result, el)
+			}
+		}
+		collectByTitle(el.Children, needle, exact, result)
+		if el.Shadow != nil {
+			collectByTitle(el.Shadow.Elements, needle, exact, result)
+		}
+	}
+}
+
 func collectByPlaceholder(elements []Element, needle string, exact bool, result *[]Element) {
 	for _, el := range elements {
 		if el.Attrs != nil {
