@@ -581,6 +581,7 @@ describe('findByLabel', () => {
     );
     assert.deepEqual(findByPlaceholder(som, 'search products', { exact: true }), []);
     assert.deepEqual(findByPlaceholder(som, '   ', { exact: true }), []);
+    assert.deepEqual(findByText(som, 'search docs').map((el) => el.id), ['aria']);
   });
 
   it('matches compiled label fallbacks', () => {
