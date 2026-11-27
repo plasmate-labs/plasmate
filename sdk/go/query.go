@@ -655,6 +655,47 @@ func FindByLabel(som *Som, label string, exact ...bool) []Element {
 	return result
 }
 
+// FindByPlaceholder returns all elements whose placeholder text matches
+// placeholder. Matching is case-insensitive and uses substring matching
+// unless exact is true. ARIA placeholder text is included as a fallback.
+func FindByPlaceholder(som *Som, placeholder string, exact ...bool) []Element {
+	if som == nil {
+		return nil
+	}
+	needle := normalizeQueryText(placeholder)
+	if needle == "" {
+		return nil
+	}
+	exactMatch := len(exact) > 0 && exact[0]
+	var result []Element
+	for _, r := range som.Regions {
+		collectByPlaceholder(r.Elements, needle, exactMatch, &result)
+	}
+	return result
+}
+
+func collectByPlaceholder(elements []Element, needle string, exact bool, result *[]Element) {
+	for _, el := range elements {
+		if el.Attrs != nil {
+			matches := func(value *string) bool {
+				if value == nil {
+					return false
+				}
+				candidate := normalizeQueryText(*value)
+				return (exact && candidate == needle) || (!exact && strings.Contains(candidate, needle))
+			}
+			if matches(el.Attrs.Placeholder) ||
+				(el.Attrs.Aria != nil && matches(el.Attrs.Aria.Placeholder)) {
+				*result = append(*result, el)
+			}
+		}
+		collectByPlaceholder(el.Children, needle, exact, result)
+		if el.Shadow != nil {
+			collectByPlaceholder(el.Shadow.Elements, needle, exact, result)
+		}
+	}
+}
+
 func collectByLabel(elements []Element, lowerLabel string, exact bool, result *[]Element) {
 	for _, el := range elements {
 		if elementMatchesLabel(el, lowerLabel, exact) {

@@ -1057,6 +1057,22 @@ func TestFindByLabel(t *testing.T) {
 	}
 }
 
+func TestFindByPlaceholder(t *testing.T) {
+	som := mustParse(t)
+	if results := FindByPlaceholder(som, "  search  "); len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByPlaceholder(normalized) = %#v, want e5", results)
+	}
+	if results := FindByPlaceholder(som, "SEARCH", true); len(results) != 0 {
+		t.Fatalf("FindByPlaceholder(exact) = %#v, want no substring match", results)
+	}
+	if results := FindByPlaceholder(som, "Search...", true); len(results) != 1 || results[0].ID != "e5" {
+		t.Fatalf("FindByPlaceholder(exact) = %#v, want e5", results)
+	}
+	if results := FindByPlaceholder(nil, "search"); results != nil {
+		t.Fatalf("FindByPlaceholder(nil) = %#v, want nil", results)
+	}
+}
+
 func TestFindByLabelCompiledFallbacks(t *testing.T) {
 	som := mustParse(t)
 
