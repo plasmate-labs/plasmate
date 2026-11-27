@@ -989,6 +989,9 @@ func TestFindByTestIDSearchesNestedAndShadowElements(t *testing.T) {
 	if got := FindByTestID(som, "nested-hook"); len(got) != 1 || got[0].ID != "nested" {
 		t.Fatalf("FindByTestID(nested-hook) = %#v, want nested", got)
 	}
+	if got := FindByTestID(som, "NESTED-HOOK"); len(got) != 1 || got[0].ID != "nested" {
+		t.Fatalf("FindByTestID(NESTED-HOOK) = %#v, want nested", got)
+	}
 	if got := FindByTestID(som, "shadow-hook"); len(got) != 1 || got[0].ID != "shadow" {
 		t.Fatalf("FindByTestID(shadow-hook) = %#v, want shadow", got)
 	}
