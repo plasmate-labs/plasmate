@@ -15,7 +15,7 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
 /// Supported selectors:
-/// - Region roles: `landmark`/`landmarks`/`all_regions`/`all-regions`/`all regions`/`landmark_region`/`landmark_regions`/`landmark-region`/`landmark region`/`landmark_inventory`/`landmark_inventories`/`landmark-inventory`/`landmark-inventories`/`landmark inventory`/`landmark inventories`/`landmark_region_inventory`/`landmark_region_inventories`/`landmark-region-inventory`/`landmark-region-inventories`/`landmark region inventory`/`landmark region inventories` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
+/// - Region roles: `landmark`/`landmarks`/`all`/`all_landmarks`/`all-landmarks`/`all landmarks`/`all_regions`/`all-regions`/`all regions`/`landmark_region`/`landmark_regions`/`landmark-region`/`landmark region`/`landmark_inventory`/`landmark_inventories`/`landmark-inventory`/`landmark-inventories`/`landmark inventory`/`landmark inventories`/`landmark_region_inventory`/`landmark_region_inventories`/`landmark-region-inventory`/`landmark-region-inventories`/`landmark region inventory`/`landmark region inventories` (all compiled regions), `main`, `nav`/`navs`/`navigation`/`navigations`/`nav_region`/
 ///   `nav-region`/`nav region`/`nav_regions`/`nav-regions`/`nav regions`/
 ///   `navigation_region`/`navigation-region`/`navigation region`/
 ///   `navigation_regions`/`navigation-regions`/`navigation regions`/`search`/`searches`/
@@ -282,6 +282,10 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
         selector.to_ascii_lowercase().as_str(),
         "landmark"
             | "landmarks"
+            | "all"
+            | "all_landmarks"
+            | "all-landmarks"
+            | "all landmarks"
             | "role=landmark"
             | "role:landmark"
             | "role landmark"
@@ -7623,6 +7627,10 @@ mod tests {
             "all_regions",
             "all-regions",
             "all regions",
+            "all",
+            "all_landmarks",
+            "all-landmarks",
+            "all landmarks",
         ] {
             let filtered = apply_selector(&som, selector);
 
