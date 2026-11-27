@@ -973,6 +973,30 @@ func TestFindByTextUserFacingMetadata(t *testing.T) {
 	}
 }
 
+func TestFindByTestIDSearchesNestedAndShadowElements(t *testing.T) {
+	rootID := "root-hook"
+	nestedID := "nested-hook"
+	shadowID := "shadow-hook"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "root", Attrs: &ElementAttrs{TestID: &rootID}, Children: []Element{{
+			ID: "nested", Attrs: &ElementAttrs{TestID: &nestedID},
+		}}},
+		{ID: "host", Shadow: &SomShadowRoot{Elements: []Element{{
+			ID: "shadow", Attrs: &ElementAttrs{TestID: &shadowID},
+		}}}},
+	}}}}
+
+	if got := FindByTestID(som, "nested-hook"); len(got) != 1 || got[0].ID != "nested" {
+		t.Fatalf("FindByTestID(nested-hook) = %#v, want nested", got)
+	}
+	if got := FindByTestID(som, "shadow-hook"); len(got) != 1 || got[0].ID != "shadow" {
+		t.Fatalf("FindByTestID(shadow-hook) = %#v, want shadow", got)
+	}
+	if got := FindByTestID(som, "missing"); len(got) != 0 {
+		t.Fatalf("FindByTestID(missing) = %#v, want empty", got)
+	}
+}
+
 func TestFindByLabelMatchesAriaDescription(t *testing.T) {
 	description := "Password requirements"
 	som := &Som{Regions: []Region{{Elements: []Element{
@@ -1570,6 +1594,12 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if byTest := FindActionTargetByTestID(som, "settings-save"); byTest == nil || byTest.ID != save.ID {
 		t.Fatalf("FindActionTargetByTestID = %#v, want %s", byTest, save.ID)
 	}
+	if byTests := FindActionTargetsByTestID(som, "settings-save"); len(byTests) != 1 || byTests[0].ID != save.ID {
+		t.Fatalf("FindActionTargetsByTestID = %#v, want %s", byTests, save.ID)
+	}
+	if byTests := FindActionTargetsByTestID(som, "missing"); len(byTests) != 0 {
+		t.Fatalf("FindActionTargetsByTestID(missing) = %#v, want empty", byTests)
+	}
 	for _, value := range []string{"e_save", save.CacheKey, "save-button", "settings-save"} {
 		if found := FindActionTarget(som, value); found == nil || found.ID != save.ID {
 			t.Fatalf("FindActionTarget(%q) = %#v, want %s", value, found, save.ID)
@@ -1655,6 +1685,25 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	}
 	if found := FindActionTargetInIndex(index, "Plan", "label"); found == nil || found.ID != "e_plan" {
 		t.Fatalf("FindActionTargetInIndex(label) = %#v, want e_plan", found)
+	}
+}
+
+func TestFindActionTargetsByTestIDEnabledOnly(t *testing.T) {
+	disabled := true
+	enabledTestID := "save"
+	disabledTestID := "save"
+	enabledText := "Save"
+	disabledText := "Save duplicate"
+	som := &Som{Regions: []Region{{ID: "r", Role: "main", Elements: []Element{
+		{ID: "enabled", Role: "button", Text: &enabledText, Actions: []string{"click"}, Attrs: &ElementAttrs{TestID: &enabledTestID}},
+		{ID: "disabled", Role: "button", Text: &disabledText, Actions: []string{"click"}, Attrs: &ElementAttrs{TestID: &disabledTestID, Disabled: &disabled}},
+	}}}}
+
+	if got := FindActionTargetsByTestID(som, "save"); len(got) != 2 {
+		t.Fatalf("FindActionTargetsByTestID = %#v, want 2 matches", got)
+	}
+	if got := FindActionTargetsByTestID(som, "save", true); len(got) != 1 || got[0].ID != "enabled" {
+		t.Fatalf("FindActionTargetsByTestID(enabledOnly) = %#v, want enabled match", got)
 	}
 }
 

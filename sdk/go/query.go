@@ -166,6 +166,31 @@ func findByHTMLIDInSlice(elements []Element, htmlID string) *Element {
 	return nil
 }
 
+// FindByTestID returns all elements with the compiled test-id attribute.
+// This searches nested elements and shadow roots and returns nil for a nil SOM.
+func FindByTestID(som *Som, testID string) []Element {
+	if som == nil || testID == "" {
+		return nil
+	}
+	var result []Element
+	for _, region := range som.Regions {
+		collectByTestID(region.Elements, testID, &result)
+	}
+	return result
+}
+
+func collectByTestID(elements []Element, testID string, result *[]Element) {
+	for _, element := range elements {
+		if element.Attrs != nil && element.Attrs.TestID != nil && *element.Attrs.TestID == testID {
+			*result = append(*result, element)
+		}
+		collectByTestID(element.Children, testID, result)
+		if element.Shadow != nil {
+			collectByTestID(element.Shadow.Elements, testID, result)
+		}
+	}
+}
+
 func findByIDInSlice(elements []Element, id string) *Element {
 	for i := range elements {
 		if elements[i].ID == id {
@@ -1332,6 +1357,25 @@ func FindActionTargetByHTMLID(som *Som, htmlID string) *ActionPlanItem {
 // FindActionTargetByTestID returns the compact action target matching a test locator attribute.
 func FindActionTargetByTestID(som *Som, testID string) *ActionPlanItem {
 	return FindActionTarget(som, testID, "test_id")
+}
+
+// FindActionTargetsByTestID returns compact action targets sharing a test locator attribute.
+// Pass true as the optional second argument to exclude disabled targets.
+func FindActionTargetsByTestID(som *Som, testID string, enabledOnly ...bool) []ActionPlanItem {
+	if som == nil || testID == "" {
+		return nil
+	}
+	plan := GetActionPlan(som)
+	if len(enabledOnly) > 0 && enabledOnly[0] {
+		plan = EnabledActionPlan(som)
+	}
+	result := make([]ActionPlanItem, 0, len(plan))
+	for _, item := range plan {
+		if item.TestID != nil && *item.TestID == testID {
+			result = append(result, item)
+		}
+	}
+	return result
 }
 
 // FindActionTargetByLabel returns the first compact action target matching an exact accessible label.

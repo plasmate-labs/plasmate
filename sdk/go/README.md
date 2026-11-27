@@ -249,6 +249,7 @@ all := plasmate.FlatElements(som)
 | `FindByRole(som, role)` | Find regions by role |
 | `FindByID(som, id)` | Find element by ID |
 | `FindByTag(som, tag)` | Find elements by role/tag |
+| `FindByTestID(som, testID)` | Find elements by compiled test-id attribute, including nested and shadow-root elements |
 | `FindInteractive(som)` | Find elements with actions |
 | `FindByLabel(som, label, exact...)` | Find elements by accessible label (substring by default; optional exact match) |
 | `FindByText(som, text)` | Case-insensitive text search |
@@ -259,6 +260,7 @@ all := plasmate.FlatElements(som)
 | `GetActionPlanCacheKey(item)` | Return a deterministic key for caching or comparing an action target |
 | `FindActionTarget(som, value, by...)` | Resolve a replay id by SOM id, cache key, HTML id, test id, exact label, or auto lookup |
 | `FindActionTargetByLabel(som, label)` | Resolve the first compact target with an exact accessible label |
+| `FindActionTargetsByTestID(som, testID, enabledOnly...)` | Return compact targets sharing a test-id attribute, optionally limited to enabled targets |
 | `FindActionTargetsByLabel(som, label, exact, enabledOnly...)` | Return compact targets whose label matches exactly or by substring |
 | `FindActionTargetsByRole(som, role, enabledOnly...)` | Return compact action targets for one SOM role or heading-level alias such as `h2`/`heading-2` |
 | `FindActionTargetsByAction(som, action, enabledOnly...)` | Return compact action targets exposing one action |
