@@ -1073,6 +1073,22 @@ func TestFindByPlaceholder(t *testing.T) {
 	}
 }
 
+func TestFindByHref(t *testing.T) {
+	som := mustParse(t)
+	if results := FindByHref(som, "about"); len(results) != 1 || results[0].ID != "e2" {
+		t.Fatalf("FindByHref(substring) = %#v, want e2", results)
+	}
+	if results := FindByHref(som, "/", true); len(results) != 1 || results[0].ID != "e1" {
+		t.Fatalf("FindByHref(exact) = %#v, want e1", results)
+	}
+	if results := FindByHref(som, "about", true); len(results) != 0 {
+		t.Fatalf("FindByHref(exact) = %#v, want no partial match", results)
+	}
+	if results := FindByHref(nil, "/"); results != nil {
+		t.Fatalf("FindByHref(nil) = %#v, want nil", results)
+	}
+}
+
 func TestFindByLabelCompiledFallbacks(t *testing.T) {
 	som := mustParse(t)
 
