@@ -289,6 +289,15 @@ pub fn apply_selector(som: &Som, selector: &str) -> Som {
             | "all_landmarks"
             | "all-landmarks"
             | "all landmarks"
+            | "role=all_regions"
+            | "role:all_regions"
+            | "role all_regions"
+            | "role=all-regions"
+            | "role:all-regions"
+            | "role all-regions"
+            | "role=all regions"
+            | "role:all regions"
+            | "role all regions"
             | "role=all"
             | "role:all"
             | "role all"
@@ -7661,6 +7670,15 @@ mod tests {
             "role=all landmarks",
             "role:all landmarks",
             "role all landmarks",
+            "role=all_regions",
+            "role:all_regions",
+            "role all_regions",
+            "role=all-regions",
+            "role:all-regions",
+            "role all-regions",
+            "role=all regions",
+            "role:all regions",
+            "role all regions",
         ] {
             let filtered = apply_selector(&som, selector);
 
