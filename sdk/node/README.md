@@ -107,7 +107,7 @@ import {
   findActionTargetsByLabel,
   findActionTargetsByRole,
   findByRole, findById, findByTag, findInteractive,
-  findByLabel, findByText, flatElements, getActionPlan, getTokenEstimate,
+  findByLabel, findByPlaceholder, findByText, flatElements, getActionPlan, getTokenEstimate,
 } from 'plasmate';
 
 const browser = new Plasmate();
@@ -136,7 +136,7 @@ const labeledActions = findActionTargetsByLabel(som, 'save');
 const enabledButtons = findActionTargetsByRole(som, 'button', { enabledOnly: true });
 const enabledClicks = findActionTargetsByAction(som, 'click', { enabledOnly: true });
 
-Action lookup accepts the same compact aliases used by MCP selectors, including
+// Action lookup accepts the same compact aliases used by MCP selectors, including
 quoted values such as `"action:click"`, as well as `action:click`,
 `action=type_text`, and `select_option`. `submit` and `reset`
 also match controls by their compiled button type (including image submitters).
@@ -145,6 +145,8 @@ also match controls by their compiled button type (including image submitters).
 const matches = findByText(som, 'sign in');
 const exactMatches = findByText(som, 'Sign in', { exact: true });
 const labeled = findByLabel(som, 'email');
+const placeholderMatches = findByPlaceholder(som, 'search');
+const exactPlaceholder = findByPlaceholder(som, 'Search products', { exact: true });
 
 // Flatten all elements across all regions
 const all = flatElements(som);
@@ -173,6 +175,7 @@ browser.close();
 | `findActionTargetsByRole(som, role, options?)` | `ActionPlanItem[]` | Find compact action targets by canonical SOM role or case-insensitive plural/selector alias (for example, `a`, `anchor`, `anchors`, `h1`, `heading 2`, `heading-2`, `heading_2`, `buttons`, `text area`, `email`, `datetime-local`, `progress-bar`, `role:button`, `role: "button"`, `role = text-input`, or `role=text-input`). Source-role metadata is matched across case, spaces, hyphens, and underscores. |
 | `findActionTargetsByAction(som, action, options?)` | `ActionPlanItem[]` | Find compact action targets that expose an action |
 | `findByLabel(som, label, options?)` | `SomElement[]` | Case-insensitive accessible-label search |
+| `findByPlaceholder(som, placeholder, options?)` | `SomElement[]` | Case-insensitive native or ARIA placeholder search; pass `{ exact: true }` for an exact, case-sensitive match |
 | `findByText(som, text, options?)` | `SomElement[]` | Case-insensitive substring search; pass `{ exact: true }` for an exact, case-sensitive match |
 | `flatElements(som)` | `SomElement[]` | Flatten all elements |
 | `getCompressionRatio(som)` | `number` | Return html_bytes / som_bytes (`Infinity` for an empty SOM) |

@@ -65,6 +65,7 @@ export {
   findById,
   findByHtmlId,
   findByLabel,
+  findByPlaceholder,
   findByTag,
   findInteractive,
   findByText,

@@ -1115,13 +1115,14 @@ function searchableTextParts(el: SomElement): string[] {
   for (const value of [
     el.attrs?.description,
     el.attrs?.alt,
-    el.attrs?.placeholder,
+    ...placeholderCandidates(el),
     el.attrs?.title,
     el.attrs?.value,
     el.attrs?.summary,
     el.attrs?.legend,
     el.attrs?.section_label,
     el.attrs?.aria?.label,
+    el.attrs?.aria?.placeholder,
     el.attrs?.aria?.description,
     el.attrs?.aria?.valuetext,
     el.attrs?.aria?.roledescription,
@@ -1156,6 +1157,12 @@ function searchableTextParts(el: SomElement): string[] {
     }
   }
   return parts;
+}
+
+function placeholderCandidates(el: SomElement): string[] {
+  return [el.attrs?.placeholder, el.attrs?.aria?.placeholder].filter(
+    (value): value is string => typeof value === 'string',
+  );
 }
 
 /** Find all elements containing the given text (case-insensitive substring match by default). */
@@ -1196,6 +1203,25 @@ export function findByLabel(
   return all.filter((el) =>
     labelCandidates(el).some((value) => normalizeLabelText(value).toLowerCase().includes(lower)),
   );
+}
+
+/** Find all elements whose native or ARIA placeholder contains the given text. */
+export function findByPlaceholder(
+  som: Som,
+  placeholder: string,
+  options?: { exact?: boolean },
+): SomElement[] {
+  const normalizedPlaceholder = normalizeLabelText(placeholder);
+  if (!normalizedPlaceholder) return [];
+  const lower = normalizedPlaceholder.toLowerCase();
+  return flatElements(som).filter((el) => {
+    return placeholderCandidates(el).some((value) => {
+      const normalizedValue = normalizeLabelText(value);
+      return options?.exact
+        ? normalizedValue === normalizedPlaceholder
+        : normalizedValue.toLowerCase().includes(lower);
+    });
+  });
 }
 
 /** Flatten all elements from all regions into a single array, recursively including children. */
