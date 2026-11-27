@@ -579,6 +579,7 @@ describe('findByLabel', () => {
       findByPlaceholder(som, 'Search products', { exact: true }).map((el) => el.id),
       ['native'],
     );
+    assert.deepEqual(findByPlaceholder(som, 'search products', { exact: true }), []);
     assert.deepEqual(findByPlaceholder(som, '   ', { exact: true }), []);
   });
 
