@@ -1688,6 +1688,25 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	}
 }
 
+func TestFindActionTargetsByTestIDEnabledOnly(t *testing.T) {
+	disabled := true
+	enabledTestID := "save"
+	disabledTestID := "save"
+	enabledText := "Save"
+	disabledText := "Save duplicate"
+	som := &Som{Regions: []Region{{ID: "r", Role: "main", Elements: []Element{
+		{ID: "enabled", Role: "button", Text: &enabledText, Actions: []string{"click"}, Attrs: &ElementAttrs{TestID: &enabledTestID}},
+		{ID: "disabled", Role: "button", Text: &disabledText, Actions: []string{"click"}, Attrs: &ElementAttrs{TestID: &disabledTestID, Disabled: &disabled}},
+	}}}}
+
+	if got := FindActionTargetsByTestID(som, "save"); len(got) != 2 {
+		t.Fatalf("FindActionTargetsByTestID = %#v, want 2 matches", got)
+	}
+	if got := FindActionTargetsByTestID(som, "save", true); len(got) != 1 || got[0].ID != "enabled" {
+		t.Fatalf("FindActionTargetsByTestID(enabledOnly) = %#v, want enabled match", got)
+	}
+}
+
 func TestEnabledActionPlanIndexFiltersBlockedTargets(t *testing.T) {
 	somBytes, err := os.ReadFile("../../integrations/fixtures/action-availability.som.json")
 	if err != nil {

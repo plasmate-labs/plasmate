@@ -1369,7 +1369,7 @@ func FindActionTargetsByTestID(som *Som, testID string, enabledOnly ...bool) []A
 	if len(enabledOnly) > 0 && enabledOnly[0] {
 		plan = EnabledActionPlan(som)
 	}
-	result := make([]ActionPlanItem, 0)
+	result := make([]ActionPlanItem, 0, len(plan))
 	for _, item := range plan {
 		if item.TestID != nil && *item.TestID == testID {
 			result = append(result, item)
