@@ -1198,6 +1198,27 @@ export function findByLabel(
   );
 }
 
+/** Find all elements whose native or ARIA placeholder contains the given text. */
+export function findByPlaceholder(
+  som: Som,
+  placeholder: string,
+  options?: { exact?: boolean },
+): SomElement[] {
+  const normalizedPlaceholder = normalizeLabelText(placeholder);
+  if (!normalizedPlaceholder) return [];
+  const lower = normalizedPlaceholder.toLowerCase();
+  return flatElements(som).filter((el) => {
+    const values = [el.attrs?.placeholder, el.attrs?.aria?.placeholder]
+      .filter((value): value is string => typeof value === 'string');
+    return values.some((value) => {
+      const normalizedValue = normalizeLabelText(value);
+      return options?.exact
+        ? normalizedValue === normalizedPlaceholder
+        : normalizedValue.toLowerCase().includes(lower);
+    });
+  });
+}
+
 /** Flatten all elements from all regions into a single array, recursively including children. */
 export function flatElements(som: Som): SomElement[] {
   const result: SomElement[] = [];

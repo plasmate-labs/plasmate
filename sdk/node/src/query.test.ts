@@ -17,6 +17,7 @@ import {
   findById,
   findByHtmlId,
   findByLabel,
+  findByPlaceholder,
   findByTag,
   findInteractive,
   findByText,
@@ -558,6 +559,27 @@ describe('findByLabel', () => {
 
     assert.deepEqual(findByLabel(som, '', { exact: true }), []);
     assert.deepEqual(findByLabel(som, '\n\t', { exact: true }), []);
+  });
+
+  it('matches native and ARIA placeholders', () => {
+    const som: Som = {
+      ...fixture,
+      regions: [{
+        ...fixture.regions[0],
+        elements: [
+          { id: 'native', role: 'text_input', attrs: { placeholder: 'Search products' } },
+          { id: 'aria', role: 'text_input', attrs: { aria: { placeholder: 'Search docs' } } },
+          { id: 'other', role: 'text_input', attrs: { placeholder: 'Email address' } },
+        ],
+      }],
+    };
+
+    assert.deepEqual(findByPlaceholder(som, 'search').map((el) => el.id), ['native', 'aria']);
+    assert.deepEqual(
+      findByPlaceholder(som, 'Search products', { exact: true }).map((el) => el.id),
+      ['native'],
+    );
+    assert.deepEqual(findByPlaceholder(som, '   ', { exact: true }), []);
   });
 
   it('matches compiled label fallbacks', () => {
