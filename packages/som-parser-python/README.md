@@ -68,6 +68,15 @@ clicks = find_action_targets_by_action(som, "click", enabled_only=True)
 fields = find_by_label(som, "email")
 ```
 
+For stable DOM or test hooks, use the direct locator helpers:
+
+```python
+from som_parser import find_by_html_id, find_by_test_id
+
+element = find_by_html_id(som, "account-email")
+save_button = find_by_test_id(som, "settings-save")
+```
+
 ### Convert to markdown
 
 ```python
@@ -112,6 +121,8 @@ print(som.model_dump_json(indent=2))
 | `get_all_elements(som) -> list[SomElement]` | Flatten all elements from all regions |
 | `find_by_role(som, role) -> list[SomElement]` | Find elements by role (enum or string) |
 | `find_by_id(som, id) -> SomElement \| None` | Find a single element by its SOM id |
+| `find_by_html_id(som, html_id) -> SomElement \| None` | Find a single element by its original HTML `id` attribute |
+| `find_by_test_id(som, test_id) -> SomElement \| None` | Find the first element by its stable test locator, case-insensitively |
 | `find_by_label(som, label, exact=False) -> list[SomElement]` | Search elements by accessible label |
 | `find_by_text(som, text, exact=False) -> list[SomElement]` | Search elements by text content |
 | `find_by_action(som, action) -> list[SomElement]` | Find elements that expose a specific action |

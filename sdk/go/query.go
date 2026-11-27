@@ -214,7 +214,7 @@ func collectByHref(elements []Element, needle string, exact bool, result *[]Elem
 
 func collectByTestID(elements []Element, testID string, result *[]Element) {
 	for _, element := range elements {
-		if element.Attrs != nil && element.Attrs.TestID != nil && *element.Attrs.TestID == testID {
+		if element.Attrs != nil && element.Attrs.TestID != nil && strings.EqualFold(*element.Attrs.TestID, testID) {
 			*result = append(*result, element)
 		}
 		collectByTestID(element.Children, testID, result)
