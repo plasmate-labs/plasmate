@@ -1089,6 +1089,17 @@ func TestFindByHref(t *testing.T) {
 	}
 }
 
+func TestFindByRoleAcceptsWhitespacePrefix(t *testing.T) {
+	som := mustParse(t)
+
+	if results := FindByTag(som, "role button"); len(results) != 2 || results[0].ID != "e6" || results[1].ID != "e10" {
+		t.Fatalf("FindByTag(role button) = %#v, want e6 and e10", results)
+	}
+	if results := FindByRole(som, "role main"); len(results) != 1 || results[0].ID != "r_main" {
+		t.Fatalf("FindByRole(role main) = %#v, want r_main", results)
+	}
+}
+
 func TestFindByLabelCompiledFallbacks(t *testing.T) {
 	som := mustParse(t)
 

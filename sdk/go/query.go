@@ -608,6 +608,10 @@ func normalizeRoleQuery(value string) string {
 				(value[0] == '`' && value[len(value)-1] == '`')) {
 				value = strings.TrimSpace(value[1 : len(value)-1])
 			}
+		} else if rest != "" {
+			// Accept the human-friendly "role button" form alongside the
+			// selector-compatible role= and role: prefixes.
+			value = rest
 		}
 	}
 	return strings.Join(strings.Fields(strings.ReplaceAll(value, "-", " ")), "_")
