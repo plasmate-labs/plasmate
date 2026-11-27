@@ -31,6 +31,7 @@ from som_parser import (
     find_by_id,
     find_by_label,
     find_by_role,
+    find_by_test_id,
     find_by_text,
     from_plasmate,
     get_action_plan,
@@ -1112,6 +1113,24 @@ class TestGetActionPlan:
         assert find_action_targets_by_action(som, "click", enabled_only=True) == [
             expected_targets[-1]
         ]
+
+    def test_finds_first_element_by_test_id_case_insensitively(self):
+        som = Som.model_validate(FIXTURE_SOM | {
+            "regions": [
+                {
+                    **FIXTURE_SOM["regions"][0],
+                    "elements": [
+                        {
+                            **FIXTURE_SOM["regions"][0]["elements"][0],
+                            "attrs": {"test_id": "settings-save"},
+                        }
+                    ],
+                }
+            ]
+        })
+
+        assert find_by_test_id(som, "SETTINGS-SAVE").id == "e_1"
+        assert find_by_test_id(som, "missing") is None
 
     def test_accepts_heading_level_aliases_for_action_targets(self, som: Som):
         payload = json.loads(json.dumps(FIXTURE_SOM))

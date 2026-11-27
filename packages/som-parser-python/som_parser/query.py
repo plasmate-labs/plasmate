@@ -69,6 +69,15 @@ def find_by_html_id(som: Som, html_id: str) -> Optional[SomElement]:
     return None
 
 
+def find_by_test_id(som: Som, test_id: str) -> Optional[SomElement]:
+    """Find the first element by its stable test locator, case-insensitively."""
+    normalized_test_id = test_id.casefold()
+    for el in get_all_elements(som):
+        if el.attrs and el.attrs.test_id and el.attrs.test_id.casefold() == normalized_test_id:
+            return el
+    return None
+
+
 def _searchable_text_parts(el: SomElement) -> List[str]:
     parts: List[str] = []
     if el.text:
