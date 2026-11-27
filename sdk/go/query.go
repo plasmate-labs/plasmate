@@ -1359,6 +1359,25 @@ func FindActionTargetByTestID(som *Som, testID string) *ActionPlanItem {
 	return FindActionTarget(som, testID, "test_id")
 }
 
+// FindActionTargetsByTestID returns compact action targets sharing a test locator attribute.
+// Pass true as the optional second argument to exclude disabled targets.
+func FindActionTargetsByTestID(som *Som, testID string, enabledOnly ...bool) []ActionPlanItem {
+	if som == nil || testID == "" {
+		return nil
+	}
+	plan := GetActionPlan(som)
+	if len(enabledOnly) > 0 && enabledOnly[0] {
+		plan = EnabledActionPlan(som)
+	}
+	result := make([]ActionPlanItem, 0)
+	for _, item := range plan {
+		if item.TestID != nil && *item.TestID == testID {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
 // FindActionTargetByLabel returns the first compact action target matching an exact accessible label.
 func FindActionTargetByLabel(som *Som, label string) *ActionPlanItem {
 	if matches := FindActionTargetsByLabel(som, label, true); len(matches) > 0 {

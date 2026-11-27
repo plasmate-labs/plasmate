@@ -1594,6 +1594,12 @@ func TestActionPlanLookupHelpers(t *testing.T) {
 	if byTest := FindActionTargetByTestID(som, "settings-save"); byTest == nil || byTest.ID != save.ID {
 		t.Fatalf("FindActionTargetByTestID = %#v, want %s", byTest, save.ID)
 	}
+	if byTests := FindActionTargetsByTestID(som, "settings-save"); len(byTests) != 1 || byTests[0].ID != save.ID {
+		t.Fatalf("FindActionTargetsByTestID = %#v, want %s", byTests, save.ID)
+	}
+	if byTests := FindActionTargetsByTestID(som, "missing"); len(byTests) != 0 {
+		t.Fatalf("FindActionTargetsByTestID(missing) = %#v, want empty", byTests)
+	}
 	for _, value := range []string{"e_save", save.CacheKey, "save-button", "settings-save"} {
 		if found := FindActionTarget(som, value); found == nil || found.ID != save.ID {
 			t.Fatalf("FindActionTarget(%q) = %#v, want %s", value, found, save.ID)
