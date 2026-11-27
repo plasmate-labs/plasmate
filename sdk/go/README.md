@@ -249,6 +249,7 @@ all := plasmate.FlatElements(som)
 | `FindByRole(som, role)` | Find regions by role |
 | `FindByID(som, id)` | Find element by ID |
 | `FindByTag(som, tag)` | Find elements by role/tag |
+| `FindByTestID(som, testID)` | Find elements by compiled test-id attribute, including nested and shadow-root elements |
 | `FindInteractive(som)` | Find elements with actions |
 | `FindByLabel(som, label, exact...)` | Find elements by accessible label (substring by default; optional exact match) |
 | `FindByText(som, text)` | Case-insensitive text search |

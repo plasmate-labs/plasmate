@@ -973,6 +973,30 @@ func TestFindByTextUserFacingMetadata(t *testing.T) {
 	}
 }
 
+func TestFindByTestIDSearchesNestedAndShadowElements(t *testing.T) {
+	rootID := "root-hook"
+	nestedID := "nested-hook"
+	shadowID := "shadow-hook"
+	som := &Som{Regions: []Region{{Elements: []Element{
+		{ID: "root", Attrs: &ElementAttrs{TestID: &rootID}, Children: []Element{{
+			ID: "nested", Attrs: &ElementAttrs{TestID: &nestedID},
+		}}},
+		{ID: "host", Shadow: &SomShadowRoot{Elements: []Element{{
+			ID: "shadow", Attrs: &ElementAttrs{TestID: &shadowID},
+		}}}},
+	}}}}
+
+	if got := FindByTestID(som, "nested-hook"); len(got) != 1 || got[0].ID != "nested" {
+		t.Fatalf("FindByTestID(nested-hook) = %#v, want nested", got)
+	}
+	if got := FindByTestID(som, "shadow-hook"); len(got) != 1 || got[0].ID != "shadow" {
+		t.Fatalf("FindByTestID(shadow-hook) = %#v, want shadow", got)
+	}
+	if got := FindByTestID(som, "missing"); len(got) != 0 {
+		t.Fatalf("FindByTestID(missing) = %#v, want empty", got)
+	}
+}
+
 func TestFindByLabelMatchesAriaDescription(t *testing.T) {
 	description := "Password requirements"
 	som := &Som{Regions: []Region{{Elements: []Element{

@@ -166,6 +166,31 @@ func findByHTMLIDInSlice(elements []Element, htmlID string) *Element {
 	return nil
 }
 
+// FindByTestID returns all elements with the compiled test-id attribute.
+// This searches nested elements and shadow roots and returns nil for a nil SOM.
+func FindByTestID(som *Som, testID string) []Element {
+	if som == nil || testID == "" {
+		return nil
+	}
+	var result []Element
+	for _, region := range som.Regions {
+		collectByTestID(region.Elements, testID, &result)
+	}
+	return result
+}
+
+func collectByTestID(elements []Element, testID string, result *[]Element) {
+	for _, element := range elements {
+		if element.Attrs != nil && element.Attrs.TestID != nil && *element.Attrs.TestID == testID {
+			*result = append(*result, element)
+		}
+		collectByTestID(element.Children, testID, result)
+		if element.Shadow != nil {
+			collectByTestID(element.Shadow.Elements, testID, result)
+		}
+	}
+}
+
 func findByIDInSlice(elements []Element, id string) *Element {
 	for i := range elements {
 		if elements[i].ID == id {
