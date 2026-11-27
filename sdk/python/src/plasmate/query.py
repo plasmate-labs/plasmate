@@ -148,8 +148,13 @@ def find_by_html_id(som: Som, html_id: str) -> Optional[SomElement]:
 
 def find_by_test_id(som: Som, test_id: str) -> Optional[SomElement]:
     """Find a single element by its stable test locator attribute."""
+    normalized_test_id = test_id.casefold()
     for element in flat_elements(som):
-        if element.attrs is not None and element.attrs.test_id == test_id:
+        if (
+            element.attrs is not None
+            and element.attrs.test_id is not None
+            and element.attrs.test_id.casefold() == normalized_test_id
+        ):
             return element
     return None
 

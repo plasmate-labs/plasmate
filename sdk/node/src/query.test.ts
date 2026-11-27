@@ -525,6 +525,10 @@ describe('findByTestId', () => {
     assert.equal(findByTestId(fixture, 'submit-button')?.id, 'e4');
   });
 
+  it('matches test locator casing consistently with selectors', () => {
+    assert.equal(findByTestId(fixture, 'SUBMIT-BUTTON')?.id, 'e4');
+  });
+
   it('returns undefined for a missing test locator', () => {
     assert.equal(findByTestId(fixture, 'missing-test-id'), undefined);
   });

@@ -95,7 +95,10 @@ export function findByHtmlId(som: Som, htmlId: string): SomElement | undefined {
 
 /** Find the first element carrying the compiler's stable test locator. */
 export function findByTestId(som: Som, testId: string): SomElement | undefined {
-  return flatElements(som).find((el) => el.attrs?.test_id === testId);
+  const normalizedTestId = testId.toLocaleLowerCase();
+  return flatElements(som).find(
+    (el) => el.attrs?.test_id?.toLocaleLowerCase() === normalizedTestId,
+  );
 }
 
 function findElementById(elements: SomElement[], id: string): SomElement | undefined {

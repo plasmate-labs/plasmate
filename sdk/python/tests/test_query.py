@@ -376,6 +376,12 @@ class TestFindByTestId:
         assert element is not None
         assert element.id == "e5"
 
+    def test_matches_test_id_casing_consistently_with_selectors(self, sample_som: Som) -> None:
+        sample_som.regions[1].elements[2].attrs = ElementAttrs(test_id="save-button")
+        element = find_by_test_id(sample_som, "SAVE-BUTTON")
+        assert element is not None
+        assert element.id == "e5"
+
     def test_returns_none_for_missing_test_id(self, sample_som: Som) -> None:
         assert find_by_test_id(sample_som, "missing-test-id") is None
 
