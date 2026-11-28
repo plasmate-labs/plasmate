@@ -100,7 +100,9 @@ const UNKNOWN_SELECTOR_GUIDANCE: &str =
 ///   `outputs` / `alert` /
 ///   `alerts` / `status` / `statuses` / `tooltip` /
 ///   `tooltips`, `section` / `sections`,
-///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and `menu`,
+///   plus common HTML tag aliases `a`/`anchor`, `p`, `ul`, `ol`, `dl`, and
+///   `menu` / `menus` / `menu_list` / `menu_lists` / `menu-list` /
+///   `menu-lists` / `menu list` / `menu lists`,
 ///   plus the ARIA collection aliases `feed` / `feeds` / `aria-feed` /
 ///   `aria-feeds` / `aria_feed` / `aria_feeds` / `ariafeed` / `ariafeeds`,
 ///   `aria feed` / `aria feeds`,
@@ -2761,6 +2763,13 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "ol"
         | "dl"
         | "menu"
+        | "menus"
+        | "menu_list"
+        | "menu_lists"
+        | "menu-list"
+        | "menu-lists"
+        | "menu list"
+        | "menu lists"
         | "feed"
         | "feeds"
         | "unordered_list"
@@ -6340,6 +6349,13 @@ mod tests {
             ("ol", ElementRole::List),
             ("dl", ElementRole::List),
             ("menu", ElementRole::List),
+            ("menus", ElementRole::List),
+            ("menu_list", ElementRole::List),
+            ("menu_lists", ElementRole::List),
+            ("menu-list", ElementRole::List),
+            ("menu-lists", ElementRole::List),
+            ("menu list", ElementRole::List),
+            ("menu lists", ElementRole::List),
             ("unordered_list", ElementRole::List),
             ("ordered_list", ElementRole::List),
             ("definition_list", ElementRole::List),
@@ -6355,6 +6371,40 @@ mod tests {
                 .elements
                 .iter()
                 .all(|element| element.role == expected_role));
+        }
+    }
+
+    #[test]
+    fn test_selector_plural_menu_alias_matches_lists() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::List;
+        som.regions[0].elements[1].role = ElementRole::Button;
+
+        let filtered = apply_selector(&som, "menus");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::List);
+    }
+
+    #[test]
+    fn test_selector_menu_list_aliases_match_lists() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::List;
+        som.regions[0].elements[1].role = ElementRole::Button;
+
+        for selector in [
+            "menu_list",
+            "menu_lists",
+            "menu-list",
+            "menu-lists",
+            "menu list",
+            "menu lists",
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].role, ElementRole::List);
         }
     }
 

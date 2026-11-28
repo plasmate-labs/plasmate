@@ -1153,7 +1153,7 @@ pub fn extract_links_definition() -> ToolDefinition {
                 "javascript": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable JavaScript execution for dynamic/SPA pages. Leave enabled for dynamic content; set false for static HTML to avoid script execution. Default: true."
+                    "description": "Enable JavaScript execution for dynamic/SPA pages. Leave enabled for dynamic content; set false (javascript=false) for static HTML to avoid script execution. Default: true."
                 },
                 "selector": {
                     "type": "string",
@@ -7705,6 +7705,9 @@ mod tests {
             extract_links_definition().input_schema["properties"]["max_links"]["minimum"],
             0
         );
+        assert!(extract_links_definition().input_schema["properties"]["javascript"]["description"]
+            .as_str()
+            .is_some_and(|description| description.contains("javascript=false")));
         let links_error = serde_json::from_value::<ExtractLinksParams>(json!({
             "url": "https://example.com",
             "selecter": "main"
