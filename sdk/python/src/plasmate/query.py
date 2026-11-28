@@ -1429,10 +1429,13 @@ def _normalize_role_alias(value: str) -> str:
     normalized = " ".join(value.strip().casefold().split())
     if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'`":
         normalized = normalized[1:-1].strip()
-    if normalized.startswith("role"):
-        remainder = normalized[4:].lstrip()
+    for prefix in ("role", "selector"):
+        if not normalized.startswith(prefix):
+            continue
+        remainder = normalized[len(prefix) :].lstrip()
         if remainder.startswith((":", "=")):
             normalized = remainder[1:].strip()
+        break
     if len(normalized) >= 2 and normalized[0] == normalized[-1] and normalized[0] in "\"'`":
         normalized = normalized[1:-1].strip()
     return "_".join(normalized.replace("-", " ").split())
