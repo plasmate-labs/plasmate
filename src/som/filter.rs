@@ -2761,6 +2761,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         | "ol"
         | "dl"
         | "menu"
+        | "menus"
         | "feed"
         | "feeds"
         | "unordered_list"
@@ -6356,6 +6357,19 @@ mod tests {
                 .iter()
                 .all(|element| element.role == expected_role));
         }
+    }
+
+    #[test]
+    fn test_selector_plural_menu_alias_matches_lists() {
+        let mut som = make_test_som();
+        som.regions[0].elements[0].role = ElementRole::List;
+        som.regions[0].elements[1].role = ElementRole::Button;
+
+        let filtered = apply_selector(&som, "menus");
+
+        assert_eq!(filtered.regions.len(), 1);
+        assert_eq!(filtered.regions[0].elements.len(), 1);
+        assert_eq!(filtered.regions[0].elements[0].role, ElementRole::List);
     }
 
     #[test]
