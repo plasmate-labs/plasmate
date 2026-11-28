@@ -796,6 +796,15 @@ describe('findByTag', () => {
     }
   });
 
+  it('accepts forwarded selector wrappers across query helpers', () => {
+    assert.deepEqual(findByRole(fixture, 'selector=main').map((region) => region.id), ['r_main']);
+    assert.deepEqual(findByTag(fixture, 'selector=button').map((el) => el.id), ['e4']);
+    assert.deepEqual(
+      findActionTargetsByRole(fixture, 'selector=button').map((item) => item.id),
+      ['e4'],
+    );
+  });
+
   it('accepts HTML input type aliases', () => {
     for (const alias of [
       'text',

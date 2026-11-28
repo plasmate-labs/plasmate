@@ -1009,7 +1009,8 @@ export function findActionTargetsByRole(
 }
 
 function stripRolePrefix(role: string): string {
-  const normalized = normalizeSelectorText(role).toLowerCase();
+  let normalized = normalizeSelectorText(role).toLowerCase();
+  normalized = normalized.replace(/^selector\s*[:=]\s*/, '');
   return normalizeSelectorText(normalized.replace(/^role\s*[:=]\s*/, ''));
 }
 

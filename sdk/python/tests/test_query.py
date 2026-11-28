@@ -252,6 +252,9 @@ class TestFindByRole:
         assert [region.id for region in find_by_role(sample_som, '"role=navigation"')] == [
             "r_navigation"
         ]
+        assert [region.id for region in find_by_role(sample_som, "selector=main")] == [
+            "r_main"
+        ]
         assert [region.id for region in find_by_role(sample_som, "role = 'navigation'")] == [
             "r_navigation"
         ]
@@ -510,6 +513,14 @@ class TestFindByPlaceholder:
 
 
 class TestFindByTag:
+    def test_accepts_forwarded_selector_wrappers(self, sample_som: Som) -> None:
+        assert [element.id for element in find_by_tag(sample_som, "selector=button")] == [
+            "e5"
+        ]
+        assert [
+            item["id"] for item in find_action_targets_by_role(sample_som, "selector=button")
+        ] == ["e5"]
+
     def test_interactive_aliases_match_find_interactive(self, sample_som: Som) -> None:
         expected = [element.id for element in find_interactive(sample_som)]
         for alias in (
