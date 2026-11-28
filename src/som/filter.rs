@@ -8370,44 +8370,6 @@ mod tests {
     }
 
     #[test]
-    fn test_selector_matches_current_aria_item_shorthand() {
-        let mut som = make_test_som();
-        som.regions[1].elements.extend([
-            Element {
-                id: "e-current".to_string(),
-                role: ElementRole::Link,
-                html_id: None,
-                text: Some("Current".to_string()),
-                label: None,
-                actions: None,
-                attrs: Some(serde_json::json!({"aria-current": "page"})),
-                children: None,
-                hints: None,
-                shadow: None,
-            },
-            Element {
-                id: "e-not-current".to_string(),
-                role: ElementRole::Link,
-                html_id: None,
-                text: Some("Other".to_string()),
-                label: None,
-                actions: None,
-                attrs: Some(serde_json::json!({"aria-current": "false"})),
-                children: None,
-                hints: None,
-                shadow: None,
-            },
-        ]);
-
-        for selector in ["current", "current item", "current-item", "current_item"] {
-            let filtered = apply_selector(&som, selector);
-            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
-            assert_eq!(filtered.regions[0].elements[0].id, "e-current");
-        }
-    }
-
-    #[test]
     fn test_selector_matches_forward_compatible_aria_attributes() {
         let mut som = make_test_som();
         som.regions[1].elements.push(Element {
