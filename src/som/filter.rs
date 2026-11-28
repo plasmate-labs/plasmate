@@ -2595,6 +2595,7 @@ fn parse_element_role(selector: &str) -> Option<ElementRole> {
         // the same selector aliases instead of making callers know the
         // normalized representation.
         "button" | "buttons" | "menuitem" | "menuitems" | "menu_item" | "menu_items"
+        | "menu_list_item" | "menu_list_items"
         | "option" | "options" | "tab" | "tabs" | "treeitem" | "treeitems"
         | "tree_item" | "tree_items" => {
             Some(ElementRole::Button)
@@ -6129,6 +6130,8 @@ mod tests {
             "menuitem",
             "menu-item",
             "menu_item",
+            "menu_list_item",
+            "menu_list_items",
             "menu items",
             "menu-items",
             "menu_items",
