@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 pub const MAX_SELECTOR_BYTES: usize = 256;
 
 const UNKNOWN_SELECTOR_GUIDANCE: &str =
-    "try selector='landmark' (or 'all-regions') to discover regions, selector='main' for token-saving page content, selector='h1' through selector='h6' for headings, interactive for controls, current for the aria-current item, disabled/enabled, required/optional, or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, aria-label:<text>, #id, .class, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
+    "try selector='landmark' (or 'all-regions') to discover regions, selector='main' for token-saving page content, selector='heading' or selector='h1' through selector='h6' for headings, interactive for controls, current for the aria-current item, disabled/enabled, required/optional, or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, label:<text>, text:<text>, name:<text>, placeholder:<text>, title:<text>, aria-label:<text>, accessible-name:<text>, or alt:<text>, #id, .class, class^=<prefix>, class$=<suffix>, class*=<substring>, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
@@ -1654,6 +1654,12 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "aria-label",
         "aria_label",
         "aria label",
+        "aria-labelledby",
+        "aria_labelledby",
+        "aria labelledby",
+        "aria-describedby",
+        "aria_describedby",
+        "aria describedby",
         "aria-braillelabel",
         "aria-braille-label",
         "aria_braillelabel",
@@ -3046,15 +3052,25 @@ mod tests {
             "selector='landmark'",
             "'all-regions'",
             "selector='main'",
+            "selector='heading'",
             "selector='h1' through selector='h6'",
             "interactive",
             "role=<region>",
             "role=<element>",
             "action:<verb>",
             "label:<text>",
+            "text:<text>",
+            "name:<text>",
+            "placeholder:<text>",
+            "title:<text>",
             "aria-label:<text>",
+            "accessible-name:<text>",
+            "alt:<text>",
             "#id",
             ".class",
+            "class^=<prefix>",
+            "class$=<suffix>",
+            "class*=<substring>",
             "testid=<value>",
             "data-testid=<value>",
             "[aria-label]",
@@ -8412,6 +8428,49 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-braille-label");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compact_aria_label_reference_values() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-labelledby".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: Some("Save".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-labelledby": "save heading"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-describedby".to_string(),
+                role: ElementRole::TextInput,
+                html_id: None,
+                text: None,
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-describedby": "password help"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        for (selector, expected_id) in [
+            ("aria-labelledby:heading", "e-labelledby"),
+            ("aria_labelledby=save", "e-labelledby"),
+            ("aria-describedby:password", "e-describedby"),
+            ("aria_describedby=help", "e-describedby"),
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, expected_id);
         }
     }
 
