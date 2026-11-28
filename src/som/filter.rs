@@ -1654,6 +1654,12 @@ fn parse_label_selector(selector: &str) -> Option<String> {
         "aria-label",
         "aria_label",
         "aria label",
+        "aria-labelledby",
+        "aria_labelledby",
+        "aria labelledby",
+        "aria-describedby",
+        "aria_describedby",
+        "aria describedby",
         "aria-braillelabel",
         "aria-braille-label",
         "aria_braillelabel",
@@ -8422,6 +8428,49 @@ mod tests {
             assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
             assert_eq!(filtered.regions[0].elements[0].id, "e-braille-label");
+        }
+    }
+
+    #[test]
+    fn test_selector_matches_compact_aria_label_reference_values() {
+        let mut som = make_test_som();
+        som.regions[1].elements.extend([
+            Element {
+                id: "e-labelledby".to_string(),
+                role: ElementRole::Button,
+                html_id: None,
+                text: Some("Save".to_string()),
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-labelledby": "save heading"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+            Element {
+                id: "e-describedby".to_string(),
+                role: ElementRole::TextInput,
+                html_id: None,
+                text: None,
+                label: None,
+                actions: None,
+                attrs: Some(serde_json::json!({"aria-describedby": "password help"})),
+                children: None,
+                hints: None,
+                shadow: None,
+            },
+        ]);
+
+        for (selector, expected_id) in [
+            ("aria-labelledby:heading", "e-labelledby"),
+            ("aria_labelledby=save", "e-labelledby"),
+            ("aria-describedby:password", "e-describedby"),
+            ("aria_describedby=help", "e-describedby"),
+        ] {
+            let filtered = apply_selector(&som, selector);
+            assert_eq!(filtered.regions.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements.len(), 1, "selector: {selector}");
+            assert_eq!(filtered.regions[0].elements[0].id, expected_id);
         }
     }
 
