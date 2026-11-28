@@ -10,7 +10,7 @@ use super::types::{Element, ElementRole, RegionRole, ShadowRoot, Som};
 pub const MAX_SELECTOR_BYTES: usize = 256;
 
 const UNKNOWN_SELECTOR_GUIDANCE: &str =
-    "try selector='landmark' (or 'all-regions') to discover regions, selector='main' for token-saving page content, selector='heading' or selector='h1' through selector='h6' for headings, interactive for controls, current for the aria-current item, disabled/enabled, required/optional, or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, accesskey or accesskey:<value> for keyboard shortcuts, label:<text>, text:<text>, name:<text>, placeholder:<text>, title:<text>, aria-label:<text>, accessible-name:<text>, or alt:<text>, [aria-pressed] / [aria-selected] for ARIA state, #id, .class, class^=<prefix>, class$=<suffix>, class*=<substring>, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
+    "try selector='landmark' (or 'all-regions') to discover regions, selector='main' for token-saving page content, selector='heading' or selector='h1' through selector='h6' for headings, interactive for controls, menuitem/menu-item/menu item/menu list item for menu controls, current for the aria-current item, disabled/enabled, required/optional, or readonly/locked/editable/writable for control state, then role=<region> (main, nav, or content), role=<element> (button or link), action:<verb>, accesskey or accesskey:<value> for keyboard shortcuts, label:<text>, text:<text>, name:<text>, placeholder:<text>, title:<text>, aria-label:<text>, accessible-name:<text>, or alt:<text>, [aria-pressed] / [aria-selected] for ARIA state, #id, .class, class^=<prefix>, class$=<suffix>, class*=<substring>, testid=<value>, data-testid=<value>, or [aria-label] / [data-*]";
 
 /// Filter a SOM to a specific region or element by semantic selector.
 ///
@@ -3066,6 +3066,7 @@ mod tests {
             "selector='heading'",
             "selector='h1' through selector='h6'",
             "interactive",
+            "menuitem/menu-item/menu item/menu list item",
             "role=<region>",
             "role=<element>",
             "action:<verb>",
